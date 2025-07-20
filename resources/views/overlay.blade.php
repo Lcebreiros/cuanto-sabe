@@ -103,11 +103,117 @@
             width: 100%; height: 100%; border-radius: 50%; object-fit: contain;
             background: #181b3f; border: none; box-shadow: none; display: block; padding: 0;
         }
+        /* Overlay y ruleta: estado oculto y visible con animación */
+.overlay-content, #ruleta-container {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.55s cubic-bezier(.39,.58,.57,1.02), transform 0.55s cubic-bezier(.39,.58,.57,1.02);
+    will-change: opacity, transform;
+}
+.overlay-content.hide-down { opacity: 0; transform: translateY(80px); pointer-events: none;}
+.overlay-content.show-up { opacity: 1; transform: translateY(0);}
+#ruleta-container.hide-up { opacity: 0; transform: translateY(-90px); pointer-events: none;}
+#ruleta-container.show-down { opacity: 1; transform: translateY(0);}
+
+
+/* Overlay desaparece hacia abajo */
+.overlay-content.hide-down {
+    opacity: 0;
+    transform: translateY(60px);
+    pointer-events: none;
+}
+
+/* Overlay aparece desde arriba */
+.overlay-content.show-up {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Ruleta desaparece hacia arriba */
+#ruleta-container.hide-up {
+    opacity: 0;
+    transform: translateY(-70px);
+    pointer-events: none;
+}
+
+/* Ruleta aparece desde abajo */
+#ruleta-container.show-down {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.overlay-content {
+    position: relative; /* ¡Esto es clave para el banner absoluto! */
+}
+
+/* Banner flotante, siempre arriba del bloque de preguntas */
+#indicator-banner {
+    position: relative;
+    margin-bottom: 18px;
+    margin-top: 0;
+    left: 0;
+    align-self: flex-start;
+    padding: 11px 34px 11px 34px;
+    border-radius: 16px;
+    font-size: 1.23rem;
+    min-width: 260px;
+    max-width: 390px;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    text-align: left;
+    box-shadow: 0 0 24px #19faff66, 0 0 5px #fff3;
+    border: none;
+    transition: background 0.25s, color 0.25s, box-shadow 0.25s;
+    background: linear-gradient(90deg,#101d2b 85%,#0b2845 100%);
+    color: #34faff;
+    text-shadow:
+        0 0 13px #00fff799,
+        0 0 8px #0ff0fc77,
+        0 0 3px #fff8,
+        0 2px 2px #011;
+}
+
+/* ---- Glow y colores según tipo especial ---- */
+#indicator-banner.banner-oro {
+    background: linear-gradient(90deg,#332804 85%,#786200 100%);
+    color: #ffe47a;
+    box-shadow: 0 0 28px #fff18acc, 0 0 16px #ffd70066, 0 0 4px #ffe47a;
+    text-shadow:
+        0 0 9px #ffe47a,
+        0 0 5px #ffe47a,
+        0 2px 2px #191400;
+}
+
+#indicator-banner.banner-verde {
+    background: linear-gradient(90deg,#082a1b 80%,#1ad964 100%);
+    color: #22fa68;
+    box-shadow: 0 0 22px #19faff55, 0 0 16px #22fa6866;
+    text-shadow:
+        0 0 12px #36ffd0bb,
+        0 0 6px #13ff79cc,
+        0 2px 2px #011;
+}
+
+#indicator-banner.banner-azul {
+    background: linear-gradient(90deg,#0c243a 80%,#2987d8 100%);
+    color: #36d1ff;
+    box-shadow: 0 0 28px #19faffbb, 0 0 10px #2987d877, 0 0 5px #fff6;
+    text-shadow:
+        0 0 12px #19faffcc,
+        0 0 7px #36d1ff88,
+        0 2px 2px #012;
+}
+
+
+
     </style>
 </head>
 <body>
     <div class="connection-status" id="connectionStatus"></div>
     <div class="overlay-content">
+            <div id="indicator-banner"></div>
+
         <div class="question-bar" id="questionBar">Esperando pregunta...</div>
         <div class="answers-row">
             <div class="option-box" id="opA">
@@ -171,14 +277,39 @@ window.Echo.connector.pusher.connection.bind('connected', () => updateConnection
 window.Echo.connector.pusher.connection.bind('disconnected', () => updateConnectionStatus(false));
 
 // =========== PANEL LOGIC =============
+let pendingSpecialBanner = null; // <-- Banner especial pendiente
 let currentOptions = [];
 let correctLabel = null;
 let ultimaSeleccionPanel = null;
 const questionBar = document.getElementById('questionBar');
 const options = ['A', 'B', 'C', 'D'];
 
+// Helper para animación crossfade (llama a callback opcional al terminar)
+function toggleAnim(el, showClass, hideClass, mostrar, cb) {
+    if(mostrar) {
+        el.style.display = '';
+        setTimeout(() => {
+            el.classList.add(showClass);
+            el.classList.remove(hideClass);
+        }, 10);
+        if(cb) setTimeout(cb, 550);
+    } else {
+        el.classList.add(hideClass);
+        el.classList.remove(showClass);
+        setTimeout(() => {
+            el.style.display = 'none';
+            if(cb) cb();
+        }, 550);
+    }
+}
+
 function resetOverlay() {
     questionBar.textContent = 'Esperando pregunta...';
+    const banner = document.getElementById('indicator-banner');
+    banner.textContent = '';
+    banner.style.display = 'none';
+    banner.classList.remove('banner-oro', 'banner-verde', 'banner-azul');
+    pendingSpecialBanner = null; // ⚡️ LIMPIA TODO por si acaso
     currentOptions = [];
     correctLabel = null;
     ultimaSeleccionPanel = null;
@@ -189,11 +320,49 @@ function resetOverlay() {
         optEl.querySelector('.vote-count').textContent = '0';
         optEl.style.display = 'flex';
     });
-    document.getElementById('ruleta-container').style.display = '';
-    document.querySelector('.overlay-content').style.display = 'none';
+    const ruleta = document.getElementById('ruleta-container');
+    const overlay = document.querySelector('.overlay-content');
+    toggleAnim(overlay, 'show-up', 'hide-down', false, () => {
+        toggleAnim(ruleta, 'show-down', 'hide-up', true);
+    });
 }
 
+
 function showQuestion(data) {
+    window.lastQuestionData = data;
+
+    console.log('[DEBUG] showQuestion data:', data);
+    console.log('[DEBUG] special_indicator:', data.special_indicator);
+
+    const banner = document.getElementById('indicator-banner');
+    let indicator = data.special_indicator;
+
+    // SI NO VIENE DE BACKEND, PERO HAY UN SPECIAL PENDIENTE, USALO (SOLO UNA VEZ):
+    if (!indicator && pendingSpecialBanner) {
+        indicator = pendingSpecialBanner;
+        pendingSpecialBanner = null; // ⚡️ SIEMPRE limpiar después de usar
+        console.log('[DEBUG] Usando pendingSpecialBanner:', indicator);
+    } else {
+        pendingSpecialBanner = null; // ⚡️ Por si acaso, limpiar siempre
+    }
+
+    // --- LIMPIA CLASES DE COLOR ANTERIORES ---
+    banner.classList.remove('banner-oro', 'banner-verde', 'banner-azul');
+
+    // --- MOSTRAR U OCULTAR EL BANNER DE INDICADOR ESPECIAL ---
+    if (!indicator) {
+        banner.textContent = '';
+        banner.style.display = 'none';
+    } else {
+        banner.textContent = indicator.toUpperCase();
+        banner.style.display = '';
+        // Asignar color según tipo
+        let tipo = indicator.trim().toLowerCase();
+        if (tipo === 'pregunta de oro') banner.classList.add('banner-oro');
+        else if (tipo === 'solo yo') banner.classList.add('banner-verde');
+        else if (tipo === 'responde el chat' || tipo === 'solo chat') banner.classList.add('banner-azul');
+    }
+
     currentOptions = data.opciones || [];
     correctLabel = data.label_correcto || data.opcion_correcta || null;
     questionBar.textContent = data.pregunta || 'Pregunta sin texto';
@@ -210,17 +379,40 @@ function showQuestion(data) {
         optEl.querySelector('.vote-count').textContent = '0';
     });
     ultimaSeleccionPanel = null;
-    document.getElementById('ruleta-container').style.display = 'none';
-    document.querySelector('.overlay-content').style.display = '';
+    const ruleta = document.getElementById('ruleta-container');
+    const overlay = document.querySelector('.overlay-content');
+    toggleAnim(ruleta, 'show-down', 'hide-up', false, () => {
+        toggleAnim(overlay, 'show-up', 'hide-down', true);
+    });
 }
 
+
+
+// NUEVO: Ruleta se va tras seleccionar opción (llamalo desde showSelectedOption)
+let ruletaOculta = false;
 function showSelectedOption(option) {
     options.forEach(opt => document.getElementById('op' + opt).classList.remove('selected'));
     if (option) {
         const optEl = document.getElementById('op' + option);
         if (optEl) optEl.classList.add('selected');
     }
+    // Ocultar ruleta tras 1s SOLO la primera vez tras seleccionar
+    if(!ruletaOculta) {
+        ruletaOculta = true;
+        setTimeout(() => {
+            const ruleta = document.getElementById('ruleta-container');
+            toggleAnim(ruleta, 'show-down', 'hide-up', false);
+        }, 1000);
+    }
 }
+
+// Cuando reseteás o se muestra la ruleta de nuevo, volver a habilitar
+function resetRuletaAnim() { ruletaOculta = false; }
+window.resetRuletaAnim = resetRuletaAnim;
+
+// Llamalo después de resetOverlay para poder repetir animación si querés
+// resetOverlay(); resetRuletaAnim();
+
 
 function playSound(id) {
     const audio = document.getElementById(id);
@@ -297,6 +489,10 @@ window.Echo.channel('overlay-channel')
     .listen('.revelar-respuesta', e => {
         // Este evento es el que debe disparar revealAnswer
         revealAnswer(e.data || e);
+    })
+        .listen('.overlay-reset', () => {
+        // 👉 ESTE ES EL QUE HACE QUE EL RESET FUNCIONE DESDE EL PANEL
+        resetOverlay();
     });
 
 // ---- Inicial ----
@@ -612,12 +808,15 @@ function startSpin() {
     spinLoop();
 }
 
+let lastSpecialSlot = null;
 function finalizeSpin() {
     currentAngle = currentAngle % (2 * Math.PI);
     selectedSlotIdx = getSlotAtAngle(currentAngle);
-    let selectedCategory = slots[selectedSlotIdx]?.label;
+    let selectedSlot = slots[selectedSlotIdx];
+    let selectedCategory = selectedSlot?.label;
+    let slotType = selectedSlot?.type || '';
+    let isSpecial = slotType === 'soloyo' || slotType === 'respondeelchat' || slotType === 'preguntadeoro';
 
-    // 1. Animar el highlight del slot ganador
     let highlightFrames = 32;
     let f = 0;
     function highlightAnim() {
@@ -631,17 +830,41 @@ function finalizeSpin() {
             spinning = false;
             stopRequested = false;
 
-            // 2. Cuando termina el highlight, mandá al backend
-            fetch('/overlay/lanzar-pregunta', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ categoria: selectedCategory })
-            })
-            .then(r => r.json())
-            .then(res => { /* log si querés */ });
+            // Log para depuración:
+            console.log('== Ruleta finalizó. Slot seleccionado:', selectedSlot);
+
+            // LOGICA DE DOBLE GIRO
+            if (lastSpecialSlot !== null) {
+                // SEGUNDO GIRO: mandar pregunta usando el especial guardado
+                let payload = { categoria: selectedCategory, special_slot: lastSpecialSlot };
+                console.log('Enviando payload (doble giro):', payload);
+                pendingSpecialBanner = payload.special_slot; // GUARDA EL INDICADOR TEMPORAL
+                fetch('/overlay/lanzar-pregunta', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                lastSpecialSlot = null;
+            } else if (isSpecial) {
+                // PRIMER GIRO ESPECIAL: solo guardá el texto, no lances nada
+                lastSpecialSlot = selectedCategory; // <-- 100% seguro el label correcto
+            } else {
+                // GIRO NORMAL: pregunta directa
+                let payload = { categoria: selectedCategory };
+                console.log('Enviando payload (giro normal):', payload);
+                fetch('/overlay/lanzar-pregunta', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                lastSpecialSlot = null;
+            }
         }
     }
     highlightAnim();

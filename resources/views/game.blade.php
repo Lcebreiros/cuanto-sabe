@@ -177,16 +177,19 @@ ul li {
         0 0 22px #10ff6299;
 }
 
-.side-queue-fixed {
-    position: fixed;
-    right: 50px;         /* <-- ¡Aumentá este valor! */
-    top: 38px;           /* Si querés más abajo, aumentá */
+.side-queue-static {
+    /* position: fixed;   <-- QUITALO */
+    /* right: 50px;      <-- QUITALO */
+    /* top: 38px;        <-- QUITALO */
     width: 355px;
     max-width: 380px;
     min-width: 260px;
     z-index: 1200;
     padding: 26px 28px 20px 28px;
+    margin-left: auto;   /* Así sigue pegado a la derecha */
+    margin-right: 50px;  /* O el margen que prefieras */
 }
+
 
 
 /* Asegúrate de que el contenido principal tenga margen derecho */
@@ -420,7 +423,7 @@ document.head.appendChild(style);
     $activeSession = \App\Models\GameSession::where('status', 'active')->latest()->first();
 @endphp
 
-<div class="side-queue-fixed">
+<div class="side-queue-static">
     <div id="queue-container">
         @include('components.queue-list', [
             'participants' => $activeSession ? $activeSession->participants : collect([]),
@@ -822,7 +825,18 @@ function reiniciarOverlay(){
         },
         body: JSON.stringify({})
     }).then(res=>res.json());
+
+    // Limpia el panel localmente:
+    document.getElementById('textoPreguntaPanel').textContent = 'Pregunta aún no enviada';
+    ['A','B','C','D'].forEach(l => {
+        let btn = document.getElementById('panel'+l);
+        btn.style.display = 'none';
+        btn.textContent = l;
+        btn.classList.remove('seleccionado-panel');
+    });
+    seleccionadaPanel = null;
 }
+
 
 // Estilos para el botón seleccionado (solo una vez, sin duplicar)
 const cssExtraPanel = document.createElement('style');

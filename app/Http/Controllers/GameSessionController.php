@@ -197,74 +197,81 @@ class GameSessionController extends Controller
         return view('overlay', compact('sessionGame'));
     }
 
-    public function lanzarPreguntaCategoria(Request $request)
-    {
-        $categoria = $request->input('categoria');
-        $categoriaLower = strtolower($categoria);
+public function lanzarPreguntaCategoria(Request $request)
+{
+    $categoria = $request->input('categoria');
+    $categoriaLower = strtolower($categoria);
+    $specialSlot = $request->input('special_slot'); // <-- esto
 
-        if ($categoriaLower === 'random') {
-            $session = GameSession::where('status', 'active')->latest()->first();
-            $motivo = $session ? Motivo::find($session->motivo_id) : null;
-            $categorias = $motivo ? $motivo->categorias : collect();
-            $categoriaModel = $categorias->random();
-        } elseif ($categoriaLower === 'pregunta de oro') {
-            // Tu lógica especial si aplica...
-        } elseif ($categoriaLower === 'responde el chat' || $categoriaLower === 'solo yo') {
-            $data = [
-                'pregunta' => strtoupper($categoria),
-                'opciones' => [],
-                'label_correcto' => null,
-                'pregunta_id' => null,
-                'categoria_id' => null,
-                'timestamp' => now()->toISOString(),
-            ];
-            session(['last_overlay_question' => $data]);
-            broadcast(new NuevaPreguntaOverlay($data));
-            return response()->json(['ok' => true]);
-        } else {
-            $categoriaModel = Categoria::where('nombre', $categoria)->first();
-            if (!$categoriaModel) return response()->json(['error' => 'Categoría no encontrada'], 404);
-        }
-
-        $pregunta = Question::where('category_id', $categoriaModel->id)->inRandomOrder()->first();
-        if(!$pregunta) return response()->json(['error' => 'No hay preguntas disponibles en esta categoría.'], 404);
-
-        $opciones = [
-            ['text' => $pregunta->opcion_correcta],
-            ['text' => $pregunta->opcion_1],
-            ['text' => $pregunta->opcion_2],
-            ['text' => $pregunta->opcion_3],
-        ];
-        shuffle($opciones);
-
-        $data_opciones = [];
-        $label_correcto = null;
-        foreach ($opciones as $i => $op) {
-            $label = chr(65 + $i);
-            $data_opciones[] = [
-                'label' => $label,
-                'texto' => $op['text'],
-            ];
-            if ($label_correcto === null && $op['text'] === $pregunta->opcion_correcta) {
-                $label_correcto = $label;
-            }
-        }
-
+    if ($categoriaLower === 'random') {
+        $session = GameSession::where('status', 'active')->latest()->first();
+        $motivo = $session ? Motivo::find($session->motivo_id) : null;
+        $categorias = $motivo ? $motivo->categorias : collect();
+        $categoriaModel = $categorias->random();
+    } elseif ($categoriaLower === 'pregunta de oro') {
+        // Tu lógica especial si aplica...
+    } elseif ($categoriaLower === 'responde el chat' || $categoriaLower === 'solo yo') {
         $data = [
-            'pregunta' => $pregunta->texto,
-            'opciones' => $data_opciones,
-            'label_correcto' => $label_correcto,
-            'pregunta_id' => $pregunta->id,
-            'categoria_id' => $pregunta->category_id,
+            'pregunta' => strtoupper($categoria),
+            'opciones' => [],
+            'label_correcto' => null,
+            'pregunta_id' => null,
+            'categoria_id' => null,
             'timestamp' => now()->toISOString(),
+            // OJO: solo deberías mandar el indicador si **viene el slot especial** desde el frontend:
+            'special_indicator' => $specialSlot ?? strtoupper($categoria),
         ];
-
-        // 🟢 GUARDA EN SESSION EL ARRAY DE OPCIONES MEZCLADAS (para el reveal)
         session(['last_overlay_question' => $data]);
-
         broadcast(new NuevaPreguntaOverlay($data));
-        return response()->json(['success' => true, 'data' => $data]);
+        return response()->json(['ok' => true]);
+    } else {
+        $categoriaModel = Categoria::where('nombre', $categoria)->first();
+        if (!$categoriaModel) return response()->json(['error' => 'Categoría no encontrada'], 404);
     }
+
+    $pregunta = Question::where('category_id', $categoriaModel->id)->inRandomOrder()->first();
+    if(!$pregunta) return response()->json(['error' => 'No hay preguntas disponibles en esta categoría.'], 404);
+
+    $opciones = [
+        ['text' => $pregunta->opcion_correcta],
+        ['text' => $pregunta->opcion_1],
+        ['text' => $pregunta->opcion_2],
+        ['text' => $pregunta->opcion_3],
+    ];
+    shuffle($opciones);
+
+    $data_opciones = [];
+    $label_correcto = null;
+    foreach ($opciones as $i => $op) {
+        $label = chr(65 + $i);
+        $data_opciones[] = [
+            'label' => $label,
+            'texto' => $op['text'],
+        ];
+        if ($label_correcto === null && $op['text'] === $pregunta->opcion_correcta) {
+            $label_correcto = $label;
+        }
+    }
+
+$data = [
+    'pregunta' => $pregunta->texto,
+    'opciones' => $data_opciones,
+    'label_correcto' => $label_correcto,
+    'pregunta_id' => $pregunta->id,
+    'categoria_id' => $pregunta->category_id,
+    'timestamp' => now()->toISOString(),
+];
+
+// SIEMPRE que llegue special_slot, lo sumás:
+if ($specialSlot) {
+    $data['special_indicator'] = $specialSlot;
+}
+
+    session(['last_overlay_question' => $data]);
+    broadcast(new NuevaPreguntaOverlay($data));
+    return response()->json(['success' => true, 'data' => $data]);
+}
+
 
     public function girarRuleta() {
         broadcast(new \App\Events\GirarRuleta());
@@ -272,12 +279,11 @@ class GameSessionController extends Controller
     }
 
     public function syncQuestion(Request $request) {
-    $data = $request->input('pregunta');
-    if ($data) {
-        session(['last_overlay_question' => $data]);
-        return response()->json(['ok' => true]);
+        $data = $request->input('pregunta');
+        if ($data) {
+            session(['last_overlay_question' => $data]);
+            return response()->json(['ok' => true]);
+        }
+        return response()->json(['ok' => false], 400);
     }
-    return response()->json(['ok' => false], 400);
-}
-
 }
