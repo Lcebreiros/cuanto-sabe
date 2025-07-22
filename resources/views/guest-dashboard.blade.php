@@ -10,329 +10,230 @@
         body {
             margin: 0;
             font-family: 'Orbitron', sans-serif;
-            background: radial-gradient(circle at center, #1e0047, #0c0125);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            background: radial-gradient(circle at center, #1e0047 60%, #0c0125 100%);
+            color: #fff;
             min-height: 100vh;
-            padding: 20px;
+            padding: 0;
             box-sizing: border-box;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
+
+        /* Fondo partículas glow */
+        .neon-bg-particles {
+            pointer-events: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 1;
+            overflow: hidden;
+        }
+        .neon-particle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(10px);
+            opacity: 0.47;
+            animation: float 7s infinite ease-in-out alternate;
+        }
+        .neon-particle:nth-child(1) { width: 170px; height: 170px; background: #00f0ffb0; top: 12%; left: 9%; animation-duration: 9s;}
+        .neon-particle:nth-child(2) { width: 110px; height: 110px; background: #ff00ff99; top: 70%; left: 82%; animation-delay: 2s; animation-duration: 11s;}
+        .neon-particle:nth-child(3) { width: 88px; height: 88px; background: #00ffd1bb; top: 60%; left: 25%; animation-delay: 3.7s;}
+        .neon-particle:nth-child(4) { width: 60px; height: 60px; background: #00eaffbb; top: 18%; left: 75%; animation-delay: 1.3s;}
+        .neon-particle:nth-child(5) { width: 140px; height: 140px; background: #14ffb080; top: 84%; left: 44%; animation-delay: 3.5s; animation-duration: 13s;}
+        @keyframes float { to { transform: translateY(-54px) scale(1.11) rotate(16deg); opacity: 0.77; }}
 
         .content-container {
-            background: rgba(5, 5, 20, 0.85);
-            border-radius: 15px;
-            padding: 40px 60px;
+            background: rgba(9, 10, 37, 0.91);
+            border-radius: 22px;
+            padding: 40px 45px 30px 45px;
             box-shadow:
-                0 0 21px rgba(0, 240, 255, 0.35),
-                0 0 42px rgba(0, 240, 255, 0.25),
-                0 0 63px rgba(0, 240, 255, 0.15);
+                0 0 42px #00f0ff4f,
+                0 0 98px #ff00ff22;
             display: flex;
             flex-direction: column;
             align-items: center;
-            max-width: 623px;
-            width: 100%;
-            margin: 0 auto;
-            box-sizing: border-box;
+            max-width: 540px;
+            width: 96vw;
+            margin: 70px auto 0 auto;
+            position: relative;
+            z-index: 2;
+            border: 2.2px solid #00f0ff55;
+            animation: fadeInUp .9s cubic-bezier(.3,0,.2,1);
         }
+        @keyframes fadeInUp { from { opacity:0; transform: translateY(32px);} to { opacity:1; transform: none;} }
 
         img.logo {
-            width: 250px;
+            width: 200px;
             height: auto;
-            margin-bottom: 0;
-            filter: drop-shadow(0 0 10px #ff00ff);
-            max-width: 100%;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 0 14px #ff00ff) drop-shadow(0 0 12px #00f0ff99);
+            display: block;
         }
 
         h3.center-title {
-            font-size: 1.8rem;
+            font-size: 1.65rem;
             color: #00f0ff;
-            text-shadow: 0 0 5px #00f0ff;
-            margin-bottom: 2rem;
-            margin-top: 0.5rem;
+            text-shadow: 0 0 13px #00f0ffcc;
+            margin-bottom: 2.1rem;
+            margin-top: 0.4rem;
+            font-weight: 700;
             text-align: center;
+            letter-spacing: 1.5px;
         }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+            gap: 21px;
             width: 100%;
+            margin-bottom: 28px;
         }
 
         .btn-glow {
             background-color: #000;
             border: 2px solid #00f0ff;
-            color: white;
+            color: #00f0ff;
             padding: 30px 0;
             text-align: center;
             text-decoration: none;
             font-weight: bold;
-            border-radius: 6px;
-            box-shadow: 0 0 10px #00f0ff;
-            transition: all 0.3s ease;
+            border-radius: 13px;
+            box-shadow: 0 0 16px #00f0ff66, 0 0 10px #ff00ff36;
+            transition: all 0.25s cubic-bezier(.45,0,.4,1);
             user-select: none;
-            height: 120px;
+            height: 108px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             box-sizing: border-box;
+            outline: none;
+            position: relative;
+            letter-spacing: 1px;
         }
-
-                .btn-jugar {
-            background-color: #000;
-            border: 2px solid #00f0ff;
-            color: white;
-            padding: 30px 0;
-            text-align: center;
-            text-decoration: none;
-            font-weight: bold;
-            border-radius: 6px;
-            box-shadow: 0 0 10px #00f0ff;
-            transition: all 0.3s ease;
-            user-select: none;
-            height: 120px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2rem;
-            box-sizing: border-box;
-        }
-
         .btn-glow:hover {
-            background-color: #001f2f;
-            transform: scale(1.05);
-            box-shadow: 0 0 20px #00f0ff;
+            background: #00f0ff;
+            color: #001f2f;
+            transform: scale(1.049);
+            box-shadow: 0 0 30px #00f0ffcc, 0 0 22px #ff00ff99;
+            border-color: #fff;
+            text-shadow: 0 0 7px #00f0ffcc;
         }
-
         .btn-logo img {
-            height: 40px;
-            margin-left: 10px;
+            height: 37px;
+            margin-left: 12px;
             filter: drop-shadow(0 0 10px #ff00ff);
             max-width: none;
         }
-
-        /* Tablets */
-        @media (max-width: 768px) {
-            body {
-                padding: 15px;
-            }
-            
-            .content-container {
-                padding: 30px 40px;
-                max-width: 550px;
-            }
-            
-            img.logo {
-                width: 200px;
-            }
-            
-            h3.center-title {
-                font-size: 1.6rem;
-                margin-bottom: 1.8rem;
-            }
-            
-            .btn-glow {
-                height: 100px;
-                font-size: 1.1rem;
-                padding: 20px 0;
-            }
-            
-            .btn-logo img {
-                height: 35px;
-                margin-left: 8px;
-            }
+        /* Botón "Jugar" ocupa dos columnas pero con mismo estilo */
+        .doble-columna {
+            grid-column: 1 / span 2;
         }
-
-        /* Móviles */
         @media (max-width: 580px) {
-            body {
-                padding: 10px;
-                justify-content: flex-start;
-                padding-top: 40px;
-            }
-            
+            .doble-columna { grid-column: auto; }
+        }
+        @media (max-width: 700px) {
             .content-container {
-                padding: 25px 30px;
-                max-width: 450px;
-                border-radius: 12px;
+                padding: 23px 5vw;
+                max-width: 99vw;
             }
-            
-            img.logo {
-                width: 170px;
-            }
-            
-            h3.center-title {
-                font-size: 1.4rem;
-                margin-bottom: 1.5rem;
-            }
-            
-            .grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            
-            .btn-glow {
-                height: 80px;
-                font-size: 1rem;
-                padding: 15px 0;
-            }
-
-            .btn-jugar {
-                height: 160px;
-                font-size: 1rem;
-                padding: 15px 0;
-            }
-            
-            .btn-logo img {
-                height: 30px;
-                margin-left: 6px;
-            }
+            .grid { grid-template-columns: 1fr; gap: 13px; }
+            .doble-columna { grid-column: auto; }
+            img.logo { width: 150px; }
+        }
+        @media (max-width: 400px) {
+            .content-container { padding: 9px 2vw; }
+            img.logo { width: 110px; }
+            h3.center-title { font-size: 1.17rem; }
+            .btn-glow { padding: 17px 0; font-size: 0.99rem; height: 70px;}
+            .btn-logo img { height: 22px; }
         }
 
-        /* Móviles pequeños */
-        @media (max-width: 420px) {
-            .content-container {
-                padding: 20px 25px;
-                max-width: 350px;
-            }
-            
-            img.logo {
-                width: 140px;
-            }
-            
-            h3.center-title {
-                font-size: 1.2rem;
-                margin-bottom: 1.2rem;
-            }
-            
-            .btn-glow {
-                height: 70px;
-                font-size: 0.9rem;
-                padding: 10px 0;
-            }
-            
-            .btn-logo img {
-                height: 25px;
-                margin-left: 5px;
-            }
+        .participar-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 96%;
+            max-width: 440px;
+            min-width: 130px;
+            margin: 32px auto 10px auto;
+            padding: 20px 0;
+            border-radius: 13px;
+            border: 2.5px solid #05ff9e;
+            background: linear-gradient(97deg, #16ffbc 75%, #00f0ff 100%);
+            color: #122d22;
+            font-size: 1.31rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            box-shadow: 0 0 14px #00ffb4b2;
+            letter-spacing: 2px;
+            text-align: center;
+            text-decoration: none;
+            transition: background 0.18s, color 0.15s, border-color 0.18s, box-shadow 0.18s;
+            user-select: none;
+            outline: none;
         }
-
-        /* Móviles muy pequeños */
-        @media (max-width: 320px) {
-            .content-container {
-                padding: 15px 20px;
-                max-width: 280px;
-            }
-            
-            img.logo {
-                width: 120px;
-            }
-            
-            h3.center-title {
-                font-size: 1.1rem;
-                margin-bottom: 1rem;
-            }
-            
-            .btn-glow {
-                height: 60px;
-                font-size: 0.8rem;
-                padding: 8px 0;
-            }
-            
-            .btn-logo img {
-                height: 20px;
-                margin-left: 4px;
-            }
+        .participar-btn:hover,
+        .participar-btn:focus {
+            background: linear-gradient(97deg, #2affb3 80%, #00fff2 100%);
+            color: #00361e;
+            border-color: #12ffcb;
+            box-shadow: 0 0 28px #05ff9e99, 0 0 4px #fff2;
         }
-.participar-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 98%;
-    max-width: 500px;
-    min-width: 140px;
-    margin: 30px auto 10px auto;
-    padding: 22px 0;
-    border-radius: 11px;
-    border: 2.5px solid #05ff9e;
-    background: #20df84;
-    color: #fff;
-    font-size: 1.35rem;
-    font-family: 'Orbitron', sans-serif;
-    font-weight: bold;
-    box-shadow: 0 0 14px #00ffb4b2;
-    letter-spacing: 2px;
-    text-align: center;
-    text-decoration: none;
-    transition: background 0.18s, color 0.15s, border-color 0.18s, box-shadow 0.18s;
-    user-select: none;
-    outline: none;
-}
-.participar-btn:hover,
-.participar-btn:focus {
-    background: #2affb3;
-    color: #00361e;
-    border-color: #12ffcb;
-    box-shadow: 0 0 28px #05ff9e99, 0 0 4px #fff2;
-}
-.participar-btn.disabled,
-.participar-btn[disabled] {
-    background: #26314a !important;
-    color: #aaa !important;
-    border-color: #333 !important;
-    box-shadow: none !important;
-    cursor: not-allowed !important;
-    pointer-events: none;
-}
-</style>
-
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-@if(session('error'))
-    <div class="alert alert-danger">{{ session('error') }}</div>
-@endif
-
-
+        .participar-btn.disabled,
+        .participar-btn[disabled] {
+            background: #26314a !important;
+            color: #aaa !important;
+            border-color: #333 !important;
+            box-shadow: none !important;
+            cursor: not-allowed !important;
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
-        @php
-    $activeSession = \App\Models\GameSession::where('status', 'active')->latest()->first();
-@endphp
+    <!-- FONDO DE PARTÍCULAS -->
+    <div class="neon-bg-particles">
+        <div class="neon-particle"></div>
+        <div class="neon-particle"></div>
+        <div class="neon-particle"></div>
+        <div class="neon-particle"></div>
+        <div class="neon-particle"></div>
+    </div>
+
+    @php
+        $activeSession = \App\Models\GameSession::where('status', 'active')->latest()->first();
+    @endphp
 
     <div class="content-container">
         <img src="/images/logo.png" alt="Logo Cuanto Sabe" class="logo" />
-        <h3 class="center-title">Centro de Control</h3>
+        <h3 class="center-title">¡Modo invitado! Elegí qué querés hacer:</h3>
 
         <div class="grid">
             <a href="#" class="btn-glow btn-logo">
-                <span>Conoce</span>
+                <span>Conocé</span>
                 <img src="/images/logo.png" alt="Logo">
             </a>
             <a href="#" class="btn-glow">Repeticiones</a>
-            <a href="#" class="btn-jugar">Jugar</a>
+            <a href="#" class="btn-glow doble-columna">Jugar</a>
         </div>
         <div style="width:100%; display:flex; justify-content:center;">
-    @if($activeSession)
-        <a href="{{ route('game.participate') }}"
-           class="participar-btn"
-           style="pointer-events:auto;">
-            Participar
-        </a>
-    @else
-        <a href="#"
-           class="participar-btn disabled"
-           style="pointer-events:none;">
-            Participar
-        </a>
-    @endif
-</div>
-
+            @if($activeSession)
+                <a href="{{ route('game.participate') }}"
+                   class="participar-btn"
+                   style="pointer-events:auto;">
+                    Participar
+                </a>
+            @else
+                <a href="#"
+                   class="participar-btn disabled"
+                   style="pointer-events:none;">
+                    Participar
+                </a>
+            @endif
+        </div>
     </div>
-
 </body>
 </html>

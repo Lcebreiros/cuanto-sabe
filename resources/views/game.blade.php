@@ -2,6 +2,60 @@
 
 @section('content')
 <style>
+.top-panels-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+.panel-superior {
+    flex: 1;
+    min-width: 0; /* Permite que se contraiga si es necesario */
+    max-width: 350px;
+}
+
+.session-info-box {
+    background: #141e35;
+    border-radius: 12px;
+    border: 1.3px solid #00f0ff45;
+    color: #fff;
+    margin: 0; /* Eliminar margen para mejor alineación */
+    padding: 8px 20px;
+    font-size: 1.12rem;
+    box-shadow: 0 0 8px #00f0ff22;
+    /* Eliminar max-width fijo para que se adapte */
+}
+
+.side-queue-static {
+    width: 355px;
+    max-width: 380px;
+    min-width: 260px;
+    z-index: 1200;
+    padding: 26px 28px 20px 28px;
+    margin: 0; /* Eliminar márgenes automáticos */
+    box-sizing: border-box;
+    flex-shrink: 0; /* Evita que se contraiga */
+}
+
+/* Resto del CSS original */
+.page-content-safe {
+    width: 100%;
+    max-width: 100vw;
+    margin: 0;
+    padding-left: max(12px, 2vw);
+    padding-right: max(12px, 2vw);
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+@media (max-width: 600px) {
+    .page-content-safe {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+}
 /* ---- LUZ DE RADIO ---- */
 .radio-light-btn {
     border: none;
@@ -18,6 +72,14 @@
     position: relative;
     transition: background 0.18s, color 0.16s, box-shadow 0.18s, transform 0.15s;
     box-shadow: 0 0 8px #211, 0 0 0 #fff0;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    /* IMPORTANTE: Mantener tamaño fijo SIEMPRE */
+    width: auto !important;
+    min-width: 130px !important;
+    max-width: 240px !important;
 }
 .radio-light-btn .light {
     position: absolute;
@@ -32,37 +94,16 @@
     border: 2px solid #fff2;
     transition: background 0.18s, box-shadow 0.18s, width 0.16s, height 0.16s;
 }
-.radio-light-btn.off .light {
-    background: #ff2d3b;
-    box-shadow: 0 0 14px #ff2d3b99;
-}
-.radio-light-btn.off {
-    background: #2d1313;
-    color: #ff8888;
-    box-shadow: 0 0 16px #ff2d3b30;
-}
-.radio-light-btn.on .light {
-    background: #10ff62;
-    box-shadow: 0 0 22px #10ff628f, 0 0 14px #00ffb7bb inset;
-}
-.radio-light-btn.on {
-    background: #0c3320;
-    color: #00ffb7;
-    box-shadow: 0 0 28px #19ffa990, 0 0 1px #fff6;
-}
+.radio-light-btn.off .light { background: #ff2d3b; box-shadow: 0 0 14px #ff2d3b99; }
+.radio-light-btn.off { background: #2d1313; color: #ff8888; box-shadow: 0 0 16px #ff2d3b30; }
+.radio-light-btn.on .light { background: #10ff62; box-shadow: 0 0 22px #10ff628f, 0 0 14px #00ffb7bb inset; }
+.radio-light-btn.on { background: #0c3320; color: #00ffb7; box-shadow: 0 0 28px #19ffa990, 0 0 1px #fff6; }
 .radio-light-btn:hover, .radio-light-btn:focus {
     filter: brightness(1.09) contrast(1.07);
     transform: scale(1.04);
     box-shadow: 0 0 24px #00f0ff22, 0 0 0 #fff0;
 }
-.radio-light-btn:hover .light,
-.radio-light-btn:focus .light {
-    width: 33px;
-    height: 33px;
-}
-
-.radio-light-btn:hover .light,
-.radio-light-btn:focus .light {
+.radio-light-btn:hover .light, .radio-light-btn:focus .light {
     width: 33px;
     height: 33px;
     box-shadow:
@@ -76,7 +117,7 @@
 /* ---- RESTO DE ESTILOS ---- */
 .neon-btn-min {
     background: #0e1738;
-    color:rgb(255, 255, 255);
+    color: rgb(255,255,255);
     border: 1.5px solid #262b39;
     border-radius: 14px;
     font-size: 1.1rem;
@@ -86,11 +127,7 @@
     margin-right: 10px;
     box-shadow: none;
     letter-spacing: 1px;
-    transition:
-        background 0.2s,
-        color 0.2s,
-        border-color 0.18s,
-        box-shadow 0.18s;
+    transition: background 0.2s, color 0.2s, border-color 0.18s, box-shadow 0.18s;
     outline: none;
     position: relative;
 }
@@ -128,33 +165,10 @@
     color: #fff;
     box-shadow: 0 0 10px #00f0ff44;
 }
-label {
-    color: #61eaff;
-    font-size: 0.97rem;
-    margin-bottom: 2px;
-}
-ul {
-    list-style: none;
-    padding-left: 0;
-    color: #b2e2ff;
-    font-size: 1rem;
-    margin-bottom: 6px;
-}
-ul li {
-    margin-bottom: 2px;
-}
-.session-info-box {
-    background:#141e35;
-    border-radius:12px;
-    border:1.3px solid #00f0ff45;
-    color:#fff;
-    margin-top:3px;
-    margin-bottom:16px;
-    padding:8px 20px;
-    max-width:360px;
-    font-size:1.12rem;
-    box-shadow: 0 0 8px #00f0ff22;
-}
+label { color: #61eaff; font-size: 0.97rem; margin-bottom: 2px; }
+ul { list-style: none; padding-left: 0; color: #b2e2ff; font-size: 1rem; margin-bottom: 6px; }
+ul li { margin-bottom: 2px; }
+
 .radio-light-btn.off:hover .light,
 .radio-light-btn.off:focus .light {
     background: #ff2d3b;
@@ -164,7 +178,6 @@ ul li {
         0 0 30px #ff2d3b99,
         0 0 22px #ff2d3b80;
 }
-
 .radio-light-btn.on:hover .light,
 .radio-light-btn.on:focus .light {
     background: #10ff62;
@@ -177,31 +190,95 @@ ul li {
         0 0 22px #10ff6299;
 }
 
-.side-queue-static {
-    /* position: fixed;   <-- QUITALO */
-    /* right: 50px;      <-- QUITALO */
-    /* top: 38px;        <-- QUITALO */
-    width: 355px;
-    max-width: 380px;
-    min-width: 260px;
-    z-index: 1200;
-    padding: 26px 28px 20px 28px;
-    margin-left: auto;   /* Así sigue pegado a la derecha */
-    margin-right: 50px;  /* O el margen que prefieras */
+/* Media queries para mobile */
+@media (max-width: 700px) {
+    /* En mobile, los paneles superiores van en columna */
+    .top-panels-container {
+        flex-direction: column !important;
+        gap: 14px !important;
+        align-items: stretch !important;
+    }
+    
+    .panel-superior {
+        width: 100% !important;
+    }
+    
+    .session-info-box {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+    
+    .side-queue-static {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 20px 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .page-content-safe > div[style*="display: flex"] {
+        flex-direction: column !important;
+        gap: 14px !important;
+        align-items: stretch !important;
+        width: 100% !important;
+    }
+    .page-content-safe > div > div[style*="display: flex"] {
+        flex-direction: column !important;
+        gap: 10px !important;
+        align-items: stretch !important;
+        width: 100% !important;
+    }
+    /* Botones: SOLO los que no son ON/OFF toman ancho auto, el ON/OFF NO cambia */
+    .neon-btn-min,
+    .custom-btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin-right: 0 !important;
+        margin-bottom: 8px !important;
+        box-sizing: border-box;
+        text-align: center !important;
+        justify-content: center !important;
+    }
+    /* El botón ON/OFF nunca cambia de tamaño en mobile */
+    .radio-light-btn {
+        width: auto !important;
+        min-width: 220px !important;
+        max-width: 340px !important;
+        margin-right: 0 !important;
+        margin-bottom: 8px !important;
+        box-sizing: border-box;
+        text-align: center !important;
+        justify-content: center !important;
+    }
+    /* Botón copiar URL nunca estirado */
+    button[title="Copiar URL del Overlay"] {
+        width: 46px !important;
+        min-width: 46px !important;
+        max-width: 46px !important;
+        margin-bottom: 8px !important;
+        margin-right: 0 !important;
+        padding: 0 !important;
+    }
+    /* Inputs full ancho */
+    .form-control, .form-select {
+        width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box;
+    }
+    /* Panel de pregunta full ancho */
+    #preguntaOverlayPanel {
+        max-width: 100vw !important;
+        width: 100% !important;
+        padding-left: 2vw !important;
+        padding-right: 2vw !important;
+        box-sizing: border-box;
+    }
 }
-
-
-
-/* Asegúrate de que el contenido principal tenga margen derecho */
-.main-content {
-    margin-right: 380px; /* Un poco más que el ancho del panel */
-}
-
 </style>
 
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-9 col-lg-8">
+<div class="page-content-safe">
 
             <h2 style="color: #00f0ff; text-shadow: 0 0 8px #00f0ff; margin-bottom: 18px; font-size: 1.7rem;">
                 Panel de Juego
@@ -215,17 +292,18 @@ ul li {
                 $activeSession = \App\Models\GameSession::where('status', 'active')->latest()->first();
             @endphp
 
-{{-- Contenedor principal con flexbox forzado --}}
-<div style="display: flex !important; 
-            align-items: center !important; 
-            justify-content: space-between !important; 
-            flex-direction: row !important;
-            max-width: 620px; 
-            margin: 0 auto 28px auto;
+<div style="display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            flex-direction: row;
+            width: 100%;
+            max-width: 100vw;
+            margin: 0 0 28px 0;
             gap: 20px;">
+
     
     {{-- Contenedor del botón ON/OFF --}}
-    <div style="display: flex; align-items: center; flex-shrink: 0; margin-left: -55px;">
+<div style="display: flex; align-items: center; flex-shrink: 0;">
         {{-- Luz de radio (Iniciar/Finalizar Juego) --}}
         @if(!$activeSession)
             <button type="button"
@@ -256,7 +334,7 @@ ul li {
     </div>
 
     {{-- Contenedor del botón Overlay y botón copiar --}}
-    <div style="display: flex; align-items: center; flex-shrink: 0; gap: 8px; margin-right: -50px;">
+<div style="display: flex; align-items: center; flex-shrink: 0; gap: 8px; justify-content: center">
         <a href="{{ url('/overlay') }}" 
            target="_blank" 
            class="neon-btn-min"
@@ -414,23 +492,29 @@ document.head.appendChild(style);
 
 {{-- Caja con info de sesión debajo de los botones --}}
 @if($activeSession)
-    <div class="session-info-box">
-        <strong>Invitado:</strong> {{ $activeSession->guest_name }}<br>
-        <strong>Motivo:</strong> {{ $activeSession->motivo->nombre ?? '—' }}
-    </div>
+    <!-- Contenedor que agrupa panel superior y side-queue en la misma línea -->
+    <div class="top-panels-container">
+        <div class="panel-superior">
+            <div class="session-info-box">
+                <strong>Invitado:</strong> {{ $activeSession->guest_name }}<br>
+                <strong>Motivo:</strong> {{ $activeSession->motivo->nombre ?? '—' }}
+            </div>
+        </div>
 
-@php
-    $activeSession = \App\Models\GameSession::where('status', 'active')->latest()->first();
-@endphp
+        @php
+            $activeSession = \App\Models\GameSession::where('status', 'active')->latest()->first();
+        @endphp
 
-<div class="side-queue-static">
-    <div id="queue-container">
-        @include('components.queue-list', [
-            'participants' => $activeSession ? $activeSession->participants : collect([]),
-            'session' => $activeSession,
-        ])
+        <div class="side-queue-static">
+            <div id="queue-container">
+                @include('components.queue-list', [
+                    'participants' => $activeSession ? $activeSession->participants : collect([]),
+                    'session' => $activeSession,
+                ])
+            </div>
+        </div>
     </div>
-</div>
+@endif
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -505,7 +589,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <button type="button" class="neon-btn-min" style="background:#111b2b;color:#19faff;font-weight:bold;" onclick="reiniciarOverlay()">Reiniciar overlay</button>
                     </div>
                 </div>
-            @endif
+
 
             <!-- Botón para mandar pregunta random -->
             @if($activeSession)
@@ -554,36 +638,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<style>
-    /* Estilo personalizado para el botón */
-    .custom-btn {
-        background-color: #007b5e; /* Verde sutil */
-        color: #fff; /* Color del texto */
-        border: 2px solid transparent; /* Sin borde visible */
-        padding: 12px 30px; /* Relleno alrededor del texto */
-        border-radius: 20px; /* Bordes redondeados suaves */
-        font-size: 1.1rem; /* Tamaño de fuente moderado */
-        font-weight: 500; /* Peso de fuente medio para elegancia */
-        letter-spacing: 0.5px; /* Espaciado sutil entre letras */
-        transition: all 0.3s ease; /* Transición suave para efectos */
-        cursor: pointer; /* Cambia el cursor al pasar por encima */
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Sombra sutil para darle profundidad */
-    }
-
-    /* Efecto hover para el botón */
-    .custom-btn:hover {
-        background-color: #006d4d; /* Color de fondo más oscuro en hover */
-        border-color: #006d4d; /* Borde oscuro en hover */
-        transform: translateY(-2px); /* Ligera elevación para un efecto sutil */
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Sombra más suave */
-    }
-
-    /* Efecto focus para el botón cuando tiene el foco */
-    .custom-btn:focus {
-        outline: none; /* Elimina el contorno predeterminado */
-        box-shadow: 0 0 8px rgba(0, 123, 94, 0.5); /* Sombra suave verde cuando está enfocado */
-    }
-</style>
 
                 </form>
             </div>

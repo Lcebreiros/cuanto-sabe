@@ -30,7 +30,8 @@
     margin-bottom: 22px;
     box-shadow: 0 0 13px #19faff32;
     max-width: 370px;
-    width: 96vw;
+    width: 100%;
+    box-sizing: border-box;
 }
 .queue-title {
     color: #00f0ff;
@@ -90,9 +91,17 @@
     margin: 12px 0 7px 0;
 }
 @media (max-width: 700px) {
-    .neon-queue-box { padding: 13px 4vw 10px 4vw; max-width: 98vw;}
-    .queue-title { font-size: 1.04rem; }
+    .neon-queue-box {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: 13px 4px 10px 4px !important; /* Usa 4px si ves que 8px suma mucho */
+        margin: 0 0 22px 0 !important;
+        box-sizing: border-box !important;
+        overflow-x: auto !important;
+    }
 }
+
 </style>
 
 <style>

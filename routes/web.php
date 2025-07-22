@@ -12,7 +12,7 @@ use App\Http\Controllers\GameSessionController;
 Route::get('/', fn() => view('welcome'))->name('home');
 
 // Dashboard para invitados y usuarios autenticados
-Route::get('/guest.dashboard', fn() => view('guest.dashboard'))->name('guest.dashboard');
+Route::get('/guest.dashboard', fn() => view('guest-dashboard'))->name('guest-dashboard');
 Route::get('/dashboard', fn() => view('dashboard'))->middleware(['auth', 'verified'])->name('dashboard');
 
 // Perfil de usuario
