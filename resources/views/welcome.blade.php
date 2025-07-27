@@ -223,6 +223,7 @@
         }
         .content-container.visible {
             animation: appearSoft 1.08s cubic-bezier(.56,.14,.39,.97) forwards;
+            pointer-events: auto; /* <-- CORRECCIÓN: ahora los botones funcionan */
         }
         @keyframes appearSoft {
             0%   { opacity: 0; filter: blur(20px);}
@@ -242,11 +243,6 @@
             margin-left: auto;
             margin-right: auto;
             animation: floatLogo 3.8s ease-in-out infinite alternate;
-           /* border-radius: 18px;*/
-           /* background: rgba(20,0,40,0.16); */
-           /*  padding: 6px 0; */
-            /* box-sizing: border-box; */
-           /*  box-shadow: 0 0 28px #00f0ff60, 0 0 34px #ff00ff11; */
             transition: max-width 0.3s;
         }
         .welcome-title {
@@ -347,7 +343,7 @@
         <h1 class="welcome-title">Bienvenido a</h1>
         <img src="{{ asset('images/logo.png') }}" alt="Logo Cuanto Sabe" class="logo" />
         <div class="btn-group">
-            <a href="{{ route('participants.form') }}" class="btn-glow">Iniciar sesión</a>
+            <a href="{{ route('participants.form', ['redirect' => 'guest-dashboard']) }}" class="btn-glow">Iniciar sesión</a>
             <a href="{{ route('guest-dashboard') }}" class="btn-glow">Entrar como invitado</a>
         </div>
     </div>

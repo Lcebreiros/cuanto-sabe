@@ -9,7 +9,7 @@
                 <li @if($loop->first) class="first" @endif>
                     <span class="neon-queue-num">#{{ $loop->iteration }}</span>
                     <span class="neon-queue-username">{{ $p->username }}</span>
-                    <span class="neon-queue-dni">(****{{ $p->dni_last4 }})</span>
+                    <span class="neon-queue-dni">({{ $p->dni_last4 }})</span>
                     @if($p->status === 'active' || $p->status === 'playing')
                         <span class="neon-queue-playing">(jugando)</span>
                     @endif

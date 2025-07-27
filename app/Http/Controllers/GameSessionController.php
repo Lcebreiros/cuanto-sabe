@@ -11,6 +11,10 @@ use App\Events\ParticipantQueueUpdated;
 use App\Models\ParticipantSession;
 use App\Models\Motivo;
 use App\Models\Categoria;
+use Illuminate\Support\Facades\Cookie;
+use App\Models\ParticipantAnswer;
+use Illuminate\Support\Facades\DB;
+
 
 class GameSessionController extends Controller
 {
@@ -115,11 +119,18 @@ class GameSessionController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function overlayReset(Request $request)
-    {
-        broadcast(new \App\Events\OverlayReset());
-        return response()->json(['success' => true]);
+public function overlayReset(Request $request)
+{
+    // Buscar la sesión de juego activa
+    $session = \App\Models\GameSession::where('status', 'active')->latest()->first();
+    if ($session) {
+        $session->active_question_id = null;
+        $session->save();
     }
+    broadcast(new \App\Events\OverlayReset());
+    return response()->json(['success' => true]);
+}
+
 
     public function queueList($sessionId)
     {
@@ -132,38 +143,66 @@ class GameSessionController extends Controller
         return view('components.queue-list', compact('participants', 'session'));
     }
 
-    public function add(Request $request)
-    {
-        $validated = $request->validate([
-            'participants.0.username' => 'required|string|max:30',
-            'participants.0.dni_last4' => 'required|digits:4',
-        ]);
+public function add(Request $request)
+{
+    $validated = $request->validate([
+        'participants.0.username' => 'required|string|max:30',
+        'participants.0.dni_last4' => 'required|digits:4',
+    ]);
 
-        $session = GameSession::where('status', 'active')->latest()->first();
-        if(!$session) {
-            return back()->with('error', 'No hay sesión activa.');
+    $session = GameSession::where('status', 'active')->latest()->first();
+    if(!$session) {
+        return back()->with('error', 'No hay sesión activa.');
+    }
+
+    $existingParticipant = ParticipantSession::where('game_session_id', $session->id)
+        ->where('username', $validated['participants'][0]['username'])
+        ->where('dni_last4', $validated['participants'][0]['dni_last4'])
+        ->first();
+
+    if($existingParticipant) {
+        // GUARDÁ EL PARTICIPANTE EN SESIÓN Y COOKIE
+        session(['participant_session_id' => $existingParticipant->id]);
+        Cookie::queue('participant_session_id', $existingParticipant->id, 60*24*30); // 30 días
+
+        // 🔁 Redirección inteligente
+        $returnToUrl = session('return_to_url');
+        session()->forget('return_to_url');
+        if ($returnToUrl) {
+            return redirect($returnToUrl)->with('success', 'Ya estás registrado en esta sesión.');
         }
 
-        $existingParticipant = ParticipantSession::where('game_session_id', $session->id)
-            ->where('username', $validated['participants'][0]['username'])
-            ->where('dni_last4', $validated['participants'][0]['dni_last4'])
-            ->first();
+        return back()->with('success', 'Ya estás registrado en esta sesión.');
+    }
 
-        if($existingParticipant) {
-            return back()->with('error', 'Ya estás registrado en esta sesión.');
-        }
+    $participant = new ParticipantSession([
+        'username' => $validated['participants'][0]['username'],
+        'dni_last4' => $validated['participants'][0]['dni_last4'],
+        'game_session_id' => $session->id,
+        'status' => 'waiting',
+        'order' => $session->participants()->max('order') + 1,
+    ]);
+    $participant->save();
 
-        $participant = new ParticipantSession([
-            'username' => $validated['participants'][0]['username'],
-            'dni_last4' => $validated['participants'][0]['dni_last4'],
-            'game_session_id' => $session->id,
-            'status' => 'waiting',
-            'order' => $session->participants()->max('order') + 1,
-        ]);
-        $participant->save();
+    // GUARDÁ EL NUEVO PARTICIPANTE EN SESIÓN Y COOKIE
+    session(['participant_session_id' => $participant->id]);
+    Cookie::queue('participant_session_id', $participant->id, 60*24*30); // 30 días
 
-        broadcast(new ParticipantQueueUpdated($session->id));
-        return redirect()->back()->with('success', '¡Te anotaste en la cola!');
+    broadcast(new ParticipantQueueUpdated($session->id));
+
+    // 🔁 Redirección inteligente
+    $returnToUrl = session('return_to_url');
+    session()->forget('return_to_url');
+    if ($returnToUrl) {
+        return redirect($returnToUrl)->with('success', '¡Te anotaste en la cola!');
+    }
+    // 🔁 Redirección por redirect_after_participant_login
+    $redirect = session('redirect_after_participant_login');
+    if ($redirect) {
+        session()->forget('redirect_after_participant_login');
+        return redirect()->route($redirect)->with('success', '¡Sesión iniciada! Ya podés jugar.');
+    }
+    return back()->with('success', '¡Te anotaste en la cola!');
     }
 
     public function ruletaOverlay()
@@ -201,15 +240,34 @@ public function lanzarPreguntaCategoria(Request $request)
 {
     $categoria = $request->input('categoria');
     $categoriaLower = strtolower($categoria);
-    $specialSlot = $request->input('special_slot'); // <-- esto
+    $specialSlot = $request->input('special_slot');
+
+    $session = GameSession::where('status', 'active')->latest()->first();
+    if (!$session) {
+        return response()->json(['error' => 'No hay sesión activa'], 400);
+    }
 
     if ($categoriaLower === 'random') {
-        $session = GameSession::where('status', 'active')->latest()->first();
-        $motivo = $session ? Motivo::find($session->motivo_id) : null;
+        $motivo = Motivo::find($session->motivo_id);
         $categorias = $motivo ? $motivo->categorias : collect();
         $categoriaModel = $categorias->random();
     } elseif ($categoriaLower === 'pregunta de oro') {
-        // Tu lógica especial si aplica...
+        // Lógica especial para pregunta de oro si la tenés...
+        // Por ahora solo ejemplo
+        $data = [
+            'pregunta' => strtoupper($categoria),
+            'opciones' => [],
+            'label_correcto' => null,
+            'pregunta_id' => null,
+            'categoria_id' => null,
+            'timestamp' => now()->toISOString(),
+            'special_indicator' => $specialSlot ?? strtoupper($categoria),
+        ];
+        // Limpiar pregunta activa en BD
+        $session->active_question_id = null;
+        $session->save();
+        broadcast(new NuevaPreguntaOverlay($data));
+        return response()->json(['ok' => true]);
     } elseif ($categoriaLower === 'responde el chat' || $categoriaLower === 'solo yo') {
         $data = [
             'pregunta' => strtoupper($categoria),
@@ -218,15 +276,18 @@ public function lanzarPreguntaCategoria(Request $request)
             'pregunta_id' => null,
             'categoria_id' => null,
             'timestamp' => now()->toISOString(),
-            // OJO: solo deberías mandar el indicador si **viene el slot especial** desde el frontend:
             'special_indicator' => $specialSlot ?? strtoupper($categoria),
         ];
-        session(['last_overlay_question' => $data]);
+        // Limpiar pregunta activa en BD
+        $session->active_question_id = null;
+        $session->save();
         broadcast(new NuevaPreguntaOverlay($data));
         return response()->json(['ok' => true]);
     } else {
         $categoriaModel = Categoria::where('nombre', $categoria)->first();
-        if (!$categoriaModel) return response()->json(['error' => 'Categoría no encontrada'], 404);
+        if (!$categoriaModel) {
+            return response()->json(['error' => 'Categoría no encontrada'], 404);
+        }
     }
 
     $pregunta = Question::where('category_id', $categoriaModel->id)->inRandomOrder()->first();
@@ -253,21 +314,23 @@ public function lanzarPreguntaCategoria(Request $request)
         }
     }
 
-$data = [
-    'pregunta' => $pregunta->texto,
-    'opciones' => $data_opciones,
-    'label_correcto' => $label_correcto,
-    'pregunta_id' => $pregunta->id,
-    'categoria_id' => $pregunta->category_id,
-    'timestamp' => now()->toISOString(),
-];
+    $data = [
+        'pregunta' => $pregunta->texto,
+        'opciones' => $data_opciones,
+        'label_correcto' => $label_correcto,
+        'pregunta_id' => $pregunta->id,
+        'categoria_id' => $pregunta->category_id,
+        'timestamp' => now()->toISOString(),
+    ];
 
-// SIEMPRE que llegue special_slot, lo sumás:
-if ($specialSlot) {
-    $data['special_indicator'] = $specialSlot;
-}
+    if ($specialSlot) {
+        $data['special_indicator'] = $specialSlot;
+    }
 
-    session(['last_overlay_question' => $data]);
+    // 👉 Guardar la pregunta activa SOLO en la sesión activa:
+    $session->active_question_id = $pregunta->id;
+    $session->save();
+
     broadcast(new NuevaPreguntaOverlay($data));
     return response()->json(['success' => true, 'data' => $data]);
 }
@@ -286,4 +349,214 @@ if ($specialSlot) {
         }
         return response()->json(['ok' => false], 400);
     }
+
+public function participar(Request $request)
+{
+    $participantSessionId = session('participant_session_id');
+    $participant = $participantSessionId
+        ? ParticipantSession::find($participantSessionId)
+        : null;
+
+    if (!$participant) {
+        session(['return_to_url' => url()->full()]);
+        return redirect()->route('participants.form');
+    }
+
+    $session = GameSession::where('status', 'active')->latest()->first();
+
+    $data = null;
+    if ($session && $session->active_question_id) {
+        $pregunta = Question::find($session->active_question_id);
+        if ($pregunta) {
+            $opciones = [
+                ['text' => $pregunta->opcion_correcta],
+                ['text' => $pregunta->opcion_1],
+                ['text' => $pregunta->opcion_2],
+                ['text' => $pregunta->opcion_3],
+            ];
+            shuffle($opciones);
+            $data_opciones = [];
+            $label_correcto = null;
+            foreach ($opciones as $i => $op) {
+                $label = chr(65 + $i);
+                $data_opciones[] = [
+                    'label' => $label,
+                    'texto' => $op['text'],
+                ];
+                if ($label_correcto === null && $op['text'] === $pregunta->opcion_correcta) {
+                    $label_correcto = $label;
+                }
+            }
+            $data = [
+                'pregunta' => $pregunta->texto,
+                'opciones' => $data_opciones,
+                'label_correcto' => $label_correcto,
+                'pregunta_id' => $pregunta->id,
+                'categoria_id' => $pregunta->category_id,
+                'timestamp' => now()->toISOString(),
+            ];
+        }
+    }
+if (!$data) {
+    // 🔥 Limpiá la pregunta anterior de la sesión, así el blade nunca la muestra
+    session()->forget('last_overlay_question');
+    return view('participar', ['sinPregunta' => true]);
+}
+
+
+    // Buscar si ya respondió a la pregunta actual
+    $yaRespondio = null;
+    if ($participant && isset($data['pregunta_id'])) {
+        $yaRespondio = \App\Models\ParticipantAnswer::where('participant_session_id', $participant->id)
+            ->where('question_id', $data['pregunta_id'])
+            ->first();
+    }
+
+    return view('participar', [
+        'pregunta' => $data,
+        'yaRespondio' => $yaRespondio ? $yaRespondio->option_label : null,
+    ]);
+}
+
+
+public function enviarParticipacion(Request $request)
+{
+    $request->validate([
+        'option_label' => 'required|in:A,B,C,D',
+        'question_id' => 'required|exists:questions,id'
+    ]);
+
+    // ⚡️ Obtener el participante desde la session
+    $participantSessionId = session('participant_session_id');
+    $participant = $participantSessionId ? ParticipantSession::find($participantSessionId) : null;
+    if (!$participant) {
+        return redirect()->route('participants.form')->with('error', 'Debes iniciar sesión como participante primero.');
+    }
+
+    // Guardar o actualizar la respuesta
+    ParticipantAnswer::updateOrCreate(
+        [
+            'participant_session_id' => $participant->id,
+            'question_id' => $request->question_id,
+        ],
+        [
+            'option_label' => $request->option_label,
+        ]
+    );
+
+$questionId = $request->question_id;
+$votedOption = $request->option_label;
+
+// Obtener el recuento de votos por opción
+$votes = \App\Models\ParticipantAnswer::where('question_id', $questionId)
+    ->select('option_label', DB::raw('count(*) as total'))
+    ->groupBy('option_label')
+    ->get();
+
+if ($votes->count() === 1) {
+    // Primer voto, tendencia es la opción votada
+    $trendOption = $votedOption;
+    $trendTotal = 1;
+} else {
+    // Busca el máximo de votos
+    $max = $votes->max('total');
+    // Opciones empatadas con ese máximo
+    $candidates = $votes->where('total', $max)->pluck('option_label')->toArray();
+
+    if (in_array($votedOption, $candidates)) {
+        // Si la opción recién votada está entre las empatadas, la tendencia es esa
+        $trendOption = $votedOption;
+    } else {
+        // Si no, toma la primera del array (no debería pasar casi nunca)
+        $trendOption = $candidates[0];
+    }
+    $trendTotal = $max;
+}
+
+if ($trendOption) {
+    broadcast(new \App\Events\TendenciaActualizada([
+        'question_id' => $questionId,
+        'option_label' => $trendOption,
+        'total' => $trendTotal,
+    ]));
+}
+
+
+    return redirect()->back()->with('success', '¡Respuesta enviada!');
+}
+
+public function apiActiveQuestion()
+{
+    $data = session('last_overlay_question', null);
+    if (!$data) {
+        return response()->json(['pregunta' => null]);
+    }
+    return response()->json($data);
+}
+public function limpiarPreguntaParticipante()
+{
+    session()->forget('last_overlay_question');
+    return response()->json(['ok' => true]);
+}
+// Agregar este método al GameSessionController
+
+public function resetParticipante(Request $request)
+{
+    $request->validate([
+        'question_id' => 'required|exists:questions,id'
+    ]);
+
+    $participantSessionId = session('participant_session_id');
+    $participant = $participantSessionId ? ParticipantSession::find($participantSessionId) : null;
+    
+    if (!$participant) {
+        return response()->json(['error' => 'Participante no encontrado'], 404);
+    }
+
+    // Eliminar la respuesta anterior si existe
+    ParticipantAnswer::where('participant_session_id', $participant->id)
+        ->where('question_id', $request->question_id)
+        ->delete();
+
+    return response()->json(['success' => true]);
+}
+public function showParticipantForm(Request $request)
+{
+    // Guarda el redirect sólo si viene en la URL
+    if ($request->has('redirect')) {
+        session(['redirect_after_participant_login' => $request->input('redirect')]);
+    }
+    return view('auth.participants-form');
+}
+public function salirDelJuego(Request $request)
+{
+    // 1. Obtener el ID del participante desde la sesión (antes de forget)
+    $participantSessionId = session('participant_session_id');
+
+    // 2. Borrar la sesión y la cookie
+    session()->forget('participant_session_id');
+    \Cookie::queue(\Cookie::forget('participant_session_id'));
+
+    // 3. Si existe, eliminar el registro del participante (y opcional: sus respuestas)
+    if ($participantSessionId) {
+        // Guardar el game_session_id antes de eliminarlo
+        $participant = \App\Models\ParticipantSession::find($participantSessionId);
+        $sessionId = $participant ? $participant->game_session_id : null;
+
+        // Borra sus respuestas primero, si corresponde
+        \App\Models\ParticipantAnswer::where('participant_session_id', $participantSessionId)->delete();
+        // Borra el participante de la cola
+        \App\Models\ParticipantSession::where('id', $participantSessionId)->delete();
+
+        // **LANZA EL EVENTO AQUÍ**
+        if ($sessionId) {
+            broadcast(new \App\Events\ParticipantQueueUpdated($sessionId));
+        }
+    }
+
+    // 4. Redirigir
+    return redirect()->route('guest-dashboard')->with('success', 'Saliste del juego y tu registro fue eliminado.');
+}
+
+
 }

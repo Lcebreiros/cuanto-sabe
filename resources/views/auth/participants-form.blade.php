@@ -170,7 +170,7 @@
                         div.textContent = '¡Te registraste correctamente! Ya estás en la cola.';
                         form.parentNode.insertBefore(div, form);
                     }
-                    setTimeout(() => window.location.href = '/admin', 3000);
+                    //setTimeout(() => window.location.href = '/admin', 3000);
                 });
             @endif
         });

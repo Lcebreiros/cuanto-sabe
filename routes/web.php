@@ -12,7 +12,7 @@ use App\Http\Controllers\GameSessionController;
 Route::get('/', fn() => view('welcome'))->name('home');
 
 // Dashboard para invitados y usuarios autenticados
-Route::get('/guest.dashboard', fn() => view('guest-dashboard'))->name('guest-dashboard');
+Route::get('/guest-dashboard', fn() => view('guest-dashboard'))->name('guest-dashboard');
 Route::get('/dashboard', fn() => view('dashboard'))->middleware(['auth', 'verified'])->name('dashboard');
 
 // Perfil de usuario
@@ -82,7 +82,7 @@ Route::post('/game-session/select-option', [GameSessionController::class, 'selec
 Route::get('/participants/form', [GameSessionController::class, 'showParticipantForm'])->name('participants.form');
 Route::post('/participants/add', [GameSessionController::class, 'add'])->name('participants.add');
 Route::get('/participants/list', [GameSessionController::class, 'showParticipants'])->name('participants.list');
-Route::get('/participar', fn() => view('auth.participants-form'))->name('participants.form');
+Route::post('/salir-juego', [App\Http\Controllers\GameSessionController::class, 'salirDelJuego'])->name('salir.juego');
 
 // Cola de participantes (queue)
 Route::get('/queue-list/{session}', [GameSessionController::class, 'queueList'])->name('queue-list');
@@ -98,5 +98,11 @@ Route::post('/game-session/girar-ruleta', [GameSessionController::class, 'girarR
 
 Route::post('/game-session/sync-question', [GameSessionController::class, 'syncQuestion'])->name('game-session.sync-question');
 
+Route::get('/participar', [GameSessionController::class, 'participar'])->name('participar');
+Route::post('/participar/enviar', [GameSessionController::class, 'enviarParticipacion'])->name('participar.enviar');
+// En routes/web.php
+Route::get('/api/active-question', [GameSessionController::class, 'apiActiveQuestion']);
+Route::post('/participar/limpiar', [App\Http\Controllers\GameSessionController::class, 'limpiarPreguntaParticipante'])->name('participar.limpiar');
+Route::post('/participar/reset', [GameSessionController::class, 'resetParticipante'])->name('participar.reset');
 
 require __DIR__.'/auth.php';

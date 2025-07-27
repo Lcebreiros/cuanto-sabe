@@ -51,4 +51,18 @@ class User extends Authenticatable
     {
         return $this->dni_ultimo4;
     }
+
+    // En app/Models/User.php
+
+public function participantSessions()
+{
+    return $this->hasMany(ParticipantSession::class);
+}
+
+// Para obtener la sesión activa (puedes ajustar la lógica del "status")
+public function participantSessionActual()
+{
+    return $this->participantSessions()->where('status', 'activo')->latest()->first();
+}
+
 }

@@ -205,6 +205,28 @@
         0 2px 2px #012;
 }
 
+.option-box.tendencia {
+    box-shadow: 0 0 38px #22fa68cc, 0 0 15px #fff7;
+    border: 2.5px solid #22fa68;
+    position: relative;
+}
+.option-box.tendencia::after {
+    content: 'TENDENCIA';
+    position: absolute;
+    top: -16px;
+    right: 22px;
+    background: linear-gradient(90deg, #22fa68 60%, #19faff 100%);
+    color: #122a16;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-weight: 900;
+    padding: 2px 12px;
+    border-radius: 11px;
+    font-size: 0.99rem;
+    box-shadow: 0 0 8px #19faffaa;
+    letter-spacing: 1px;
+    z-index: 2;
+    border: none;
+}
 
 
     </style>
@@ -304,6 +326,11 @@ function toggleAnim(el, showClass, hideClass, mostrar, cb) {
 }
 
 function resetOverlay() {
+        // 🔥 LIMPIA TENDENCIA DE TODAS LAS OPCIONES
+    ['A','B','C','D'].forEach(l => {
+        const optEl = document.getElementById('op'+l);
+        optEl && optEl.classList.remove('tendencia');
+    });
     questionBar.textContent = 'Esperando pregunta...';
     const banner = document.getElementById('indicator-banner');
     banner.textContent = '';
@@ -329,6 +356,12 @@ function resetOverlay() {
 
 
 function showQuestion(data) {
+    // 🔥 LIMPIA TENDENCIA DE TODAS LAS OPCIONES
+    ['A','B','C','D'].forEach(l => {
+        const optEl = document.getElementById('op'+l);
+        optEl && optEl.classList.remove('tendencia');
+    });
+
     window.lastQuestionData = data;
 
     console.log('[DEBUG] showQuestion data:', data);
@@ -385,6 +418,7 @@ function showQuestion(data) {
         toggleAnim(overlay, 'show-up', 'hide-down', true);
     });
 }
+
 
 
 
@@ -493,7 +527,22 @@ window.Echo.channel('overlay-channel')
         .listen('.overlay-reset', () => {
         // 👉 ESTE ES EL QUE HACE QUE EL RESET FUNCIONE DESDE EL PANEL
         resetOverlay();
+    })
+        .listen('.tendencia-actualizada', e => {
+    // Limpia tendencia anterior
+    ['A','B','C','D'].forEach(l => {
+        const optEl = document.getElementById('op'+l);
+        optEl && optEl.classList.remove('tendencia');
     });
+    // Marca la nueva tendencia
+    if (e.data && e.data.option_label) {
+        const tendenciaEl = document.getElementById('op' + e.data.option_label);
+        if (tendenciaEl) {
+            tendenciaEl.classList.add('tendencia');
+        }
+    }
+});
+
 
 // ---- Inicial ----
 resetOverlay();
@@ -787,6 +836,9 @@ function startSpin() {
     stopRequested = false;
     currentSpinSpeed = maxSpeed * (0.87 + Math.random()*0.19);
     selectedSlotIdx = null;
+
+    smoothFrenando = false;
+    targetAngle = null;
 
     function spinLoop() {
         if (!spinning) return;

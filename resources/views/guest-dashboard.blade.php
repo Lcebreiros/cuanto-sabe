@@ -162,7 +162,7 @@
             padding: 20px 0;
             border-radius: 13px;
             border: 2.5px solid #05ff9e;
-            background: linear-gradient(97deg, #16ffbc 75%, #00f0ff 100%);
+            background: linear-gradient(97deg,rgb(7, 155, 44) 75%,rgb(7, 155, 44) 100%);
             color: #122d22;
             font-size: 1.31rem;
             font-family: 'Orbitron', sans-serif;
@@ -192,6 +192,8 @@
             pointer-events: none;
         }
     </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
 </head>
 <body>
     <!-- FONDO DE PARTÍCULAS -->
@@ -203,13 +205,26 @@
         <div class="neon-particle"></div>
     </div>
 
-    @php
-        $activeSession = \App\Models\GameSession::where('status', 'active')->latest()->first();
-    @endphp
+@php
+    use App\Models\ParticipantSession;
+    use App\Models\GameSession;
 
-    <div class="content-container">
-        <img src="/images/logo.png" alt="Logo Cuanto Sabe" class="logo" />
+    $participantId = session('participant_session_id');
+    $participant = $participantId ? ParticipantSession::find($participantId) : null;
+    $activeSession = GameSession::where('status', 'active')->latest()->first();
+@endphp
+
+<div class="content-container">
+    <img src="/images/logo.png" alt="Logo Cuanto Sabe" class="logo" />
+
+    @if($participant)
+        <h3 class="center-title">¡Hola, {{ $participant->username }}!</h3>
+        <div style="color:#19ff8c; font-size:1.02rem; text-align:center; margin-bottom:19px;">
+            Ya estás registrado en la sesión actual.
+        </div>
+    @else
         <h3 class="center-title">¡Modo invitado! Elegí qué querés hacer:</h3>
+    @endif
 
         <div class="grid">
             <a href="#" class="btn-glow btn-logo">
@@ -217,11 +232,11 @@
                 <img src="/images/logo.png" alt="Logo">
             </a>
             <a href="#" class="btn-glow">Repeticiones</a>
-            <a href="#" class="btn-glow doble-columna">Jugar</a>
+            <a href="#" class="btn-glow doble-columna">Jugar demo</a>
         </div>
         <div style="width:100%; display:flex; justify-content:center;">
             @if($activeSession)
-                <a href="{{ route('game.participate') }}"
+                <a href="{{ route('participar') }}"
                    class="participar-btn"
                    style="pointer-events:auto;">
                     Participar
@@ -234,6 +249,63 @@
                 </a>
             @endif
         </div>
+@if($participant)
+    <form id="salirForm" action="{{ route('salir.juego') }}" method="POST" style="margin-top:16px; width:100%; text-align:center;">
+        @csrf
+        <button type="button"
+            onclick="abrirModalSalir()"
+            class="participar-btn"
+            style="background:#350d18; color:#ff6060; border-color:#ff4444; margin-top:10px;">
+            Salir del juego
+        </button>
+    </form>
+@endif
+
+
     </div>
+<div id="modalSalir" style="display:none; position:fixed; z-index:99; top:0; left:0; width:100vw; height:100vh; background:rgba(12,0,36,0.72); backdrop-filter: blur(2px); align-items:center; justify-content:center;">
+    <div style="background:rgba(17,11,42,0.95); border-radius:18px; max-width:340px; margin:auto; padding:32px 24px 24px 24px; box-shadow:0 0 30px #00f0ff55,0 0 50px #ff00ff22; border:2px solid #ff444499; text-align:center; position:relative; display:flex; flex-direction:column; align-items:center;">
+        <div style="font-size:2.3rem; color:#ffe27a; margin-bottom:18px; filter:drop-shadow(0 0 6px #ffe27aaa);">
+            <span style="font-size:2.5rem; vertical-align:middle;">&#9888;</span>
+        </div>
+        <div style="color:#ffd966; font-size:1.11rem; font-weight:bold; margin-bottom:18px;">
+            ¿Seguro que deseas salir del juego?<br>
+            <span style="color:#ff6060;">Se perderá la sesión y el puntaje alcanzado.</span>
+        </div>
+        <div style="display:flex; gap:18px; justify-content:center;">
+            <button onclick="cerrarModalSalir()"
+                style="padding:11px 25px; border-radius:1.4em; border:none; background:#222a37; color:#19ff8c; font-weight:bold; font-size:1.06rem; box-shadow:0 0 8px #00f0ff99; cursor:pointer; transition:background .17s;">
+                Cancelar
+            </button>
+            <button onclick="confirmarSalidaFinal()"
+                style="padding:11px 25px; border-radius:1.4em; border:none; background:#ff4444; color:#fff; font-weight:bold; font-size:1.06rem; box-shadow:0 0 8px #ff444488; cursor:pointer; transition:background .17s;">
+                Sí, salir
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+function abrirModalSalir() {
+    document.getElementById('modalSalir').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+function cerrarModalSalir() {
+    document.getElementById('modalSalir').style.display = 'none';
+    document.body.style.overflow = '';
+}
+function confirmarSalidaFinal() {
+    cerrarModalSalir();
+    document.getElementById('salirForm').submit();
+}
+// Cierra el modal si clickeás fuera del cuadro:
+document.addEventListener('mousedown', function(e){
+    const modal = document.getElementById('modalSalir');
+    const dialog = modal?.querySelector('div[style*="background"]');
+    if(modal && modal.style.display === 'flex' && !dialog.contains(e.target)){
+        cerrarModalSalir();
+    }
+});
+</script>
+
 </body>
 </html>

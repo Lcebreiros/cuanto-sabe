@@ -1,12 +1,12 @@
+@if(Auth::check()) <!-- Verifica si el usuario está autenticado -->
 <nav x-data="{ open: false }" class="bg-[#0c0125] nav-neon-bar nav-elegant-shadow">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
             <div class="flex items-center space-x-4">
                 <!-- Logo -->
                 <a href="{{ route('dashboard') }}" class="shrink-0">
-<x-application-logo class="block h-9 w-auto" />
+                    <x-application-logo class="block h-9 w-auto" />
                 </a>
-
             </div>
 
             <!-- Settings Dropdown -->
@@ -82,3 +82,4 @@
         </div>
     </div>
 </nav>
+@endif <!-- Fin de la condición si el usuario está autenticado -->
