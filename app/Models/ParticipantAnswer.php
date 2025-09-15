@@ -13,6 +13,7 @@ class ParticipantAnswer extends Model
         'participant_session_id',
         'question_id',
         'option_label',
+        'label_correcto',
     ];
 
     // Relación con la sesión de participante

@@ -46,4 +46,22 @@ class Question extends Model
         $this->is_active = false;
         $this->save();
     }
+
+    public function getCorrectLabel()
+{
+    // Busca cuál label corresponde a la opción correcta (A, B, C o D)
+    $opciones = [
+        'A' => $this->opcion_correcta,
+        'B' => $this->opcion_1,
+        'C' => $this->opcion_2,
+        'D' => $this->opcion_3,
+    ];
+    foreach ($opciones as $label => $texto) {
+        if (trim($texto) === trim($this->opcion_correcta)) {
+            return $label;
+        }
+    }
+    return null; // Si no la encuentra
+}
+
 }

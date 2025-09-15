@@ -5,11 +5,16 @@
     </div>
     @if(count($participants))
         <ol class="neon-queue-list">
-            @foreach($participants->sortBy('order') as $p)
-                <li @if($loop->first) class="first" @endif>
+            @foreach($participants->sortByDesc('puntaje') as $p)
+                <li>
                     <span class="neon-queue-num">#{{ $loop->iteration }}</span>
                     <span class="neon-queue-username">{{ $p->username }}</span>
                     <span class="neon-queue-dni">({{ $p->dni_last4 }})</span>
+                    @if(isset($p->puntaje))
+                        <span class="neon-queue-score">
+                            {{ $p->puntaje }} pts
+                        </span>
+                    @endif
                     @if($p->status === 'active' || $p->status === 'playing')
                         <span class="neon-queue-playing">(jugando)</span>
                     @endif
@@ -17,7 +22,7 @@
             @endforeach
         </ol>
     @else
-        <div class="neon-queue-empty">Cola vacía</div>
+        <div class="neon-queue-empty">Sin participantes</div>
     @endif
 </div>
 
@@ -43,45 +48,54 @@
     letter-spacing: 1px;
 }
 .neon-queue-list {
-    padding-left: 20px;
+    padding-left: 6px; /* Mueve la lista levemente a la izquierda */
     margin-bottom: 0;
 }
 .neon-queue-list li {
     margin-bottom: 7px;
     font-weight: 500;
-    font-size: 1.10em;
+    font-size: 1.06em;
     color: #ffe47a;
     display: flex;
     align-items: center;
     border-bottom: 1px dashed #19faff22;
     padding-bottom: 2px;
-}
-.neon-queue-list li.first {
-    color: #00f0ff;
-    font-weight: 700;
-    text-shadow: 0 0 8px #19faff80;
+    gap: 5px;
 }
 .neon-queue-num {
     color: #00f0ff;
-    font-size: 1.03em;
+    font-size: 1.01em;
     font-weight: bold;
     margin-right: 8px;
 }
 .neon-queue-username {
     color: #ffe47a;
     font-weight: bold;
-    margin-right: 10px;
+    margin-right: 9px;
 }
 .neon-queue-dni {
     color: #aee;
     font-size: 0.94em;
-    margin-right: 6px;
+    margin-right: 5px;
+}
+.neon-queue-score {
+    color: #19ff8c;
+    font-weight: 700;
+    font-size: 1em;       /* Más pequeño y elegante */
+    margin-left: 6px;
+    margin-right: 0;
+    text-shadow: 0 0 7px #19ff8c, 0 0 2px #fff3;
+    letter-spacing: 0.3px;
+    background: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    display: inline;
 }
 .neon-queue-playing {
     color: #19ff8c;
     font-weight: bold;
     font-size: 0.97em;
-    margin-left: 11px;
+    margin-left: 8px;
     text-shadow: 0 0 8px #1affd2a5;
 }
 .neon-queue-empty {
@@ -95,19 +109,10 @@
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
-        padding: 13px 4px 10px 4px !important; /* Usa 4px si ves que 8px suma mucho */
+        padding: 13px 4px 10px 4px !important;
         margin: 0 0 22px 0 !important;
         box-sizing: border-box !important;
         overflow-x: auto !important;
     }
-}
-
-</style>
-
-<style>
-@keyframes updatePulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.02); box-shadow: 0 0 20px #19faff66; }
-    100% { transform: scale(1); }
 }
 </style>

@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Motivo;
+use App\Models\Categoria;
 
 class QuestionController extends Controller
 {
     public function index()
     {
-        return view('questions'); // Esta vista debe existir en resources/views/questions.blade.php
+        $motivos     = Motivo::orderBy('nombre')->get();
+        $categorias  = Categoria::with('motivo')->orderBy('nombre')->get();
+
+        return view('questions', compact('motivos', 'categorias'));
     }
 }

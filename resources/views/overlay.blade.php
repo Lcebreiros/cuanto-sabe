@@ -7,164 +7,200 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@700&display=swap" rel="stylesheet">
-    <style>
-        html, body {
-            width: 100vw; height: 100vh; margin: 0; padding: 0;
-            overflow: hidden; background: transparent !important;
-        }
-        body {
-            font-family: 'Orbitron', Arial, sans-serif; color: #fff;
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-            min-height: 100vh; width: 100vw;
-        }
-        .connection-status {
-            position: fixed; top: 20px; right: 20px; width: 12px; height: 12px; border-radius: 50%;
-            background: #ff3f34; z-index: 999; transition: background 0.3s;
-        }
-        .connection-status.connected { background: #13ff79; }
-        .overlay-content {
-            width: 100vw; max-width: 1200px;
-            margin-bottom: 3vh; display: flex; flex-direction: column; align-items: center; z-index: 20;
-        }
-        .question-bar, .answers-row {
-            width: 100%; max-width: 1200px;
-        }
-        .question-bar {
-            min-height: 52px; margin: 0 auto 2vh auto;
-            background: linear-gradient(90deg, #111b2b 80%, #004563 100%);
-            border-radius: 28px; display: flex; align-items: center; justify-content: center;
-            font-size: 1.74rem; font-weight: 700; text-align: center; color: #fff;
-            text-shadow: 0 0 10px #00f0ff; box-shadow: 0 0 15px #19faffb9, 0 0 1px #fff6;
-            border: none; letter-spacing: 1.2px; font-family: 'Orbitron', Arial, sans-serif;
-            transition: box-shadow 0.25s;
-        }
-        .answers-row {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 16px 28px; margin-bottom: 1.3vh;
-        }
-        .option-box {
-            display: flex; align-items: center; justify-content: flex-start;
-            font-size: 1.32rem; background: linear-gradient(90deg, #0b1530 75%, #12375c 100%);
-            color: #fff; padding: 16px 28px 16px 28px; border-radius: 23px;
-            box-shadow: 0 0 14px #19faffaa, 0 0 1px #fff8;
-            font-family: 'Orbitron', Arial, sans-serif; font-weight: 600; position: relative; border: none;
-            min-height: 46px; transition: background 0.12s, box-shadow 0.14s, color 0.15s, transform 0.16s; letter-spacing: 1px;
-        }
-        .option-box .opt-label {
-            font-size: 1.62rem; color: #36ffd0; margin-right: 19px; font-weight: 900; text-shadow: 0 0 8px #1affd2b5;
-        }
-        .option-box .opt-text { flex: 1; font-size: 1.04em; }
-        .option-box .total-votes {
-            font-size: 1.01rem; color: #b7eaff; position: absolute; right: 22px; bottom: 8px; font-weight: 400; text-shadow: 0 0 5px #00f0ff8c;
-        }
-        .option-box.selected, .option-box:hover {
-            background: linear-gradient(90deg, #ffe47a 80%, #e6be2f 100%); color: #333; transform: scale(1.07);
-            box-shadow: 0 0 22px #ffe47a99, 0 0 5px #e6be2f77; z-index: 1;
-        }
-        @keyframes flash-green {0%, 100%{background:linear-gradient(90deg,#0b1530 75%,#12375c 100%);color:#fff;}25%,75%{background:linear-gradient(90deg,#13ff79 70%,#07ce5e 110%);color:#fff;}50%{background:linear-gradient(90deg,#0b1530 75%,#12375c 100%);color:#fff;}}
-        .option-box.correct-flash {animation:flash-green 0.65s 2;}
-        .option-box.correct-final {background:linear-gradient(90deg,#13ff79 80%,#07ce5e 100%);color:#003e18;box-shadow:0 0 33px #15ff99c9,0 0 5px #07ce5e99;}
-        @keyframes flash-red {0%,100%{background:linear-gradient(90deg,#0b1530 75%,#12375c 100%);color:#fff;}25%,75%{background:linear-gradient(90deg,#ff3f34 80%,#d00015 100%);color:#fff;}50%{background:linear-gradient(90deg,#0b1530 75%,#12375c 100%);color:#fff;}}
-        .option-box.incorrect-flash {animation:flash-red 0.65s 2;}
-        .option-box.incorrect-final {background:linear-gradient(90deg,#ff3f34 80%,#d00015 100%);color:#fff;box-shadow:0 0 26px #ff4a4a99;}
-        #ruleta-container {
-            position: relative; width: 440px; height: 440px; margin-bottom: 3vh;
-        }
-        #ruleta-svg {
-            width: 440px; height: 440px; display: block;
-            filter: drop-shadow(0 0 18px #0e1528ee);
-        }
-        #flecha-roja {
-            position: absolute; background: transparent;
-            left: 50%; top: -10px; transform: translateX(-50%);
-            z-index: 20; width: 81.6px; height: 57.8px; pointer-events: none;
-        }
-        #spin-btn {
-            position: absolute; left: 50%; top: 50%;
-            transform: translate(-50%, -50%);
-            width: 85px; height: 85px; border-radius: 50%;
-            border: 2.7px solid #0e1528ee; background:rgb(12, 42, 74);
-            z-index: 21; padding: 0; display: flex; align-items: center; justify-content: center;
-            box-shadow:
-                0 0 26px 9px #2d60a666,
-                0 7px 20px #181b3f88,
-                0 1px 3px #181b3f66,
-                inset 0 0 0 1.2px #153364;
-            cursor: pointer; transition: box-shadow 0.28s, background 0.18s;
-        }
-        #spin-btn:hover {
-            box-shadow:
-                0 0 38px 14px #2987d888,
-                0 0 17px #00f0ff,
-                0 0 13px #ffe47a44,
-                0 6px 20px #0a132bcc;
-            background: #205093;
-        }
-        #spin-btn img {
-            width: 100%; height: 100%; border-radius: 50%; object-fit: contain;
-            background: #181b3f; border: none; box-shadow: none; display: block; padding: 0;
-        }
-        /* Overlay y ruleta: estado oculto y visible con animación */
-.overlay-content, #ruleta-container {
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 0.55s cubic-bezier(.39,.58,.57,1.02), transform 0.55s cubic-bezier(.39,.58,.57,1.02);
-    will-change: opacity, transform;
+ <style>
+    html, body {
+        width: 100vw; height: 100vh; margin: 0; padding: 0;
+        overflow: hidden; background: transparent !important;
+    }
+    body {
+        font-family: 'Orbitron', Arial, sans-serif; color: #fff;
+        display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+        min-height: 100vh; width: 100vw;
+    }
+    .connection-status {
+        position: fixed; top: 20px; right: 20px; width: 12px; height: 12px; border-radius: 50%;
+        background: #ff3f34; z-index: 999; transition: background 0.3s;
+    }
+    .connection-status.connected { background: #13ff79; }
+    .overlay-content {
+        width: 100vw; max-width: 1200px;
+        margin-bottom: 3vh; display: flex; flex-direction: column; align-items: center; z-index: 20;
+    }
+    .question-bar, .answers-row {
+        width: 100%; max-width: 1200px;
+    }
+    .question-bar {
+        min-height: 52px; margin: 0 auto 2vh auto;
+        background: linear-gradient(90deg, #111b2b 80%, #004563 100%);
+        border-radius: 28px; display: flex; align-items: center; justify-content: center;
+        font-size: 1.74rem; font-weight: 700; text-align: center; color: #fff;
+        text-shadow: 0 0 10px #00f0ff; box-shadow: 0 0 15px #19faffb9, 0 0 1px #fff6;
+        border: none; letter-spacing: 1.2px; font-family: 'Orbitron', Arial, sans-serif;
+        transition: box-shadow 0.25s;
+    }
+    .answers-row {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 16px 28px; margin-bottom: 1.3vh;
+    }
+    .option-box {
+        display: flex; align-items: center; justify-content: flex-start;
+        font-size: 1.32rem; background: linear-gradient(90deg, #0b1530 75%, #12375c 100%);
+        color: #fff; padding: 16px 28px 16px 28px; border-radius: 23px;
+        box-shadow: 0 0 14px #19faffaa, 0 0 1px #fff8;
+        font-family: 'Orbitron', Arial, sans-serif; font-weight: 600; position: relative; border: none;
+        min-height: 46px; transition: background 0.12s, box-shadow 0.14s, color 0.15s, transform 0.16s; letter-spacing: 1px;
+    }
+    .option-box .opt-label {
+        font-size: 1.62rem; color: #36ffd0; margin-right: 19px; font-weight: 900; text-shadow: 0 0 8px #1affd2b5;
+    }
+    .option-box .opt-text { flex: 1; font-size: 1.04em; }
+    .option-box .total-votes {
+        font-size: 1.01rem; color: #b7eaff; position: absolute; right: 22px; bottom: 8px; font-weight: 400; text-shadow: 0 0 5px #00f0ff8c;
+    }
+    .option-box.selected, .option-box:hover {
+        background: linear-gradient(90deg, #ffe47a 80%, #e6be2f 100%); color: #333; transform: scale(1.07);
+        box-shadow: 0 0 22px #ffe47a99, 0 0 5px #e6be2f77; z-index: 1;
+    }
+    @keyframes flash-green {0%, 100%{background:linear-gradient(90deg,#0b1530 75%,#12375c 100%);color:#fff;}25%,75%{background:linear-gradient(90deg,#13ff79 70%,#07ce5e 110%);color:#fff;}50%{background:linear-gradient(90deg,#0b1530 75%,#12375c 100%);color:#fff;}}
+    .option-box.correct-flash {animation:flash-green 0.65s 2;}
+    .option-box.correct-final {background:linear-gradient(90deg,#13ff79 80%,#07ce5e 100%);color:#003e18;box-shadow:0 0 33px #15ff99c9,0 0 5px #07ce5e99;}
+    @keyframes flash-red {0%,100%{background:linear-gradient(90deg,#0b1530 75%,#12375c 100%);color:#fff;}25%,75%{background:linear-gradient(90deg,#ff3f34 80%,#d00015 100%);color:#fff;}50%{background:linear-gradient(90deg,#0b1530 75%,#12375c 100%);color:#fff;}}
+    .option-box.incorrect-flash {animation:flash-red 0.65s 2;}
+    .option-box.incorrect-final {background:linear-gradient(90deg,#ff3f34 80%,#d00015 100%);color:#fff;box-shadow:0 0 26px #ff4a4a99;}
+    #ruleta-container {
+        position: relative; width: 440px; height: 440px; margin-bottom: 3vh;
+    }
+    #ruleta-svg {
+        width: 440px; height: 440px; display: block;
+        filter: drop-shadow(0 0 18px #0e1528ee);
+    }
+    #flecha-roja {
+        position: absolute; background: transparent;
+        left: 50%; top: -10px; transform: translateX(-50%);
+        z-index: 20; width: 81.6px; height: 57.8px; pointer-events: none;
+    }
+    #spin-btn {
+        position: absolute; left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        width: 85px; height: 85px; border-radius: 50%;
+        border: 2.7px solid #0e1528ee; background:rgb(12, 42, 74);
+        z-index: 21; padding: 0; display: flex; align-items: center; justify-content: center;
+        box-shadow:
+            0 0 26px 9px #2d60a666,
+            0 7px 20px #181b3f88,
+            0 1px 3px #181b3f66,
+            inset 0 0 0 1.2px #153364;
+        cursor: pointer; transition: box-shadow 0.28s, background 0.18s;
+    }
+    #spin-btn:hover {
+        box-shadow:
+            0 0 38px 14px #2987d888,
+            0 0 17px #00f0ff,
+            0 0 13px #ffe47a44,
+            0 6px 20px #0a132bcc;
+        background: #205093;
+    }
+    #spin-btn img {
+        width: 100%; height: 100%; border-radius: 50%; object-fit: contain;
+        background: #181b3f; border: none; box-shadow: none; display: block; padding: 0;
+    }
+    /* Overlay y ruleta: estado oculto y visible con animación */
+    .overlay-content, #ruleta-container {
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 0.55s cubic-bezier(.39,.58,.57,1.02), transform 0.55s cubic-bezier(.39,.58,.57,1.02);
+        will-change: opacity, transform;
+    }
+    .overlay-content.hide-down { opacity: 0; transform: translateY(80px); pointer-events: none;}
+    .overlay-content.show-up { opacity: 1; transform: translateY(0);}
+    #ruleta-container.hide-up { opacity: 0; transform: translateY(-90px); pointer-events: none;}
+    #ruleta-container.show-down { opacity: 1; transform: translateY(0);}
+    .overlay-content.hide-down {
+        opacity: 0;
+        transform: translateY(60px);
+        pointer-events: none;
+    }
+    .overlay-content.show-up {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    #ruleta-container.hide-up {
+        opacity: 0;
+        transform: translateY(-70px);
+        pointer-events: none;
+    }
+    #ruleta-container.show-down {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .overlay-content {
+        position: relative; /* ¡Esto es clave para el banner absoluto! */
+    }
+    /* TENDENCIA */
+    .option-box.tendencia {
+        box-shadow: 0 0 38px #22fa68cc, 0 0 15px #fff7;
+        border: 2.5px solid #22fa68;
+        position: relative;
+    }
+    .option-box.tendencia::after {
+        content: 'TENDENCIA';
+        position: absolute;
+        top: -16px;
+        right: 22px;
+        background: linear-gradient(90deg, #22fa68 60%, #19faff 100%);
+        color: #122a16;
+        font-family: 'Orbitron', Arial, sans-serif;
+        font-weight: 900;
+        padding: 2px 12px;
+        border-radius: 11px;
+        font-size: 0.99rem;
+        box-shadow: 0 0 8px #19faffaa;
+        letter-spacing: 1px;
+        z-index: 2;
+        border: none;
+    }
+
+    /* ------ TOP BAR: para dejar SIEMPRE el puntaje a la derecha ------ */
+   .top-bar-row {
+    width: 100%;
+    max-width: 1200px;
+    height: 58px; /* Alto fijo real, no min-height! */
+    margin: 0 auto 18px auto;
+    border-radius: 28px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;  /* Cambia stretch por center */
+    justify-content: space-between;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
 }
-.overlay-content.hide-down { opacity: 0; transform: translateY(80px); pointer-events: none;}
-.overlay-content.show-up { opacity: 1; transform: translateY(0);}
-#ruleta-container.hide-up { opacity: 0; transform: translateY(-90px); pointer-events: none;}
-#ruleta-container.show-down { opacity: 1; transform: translateY(0);}
 
-
-/* Overlay desaparece hacia abajo */
-.overlay-content.hide-down {
-    opacity: 0;
-    transform: translateY(60px);
-    pointer-events: none;
-}
-
-/* Overlay aparece desde arriba */
-.overlay-content.show-up {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* Ruleta desaparece hacia arriba */
-#ruleta-container.hide-up {
-    opacity: 0;
-    transform: translateY(-70px);
-    pointer-events: none;
-}
-
-/* Ruleta aparece desde abajo */
-#ruleta-container.show-down {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.overlay-content {
-    position: relative; /* ¡Esto es clave para el banner absoluto! */
-}
-
-/* Banner flotante, siempre arriba del bloque de preguntas */
-#indicator-banner {
-    position: relative;
-    margin-bottom: 18px;
-    margin-top: 0;
-    left: 0;
-    align-self: flex-start;
-    padding: 11px 34px 11px 34px;
-    border-radius: 16px;
-    font-size: 1.23rem;
-    min-width: 260px;
+.banner-holder {
+    min-width: 180px;
     max-width: 390px;
+    width: auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    /* Sin flex-basis fijo */
+}
+
+#indicator-banner {
+    width: 100%;
+    min-width: 140px;
+    max-width: 390px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 22px;
+    border-radius: 22px;
+    font-size: 1.16rem;
     font-family: 'Orbitron', Arial, sans-serif;
     font-weight: 800;
     letter-spacing: 1.6px;
     text-align: left;
-    box-shadow: 0 0 24px #19faff66, 0 0 5px #fff3;
+    box-shadow: 0 0 15px #19faffb9, 0 0 1px #fff6;
     border: none;
-    transition: background 0.25s, color 0.25s, box-shadow 0.25s;
     background: linear-gradient(90deg,#101d2b 85%,#0b2845 100%);
     color: #34faff;
     text-shadow:
@@ -172,71 +208,138 @@
         0 0 8px #0ff0fc77,
         0 0 3px #fff8,
         0 2px 2px #011;
+    transition: background 0.25s, color 0.25s, box-shadow 0.25s;
+}
+#indicator-banner.banner-oro,
+#indicator-banner.banner-verde,
+#indicator-banner.banner-azul {
+    position: relative;
+    overflow: hidden;
+    /* Efecto de borde brillante: */
+    box-shadow:
+      0 0 22px 1.5px rgba(255,228,122,0.45),
+      0 0 8px 1.5px rgba(255,255,255,0.16),
+      0 0 1.5px 0px #000;
 }
 
-/* ---- Glow y colores según tipo especial ---- */
 #indicator-banner.banner-oro {
-    background: linear-gradient(90deg,#332804 85%,#786200 100%);
+    background: radial-gradient(circle at 58% 33%, #786200 0%, #312407 54%, #221b05 100%);
     color: #ffe47a;
-    box-shadow: 0 0 28px #fff18acc, 0 0 16px #ffd70066, 0 0 4px #ffe47a;
-    text-shadow:
-        0 0 9px #ffe47a,
-        0 0 5px #ffe47a,
-        0 2px 2px #191400;
+    border: 2.2px solid #ffe47a;
+    box-shadow:
+      0 0 19px 2px #ffe47a99,
+      0 0 0.5px #fff3,
+      0 0 0px #000;
+    text-shadow: 0 0 6px #ffe47a, 0 2px 2px #191400;
 }
 
 #indicator-banner.banner-verde {
-    background: linear-gradient(90deg,#082a1b 80%,#1ad964 100%);
+    background: radial-gradient(circle at 62% 30%, #1ad964 0%, #17462b 54%, #0b1c12 100%);
     color: #22fa68;
-    box-shadow: 0 0 22px #19faff55, 0 0 16px #22fa6866;
-    text-shadow:
-        0 0 12px #36ffd0bb,
-        0 0 6px #13ff79cc,
-        0 2px 2px #011;
+    border: 2.2px solid #22fa68;
+    box-shadow:
+      0 0 17px 2px #22fa6888,
+      0 0 0.5px #fff2,
+      0 0 0px #000;
+    text-shadow: 0 0 6px #36ffd0bb, 0 2px 2px #011;
 }
 
 #indicator-banner.banner-azul {
-    background: linear-gradient(90deg,#0c243a 80%,#2987d8 100%);
+    background: radial-gradient(circle at 65% 37%, #2987d8 0%, #182b3e 54%, #0a1628 100%);
     color: #36d1ff;
-    box-shadow: 0 0 28px #19faffbb, 0 0 10px #2987d877, 0 0 5px #fff6;
-    text-shadow:
-        0 0 12px #19faffcc,
-        0 0 7px #36d1ff88,
-        0 2px 2px #012;
+    border: 2.2px solid #36d1ff;
+    box-shadow:
+      0 0 19px 2px #36d1ff88,
+      0 0 0.5px #fff2,
+      0 0 0px #000;
+    text-shadow: 0 0 7px #19faffaa, 0 2px 2px #012;
 }
 
-.option-box.tendencia {
-    box-shadow: 0 0 38px #22fa68cc, 0 0 15px #fff7;
-    border: 2.5px solid #22fa68;
-    position: relative;
-}
-.option-box.tendencia::after {
-    content: 'TENDENCIA';
+/* Highlight superior muy sutil */
+#indicator-banner.banner-oro::before,
+#indicator-banner.banner-verde::before,
+#indicator-banner.banner-azul::before {
+    content: "";
     position: absolute;
-    top: -16px;
-    right: 22px;
-    background: linear-gradient(90deg, #22fa68 60%, #19faff 100%);
-    color: #122a16;
-    font-family: 'Orbitron', Arial, sans-serif;
-    font-weight: 900;
-    padding: 2px 12px;
-    border-radius: 11px;
-    font-size: 0.99rem;
-    box-shadow: 0 0 8px #19faffaa;
-    letter-spacing: 1px;
+    left: 12%; top: 0;
+    width: 75%;
+    height: 34%;
+    border-radius: 50% 50% 20% 20% / 55% 55% 16% 16%;
+    background: linear-gradient(to bottom,
+        rgba(255,255,255,0.15) 0%,
+        rgba(255,255,255,0.03) 80%,
+        rgba(255,255,255,0.00) 100%);
+    opacity: 0.19;
     z-index: 2;
+    pointer-events: none;
+    filter: blur(0.5px);
+}
+
+#indicator-banner.banner-oro::after,
+#indicator-banner.banner-verde::after,
+#indicator-banner.banner-azul::after {
+    display: none; /* Eliminamos reflejo secundario */
+}
+
+#indicator-banner:empty { visibility: hidden; }
+
+.guest-points-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 52px;
+    background: linear-gradient(90deg, #111b2b 80%, #004563 100%);
+    border-radius: 22px;
+    box-shadow: 0 0 15px #19faffb9, 0 0 1px #fff6;
+    padding: 0 22px;
+    min-width: 140px;
+    max-width: 260px;
+    margin-left: 10px;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-weight: 500;
+    font-size: 1.74rem; /* ¡Valor grande! */
+    color: #fff;
+    text-shadow: 0 0 10px #00f0ff;
+    letter-spacing: 1.1px;
     border: none;
 }
 
+.guest-points-bar .gp-title {
+    font-size: 1.68rem;  /* 50-60% más chico que el valor */
+    font-weight: 700;
+    margin-right: 9px;
+    margin-left: -5px;
+    color: #fff;            /* Igual que question-bar */
+    text-shadow: 0 0 10px #00f0ff;  /* Igual que question-bar */
+    /*opacity: 0.74;*/
+    letter-spacing: 0.5px;
+}
 
-    </style>
+.guest-points-bar .gp-value {
+    color: #ffe47a;
+    font-size: 1.78rem;  /* Valor grande */
+    font-weight: 900;
+    margin-left: 3px;
+    text-shadow: 0 0 13px #ffe47a99, 0 0 4px #fff7;
+}
+
+
+</style>
+
 </head>
 <body>
     <div class="connection-status" id="connectionStatus"></div>
-    <div class="overlay-content">
-            <div id="indicator-banner"></div>
-
-        <div class="question-bar" id="questionBar">Esperando pregunta...</div>
+<div class="overlay-content">
+  <div class="top-bar-row">
+    <div class="banner-holder">
+      <div id="indicator-banner"></div>
+    </div>
+    <div class="guest-points-bar" id="guestPointsBar">
+      <span class="gp-title">TU PUNTAJE:</span>
+      <span class="gp-value" id="guestPointsValue">0</span>
+    </div>
+  </div>
+  <div class="question-bar" id="questionBar">Esperando pregunta...</div>
         <div class="answers-row">
             <div class="option-box" id="opA">
                 <span class="opt-label">A</span>
@@ -305,6 +408,35 @@ let correctLabel = null;
 let ultimaSeleccionPanel = null;
 const questionBar = document.getElementById('questionBar');
 const options = ['A', 'B', 'C', 'D'];
+
+async function fetchOverlayState() {
+    // 1. Trae la pregunta activa
+    let pregunta = null;
+    try {
+        const res = await fetch('/overlay/api/pregunta');
+        if (res.ok) pregunta = await res.json();
+    } catch (e) { pregunta = null; }
+
+    // 2. Muestra la pregunta si hay, si no, resetea
+    if (pregunta && pregunta.pregunta) {
+        showQuestion(pregunta);
+    } else {
+        resetOverlay();
+    }
+
+    // 3. Trae el puntaje actual del invitado
+    let puntos = 0;
+    try {
+        const res = await fetch('/overlay/api/puntos');
+        if (res.ok) {
+            const json = await res.json();
+            puntos = json.points ?? 0;
+        }
+    } catch (e) {}
+    const val = document.getElementById('guestPointsValue');
+    if (val) val.textContent = puntos;
+}
+
 
 // Helper para animación crossfade (llama a callback opcional al terminar)
 function toggleAnim(el, showClass, hideClass, mostrar, cb) {
@@ -507,41 +639,48 @@ function revealAnswer(data) {
     }
 }
 
-// =========== LISTENERS ECHO (1 bloque, solo 1 vez) ===========
 window.Echo.channel('overlay-channel')
     .listen('.girar-ruleta', () => {
         window.girarRuletaRemoto && window.girarRuletaRemoto();
     })
     .listen('.nueva-pregunta', e => {
-        console.log("[Overlay] Recibido evento nueva-pregunta", e);
-        showQuestion(e.data || e);
+        if (!e.data || !e.data.pregunta) {
+            fetchOverlayState(); // 🚨 Si el evento viene vacío, refrescá del backend
+        } else {
+            showQuestion(e.data || e);
+        }
     })
     .listen('.opcion-seleccionada', e => {
         ultimaSeleccionPanel = e.opcion;
         showSelectedOption(e.opcion);
     })
     .listen('.revelar-respuesta', e => {
-        // Este evento es el que debe disparar revealAnswer
         revealAnswer(e.data || e);
     })
-        .listen('.overlay-reset', () => {
-        // 👉 ESTE ES EL QUE HACE QUE EL RESET FUNCIONE DESDE EL PANEL
+    .listen('.overlay-reset', () => {
         resetOverlay();
+        fetchOverlayState(); // 🚨 Tras un reset, asegurate que la UI quede sincronizada
     })
-        .listen('.tendencia-actualizada', e => {
-    // Limpia tendencia anterior
-    ['A','B','C','D'].forEach(l => {
-        const optEl = document.getElementById('op'+l);
-        optEl && optEl.classList.remove('tendencia');
-    });
-    // Marca la nueva tendencia
-    if (e.data && e.data.option_label) {
-        const tendenciaEl = document.getElementById('op' + e.data.option_label);
-        if (tendenciaEl) {
-            tendenciaEl.classList.add('tendencia');
+    .listen('.tendencia-actualizada', e => {
+        ['A','B','C','D'].forEach(l => {
+            const optEl = document.getElementById('op'+l);
+            optEl && optEl.classList.remove('tendencia');
+        });
+        if (e.data && e.data.option_label) {
+            const tendenciaEl = document.getElementById('op' + e.data.option_label);
+            if (tendenciaEl) {
+                tendenciaEl.classList.add('tendencia');
+            }
         }
-    }
-});
+    })
+    .listen('.GuestPointsUpdated', e => {
+        const bar = document.getElementById('guestPointsBar');
+        const val = document.getElementById('guestPointsValue');
+        if (bar && val) {
+            val.textContent = e.points;
+            bar.style.display = '';
+        }
+    });
 
 
 // ---- Inicial ----
@@ -932,6 +1071,9 @@ document.getElementById('spin-btn').onclick = function() {
 };
 
 drawRuleta(0);
+
+window.addEventListener('DOMContentLoaded', fetchOverlayState);
+
 
 window.girarRuletaRemoto = function() {
     // Esto simula el click en el botón o inicia el giro:

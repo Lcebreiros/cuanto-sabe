@@ -15,6 +15,7 @@ class ParticipantSession extends Model
         'dni_last4',
         'order',
         'status',
+        'puntaje',
     ];
 
     // Relación con la sesión de juego

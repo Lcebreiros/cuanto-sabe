@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class GameSession extends Model
 {
-    protected $fillable = ['guest_name', 'motivo_id', 'status'];
+    protected $fillable = ['guest_name', 'motivo_id', 'status', 'guest_points'];
 
     public function motivo()
     {

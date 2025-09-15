@@ -61,4 +61,5 @@ public function storePregunta(Request $request)
     ]);
     return back()->with('success', 'Pregunta creada correctamente.');
 }
+
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\GameSessionController;
+use App\Http\Controllers\QuestionImportController;
 
 // Ruta raíz
 Route::get('/', fn() => view('welcome'))->name('home');
@@ -23,7 +24,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Panel admin
-Route::middleware(['auth', IsAdmin::class])->get('/admin', fn() => view('admin'))->name('admin');
+//Route::middleware(['auth', IsAdmin::class])->get('/admin', fn() => view('admin'))->name('admin');
 
 // Preguntas (público)
 Route::get('/questions', [QuestionController::class, 'index'])->name('questions');
@@ -34,7 +35,7 @@ Route::middleware(['auth', IsAdmin::class])->group(function () {
     Route::patch('/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('users.updateRole');
     Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::get('/panel', fn() => view('admin'))->name('panel');
+        Route::get('/panel', fn() => view('users'))->name('panel');
         // Aquí podés agregar más rutas admin si necesitas
     });
 });
@@ -77,6 +78,9 @@ Route::post('/game-session/reveal', [GameSessionController::class, 'revealAnswer
 Route::post('/game-session/random-question', [GameSessionController::class, 'sendRandomQuestion'])->name('game-session.random-question');
 Route::post('/game-session/overlay-reset', [GameSessionController::class, 'overlayReset'])->name('game-session.overlay-reset');
 Route::post('/game-session/select-option', [GameSessionController::class, 'selectOption'])->name('game-session.select-option');
+Route::get('/overlay/api/puntos', [GameSessionController::class, 'apiGuestPoints']);
+Route::get('/overlay/api/pregunta', [GameSessionController::class, 'apiActiveQuestion']);
+
 
 // Participantes
 Route::get('/participants/form', [GameSessionController::class, 'showParticipantForm'])->name('participants.form');
@@ -92,8 +96,6 @@ Route::get('/game-sessions/{sessionId}/queue-list', [GameSessionController::clas
 Route::get('/ruleta', [GameSessionController::class, 'ruletaOverlay'])->name('ruleta');
 Route::post('/overlay/lanzar-pregunta', [GameSessionController::class, 'lanzarPreguntaCategoria']);
 
-Route::get('/overlay', [GameSessionController::class, 'ruletaOverlay']);
-
 Route::post('/game-session/girar-ruleta', [GameSessionController::class, 'girarRuleta']);
 
 Route::post('/game-session/sync-question', [GameSessionController::class, 'syncQuestion'])->name('game-session.sync-question');
@@ -104,5 +106,14 @@ Route::post('/participar/enviar', [GameSessionController::class, 'enviarParticip
 Route::get('/api/active-question', [GameSessionController::class, 'apiActiveQuestion']);
 Route::post('/participar/limpiar', [App\Http\Controllers\GameSessionController::class, 'limpiarPreguntaParticipante'])->name('participar.limpiar');
 Route::post('/participar/reset', [GameSessionController::class, 'resetParticipante'])->name('participar.reset');
+Route::post('/salir', [GameSessionController::class, 'salirDelJuego'])->name('salirDelJuego');
+
+// Demo
+// routes/web.php
+Route::view('/demo', 'demo')->name('demo');
+
+Route::get('/questions/import', [QuestionImportController::class, 'create'])->name('questions.import.create');
+Route::post('/questions/import', [QuestionImportController::class, 'store'])->name('questions.import.store');
+
 
 require __DIR__.'/auth.php';
