@@ -394,6 +394,65 @@
         height: fit-content;
     }
 
+    /* ---- LUZ DE RADIO ---- */
+.radio-light-btn {
+    border: none;
+    outline: none;
+    border-radius: 38px;
+    font-size: 1.24rem;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-weight: bold;
+    padding: 12px 30px 12px 60px;
+    margin-right: 10px;
+    letter-spacing: 2px;
+    background: #211;
+    color: #fff;
+    position: relative;
+    transition: background 0.18s, color 0.16s, box-shadow 0.18s, transform 0.15s;
+    box-shadow: 0 0 8px #211, 0 0 0 #fff0;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    /* IMPORTANTE: Mantener tamaño fijo SIEMPRE */
+    width: auto !important;
+    min-width: 130px !important;
+    max-width: 240px !important;
+}
+.radio-light-btn .light {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #ff2d3b;
+    box-shadow: 0 0 14px #ff2d3b99, 0 0 0 #fff0;
+    border: 2px solid #fff2;
+    transition: background 0.18s, box-shadow 0.18s, width 0.16s, height 0.16s;
+}
+.radio-light-btn.off .light { background: #ff2d3b; box-shadow: 0 0 14px #ff2d3b99; }
+.radio-light-btn.off { background: #2d1313; color: #ff8888; box-shadow: 0 0 16px #ff2d3b30; }
+.radio-light-btn.on .light { background: #10ff62; box-shadow: 0 0 22px #10ff628f, 0 0 14px #00ffb7bb inset; }
+.radio-light-btn.on { background: #0c3320; color: #00ffb7; box-shadow: 0 0 28px #19ffa990, 0 0 1px #fff6; }
+.radio-light-btn:hover, .radio-light-btn:focus {
+    filter: brightness(1.09) contrast(1.07);
+    transform: scale(1.04);
+    box-shadow: 0 0 24px #00f0ff22, 0 0 0 #fff0;
+}
+.radio-light-btn:hover .light, .radio-light-btn:focus .light {
+    width: 33px;
+    height: 33px;
+    box-shadow:
+        0 0 30px #ffe78caa,
+        0 0 50px #fff93333,
+        0 0 30px #00ffb7a1,
+        0 0 18px #ff2d3b80,
+        0 0 38px #15ff90c9,
+        0 0 22px #10ff6299;
+}
+
     .random-question-form {
         display: flex;
         gap: 15px;
@@ -560,10 +619,32 @@
         
         <!-- Botón ON/OFF -->
         <div class="power-toggle-container">
-            <button type="button" class="power-btn {{ $activeSession ? 'on' : 'off' }}" onclick="toggleStartForm()">
-                <span class="indicator"></span>
-                {{ $activeSession ? 'ON' : 'OFF' }}
+           @if(!$activeSession)
+            <button type="button"
+                class="radio-light-btn off"
+                onclick="toggleStartForm('formStartGame')"
+                style="display: inline-flex !important; 
+                       align-items: center !important; 
+                       white-space: nowrap !important;
+                       vertical-align: middle !important;">
+                <span class="light"></span>
+                OFF
             </button>
+        @else
+            <form action="{{ route('game-session.end') }}" method="POST" 
+                  style="display: inline-flex !important; margin: 0 !important; padding: 0 !important;">
+                @csrf
+                <button type="submit" 
+                    class="radio-light-btn on"
+                    style="display: inline-flex !important; 
+                           align-items: center !important; 
+                           white-space: nowrap !important;
+                           vertical-align: middle !important;">
+                    <span class="light"></span>
+                    ON
+                </button>
+            </form>
+        @endif
         </div>
     </div>
 
