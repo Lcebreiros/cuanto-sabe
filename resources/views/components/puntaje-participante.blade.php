@@ -1,6 +1,17 @@
 @props(['puntaje'])
 
-<div style="
+@php
+    // Aseguramos que $totalPuntaje siempre tenga un número
+    $totalPuntaje = 0;
+
+    if (is_array($puntaje) && isset($puntaje['total'])) {
+        $totalPuntaje = $puntaje['total'];
+    } elseif (is_numeric($puntaje)) {
+        $totalPuntaje = $puntaje;
+    }
+@endphp
+
+<div id="puntaje-container" style="
     background: linear-gradient(90deg, #001a35ee 0%, #072954ea 100%);
     border: 4px solid #01e3fd66;
     border-radius: 1.5rem;
@@ -36,48 +47,8 @@
         letter-spacing: 0.01em;
         white-space: nowrap;
     ">
-        {{ $puntaje['total'] }}
+        {{ $totalPuntaje }}
     </span>
 </div>
 
-@if(session('participant_session_id'))
-<script>
-    window.PARTICIPANT_SESSION_ID = '{{ session('participant_session_id') }}';
-    console.log("Participant session ID:", window.PARTICIPANT_SESSION_ID);
-
-    if (window.Echo && window.PARTICIPANT_SESSION_ID) {
-        let canal = 'puntaje.' + window.PARTICIPANT_SESSION_ID;
-        console.log("Intentando suscribir a canal:", canal);
-
-window.Echo.channel(canal)
-    .listen('.PuntajeActualizado', function(e) {
-        console.log("EVENTO PuntajeActualizado RECIBIDO!", e);
-        const nuevoPuntaje = (typeof e.puntaje === 'object') ? e.puntaje.total : e.puntaje;
-        let el = document.getElementById('puntaje-num');
-        let container = document.getElementById('puntaje-container');
-        if (el) {
-            let puntajePrevio = parseInt(el.textContent) || 0;
-            el.textContent = nuevoPuntaje;
-            if (container) {
-                container.classList.remove('puntaje-anim-bounce', 'puntaje-anim-shake');
-                setTimeout(function() {
-                    if (nuevoPuntaje > puntajePrevio) {
-                        container.classList.add('puntaje-anim-bounce');
-                    } else if (nuevoPuntaje < puntajePrevio) {
-                        container.classList.add('puntaje-anim-shake');
-                    }
-                }, 15);
-                container.addEventListener('animationend', function limpiarAnim(e) {
-                    container.classList.remove('puntaje-anim-bounce', 'puntaje-anim-shake');
-                    container.removeEventListener('animationend', limpiarAnim);
-                });
-            }
-            console.log("Puntaje DOM actualizado:", nuevoPuntaje);
-        }
-    });
-
-    } else {
-        console.error("Echo o PARTICIPANT_SESSION_ID no disponible.");
-    }
-</script>
-@endif
+{{-- NO HAY SCRIPT AQUÍ - Todo se maneja desde participar.blade.php --}}

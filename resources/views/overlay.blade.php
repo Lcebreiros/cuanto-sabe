@@ -322,9 +322,47 @@
     margin-left: 3px;
     text-shadow: 0 0 13px #ffe47a99, 0 0 4px #fff7;
 }
+.indicator-banner {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-family: sans-serif;
+    border-radius: 8px;
+    border: 2.2px solid;
+    text-shadow: 0 0 7px #19faffaa, 0 2px 2px #012;
+    box-shadow: 0 0 19px 2px #36d1ff88, 0 0 0.5px #fff2, 0 0 0px #000;
+    transition: all 0.3s ease-in-out;
+    z-index: 9999;
+}
+
+/* Banners distintos */
+#apuesta-indicator {
+    background: radial-gradient(circle at 65% 37%, #2987d8 0%, #182b3e 54%, #0a1628 100%);
+    color: #36d1ff;
+    border-color: #36d1ff;
+}
+
+#descarta-indicator {
+    background: radial-gradient(circle at 65% 37%, #d82c2c 0%, #3e1818 54%, #280a0a 100%);
+    color: #ff3636;
+    border-color: #ff3636;
+}
 
 
 </style>
+
+<div style="display: flex; gap: 10px; justify-content: flex-start;">
+    <div id="descarta-indicator" class="indicator-banner" style="display: none;">
+        DESCARTE USADO
+    </div>
+
+    <div id="apuesta-indicator" class="indicator-banner" style="display: none;">
+        APUESTA USADA
+    </div>
+</div>
+
 
 </head>
 <body>
@@ -334,34 +372,33 @@
     <div class="banner-holder">
       <div id="indicator-banner"></div>
     </div>
-    <div class="guest-points-bar" id="guestPointsBar">
-      <span class="gp-title">TU PUNTAJE:</span>
-      <span class="gp-value" id="guestPointsValue">0</span>
-    </div>
+<div class="guest-points-bar" id="guestPointsBar">
+  <span class="gp-value" id="categoryValue">-</span>
+</div>
   </div>
   <div class="question-bar" id="questionBar">Esperando pregunta...</div>
         <div class="answers-row">
             <div class="option-box" id="opA">
                 <span class="opt-label">A</span>
                 <span class="opt-text">Opción A</span>
-                <span class="total-votes">Total: <span class="vote-count">0</span></span>
+                <span class="total-votes"><span class="vote-count"></span></span>
             </div>
             <div class="option-box" id="opB">
                 <span class="opt-label">B</span>
                 <span class="opt-text">Opción B</span>
-                <span class="total-votes">Total: <span class="vote-count">0</span></span>
+                <span class="total-votes"><span class="vote-count"></span></span>
             </div>
         </div>
         <div class="answers-row">
             <div class="option-box" id="opC">
                 <span class="opt-label">C</span>
                 <span class="opt-text">Opción C</span>
-                <span class="total-votes">Total: <span class="vote-count">0</span></span>
+                <span class="total-votes"><span class="vote-count"></span></span>
             </div>
             <div class="option-box" id="opD">
                 <span class="opt-label">D</span>
                 <span class="opt-text">Opción D</span>
-                <span class="total-votes">Total: <span class="vote-count">0</span></span>
+            <span class="total-votes"><span class="vote-count"></span></span>
             </div>
         </div>
     </div>
@@ -409,34 +446,57 @@ let ultimaSeleccionPanel = null;
 const questionBar = document.getElementById('questionBar');
 const options = ['A', 'B', 'C', 'D'];
 
+let isFetching = false;
+let lastFetch = 0;
+const FETCH_COOLDOWN = 2000; // 2 segundos mínimo entre llamadas
+
 async function fetchOverlayState() {
-    // 1. Trae la pregunta activa
-    let pregunta = null;
-    try {
-        const res = await fetch('/overlay/api/pregunta');
-        if (res.ok) pregunta = await res.json();
-    } catch (e) { pregunta = null; }
-
-    // 2. Muestra la pregunta si hay, si no, resetea
-    if (pregunta && pregunta.pregunta) {
-        showQuestion(pregunta);
-    } else {
-        resetOverlay();
+    const now = Date.now();
+    
+    // 🔥 Evitar llamadas duplicadas
+    if (isFetching || (now - lastFetch) < FETCH_COOLDOWN) {
+        console.log('[DEBUG] fetchOverlayState: cooldown activo, skip');
+        return;
     }
-
-    // 3. Trae el puntaje actual del invitado
-    let puntos = 0;
+    
+    isFetching = true;
+    lastFetch = now;
+    
     try {
-        const res = await fetch('/overlay/api/puntos');
-        if (res.ok) {
-            const json = await res.json();
+        // 1. Pregunta activa
+        let pregunta = null;
+        const resP = await fetch('/overlay/api/pregunta');
+        if (resP.ok) pregunta = await resP.json();
+
+        if (pregunta && pregunta.pregunta) {
+            showQuestion(pregunta);
+        } else {
+            resetOverlay();
+        }
+
+        /*
+        let puntos = 0;
+        const resPts = await fetch('/overlay/api/puntos');
+        if (resPts.ok) {
+            const json = await resPts.json();
             puntos = json.points ?? 0;
         }
-    } catch (e) {}
-    const val = document.getElementById('guestPointsValue');
-    if (val) val.textContent = puntos;
+        const val = document.getElementById('guestPointsValue');
+        if (val) val.textContent = puntos;
+        */
+        
+    } catch (e) {
+        console.error('[ERROR] fetchOverlayState:', e);
+    } finally {
+        isFetching = false;
+    }
 }
-
+function updateCategory(categoryName) {
+    const categoryEl = document.getElementById('categoryValue');
+    if (categoryEl) {
+        categoryEl.textContent = categoryName ? categoryName.toUpperCase() : '-';
+    }
+}
 
 // Helper para animación crossfade (llama a callback opcional al terminar)
 function toggleAnim(el, showClass, hideClass, mostrar, cb) {
@@ -476,7 +536,7 @@ function resetOverlay() {
         const optEl = document.getElementById('op' + opt);
         optEl.classList.remove('selected', 'correct-flash', 'correct-final', 'incorrect-flash', 'incorrect-final');
         optEl.querySelector('.opt-text').textContent = 'Opción ' + opt;
-        optEl.querySelector('.vote-count').textContent = '0';
+     //   optEl.querySelector('.vote-count').textContent = '0';
         optEl.style.display = 'flex';
     });
     const ruleta = document.getElementById('ruleta-container');
@@ -484,6 +544,7 @@ function resetOverlay() {
     toggleAnim(overlay, 'show-up', 'hide-down', false, () => {
         toggleAnim(ruleta, 'show-down', 'hide-up', true);
     });
+    updateCategory(null);
 }
 
 
@@ -505,10 +566,10 @@ function showQuestion(data) {
     // SI NO VIENE DE BACKEND, PERO HAY UN SPECIAL PENDIENTE, USALO (SOLO UNA VEZ):
     if (!indicator && pendingSpecialBanner) {
         indicator = pendingSpecialBanner;
-        pendingSpecialBanner = null; // ⚡️ SIEMPRE limpiar después de usar
+        pendingSpecialBanner = null;
         console.log('[DEBUG] Usando pendingSpecialBanner:', indicator);
     } else {
-        pendingSpecialBanner = null; // ⚡️ Por si acaso, limpiar siempre
+        pendingSpecialBanner = null;
     }
 
     // --- LIMPIA CLASES DE COLOR ANTERIORES ---
@@ -521,7 +582,6 @@ function showQuestion(data) {
     } else {
         banner.textContent = indicator.toUpperCase();
         banner.style.display = '';
-        // Asignar color según tipo
         let tipo = indicator.trim().toLowerCase();
         if (tipo === 'pregunta de oro') banner.classList.add('banner-oro');
         else if (tipo === 'solo yo') banner.classList.add('banner-verde');
@@ -530,29 +590,53 @@ function showQuestion(data) {
 
     currentOptions = data.opciones || [];
     correctLabel = data.label_correcto || data.opcion_correcta || null;
-    questionBar.textContent = data.pregunta || 'Pregunta sin texto';
+    ultimaSeleccionPanel = null;
+
+    // ✅ Ocultar el guest-points-bar durante la pantalla de categoría
+    const guestPointsBar = document.getElementById('guestPointsBar');
+    if (guestPointsBar) guestPointsBar.style.display = 'none';
+
+    // ✅ PRIMERO: Mostrar solo la categoría en el question-bar
+    const categoryValue = document.getElementById('categoryValue');
+    const categoria = categoryValue ? categoryValue.textContent : 'CATEGORÍA';
+    questionBar.textContent = categoria;
+
+    // Ocultar todas las opciones inicialmente
     options.forEach(opt => {
         const optEl = document.getElementById('op' + opt);
-        const optData = currentOptions.find(o => o.label === opt);
-        if (optData) {
-            optEl.querySelector('.opt-text').textContent = optData.texto;
-            optEl.style.display = 'flex';
-        } else {
-            optEl.style.display = 'none';
-        }
+        optEl.style.display = 'none';
         optEl.classList.remove('selected', 'correct-flash', 'correct-final', 'incorrect-flash', 'incorrect-final');
-        optEl.querySelector('.vote-count').textContent = '0';
     });
-    ultimaSeleccionPanel = null;
+
+    // Mostrar el overlay con animación
     const ruleta = document.getElementById('ruleta-container');
     const overlay = document.querySelector('.overlay-content');
+    
     toggleAnim(ruleta, 'show-down', 'hide-up', false, () => {
         toggleAnim(overlay, 'show-up', 'hide-down', true);
     });
+
+    // ✅ DESPUÉS DE 10 SEGUNDOS: Mostrar pregunta, opciones Y guest-points-bar
+    setTimeout(() => {
+        questionBar.textContent = data.pregunta || 'Pregunta sin texto';
+        
+        // ✅ Mostrar el guest-points-bar
+        if (guestPointsBar) guestPointsBar.style.display = '';
+        
+        options.forEach(opt => {
+            const optEl = document.getElementById('op' + opt);
+            const optData = currentOptions.find(o => o.label === opt);
+            if (optData) {
+                optEl.querySelector('.opt-text').textContent = optData.texto;
+               // optEl.querySelector('.vote-count').textContent = '0';
+                optEl.style.display = 'flex';
+            } else {
+                // ✅ Si no hay optData, asegurar que esté oculta
+                optEl.style.display = 'none';
+            }
+        });
+    }, 10000); // 10 segundos
 }
-
-
-
 
 // NUEVO: Ruleta se va tras seleccionar opción (llamalo desde showSelectedOption)
 let ruletaOculta = false;
@@ -650,6 +734,25 @@ window.Echo.channel('overlay-channel')
             showQuestion(e.data || e);
         }
     })
+.listen('.GameBonusUpdated', (event) => {
+        console.log('[BONUS] Evento recibido:', event);
+        
+        // Mostrar/ocultar indicador de Apuesta x2
+        const apuestaIndicator = document.getElementById('apuesta-indicator');
+        if (event.apuesta_x2_active) {
+            apuestaIndicator.style.display = 'block';
+        } else {
+            apuestaIndicator.style.display = 'none';
+        }
+        
+        // Mostrar/ocultar indicador de Descarte
+        const descarteIndicator = document.getElementById('descarta-indicator');
+        if (event.descarte_usados > 0) {
+            descarteIndicator.style.display = 'block';
+        } else {
+            descarteIndicator.style.display = 'none';
+        }
+    })
     .listen('.opcion-seleccionada', e => {
         ultimaSeleccionPanel = e.opcion;
         showSelectedOption(e.opcion);
@@ -672,7 +775,8 @@ window.Echo.channel('overlay-channel')
                 tendenciaEl.classList.add('tendencia');
             }
         }
-    })
+    });
+    /*
     .listen('.GuestPointsUpdated', e => {
         const bar = document.getElementById('guestPointsBar');
         const val = document.getElementById('guestPointsValue');
@@ -681,6 +785,7 @@ window.Echo.channel('overlay-channel')
             bar.style.display = '';
         }
     });
+    */
 
 
 // ---- Inicial ----
@@ -713,10 +818,10 @@ const neonGreenText = "#eaffdb"; // Texto claro para verde
 const categories = (window.sessionGame && window.sessionGame.categories) ? window.sessionGame.categories : [];
 const fixedTypes = ["pregunta de oro", "responde el chat", "solo yo", "random"];
 const sizePresets = {
-    "pregunta de oro": 0.05,
-    "responde el chat": 0.12,
-    "solo yo": 0.12,
-    "random": 0.20
+    "pregunta de oro": 0.02,
+    "responde el chat": 0.08,
+    "solo yo": 0.08,
+    "random": 0.27
 };
 
 const slots = categories.map(cat => ({
@@ -1005,6 +1110,7 @@ function finalizeSpin() {
     selectedSlotIdx = getSlotAtAngle(currentAngle);
     let selectedSlot = slots[selectedSlotIdx];
     let selectedCategory = selectedSlot?.label;
+    updateCategory(selectedCategory);
     let slotType = selectedSlot?.type || '';
     let isSpecial = slotType === 'soloyo' || slotType === 'respondeelchat' || slotType === 'preguntadeoro';
 
@@ -1083,9 +1189,6 @@ window.girarRuletaRemoto = function() {
         stopRequested = true;
     }
 };
-
-
-
     </script>
 </body>
 </html>

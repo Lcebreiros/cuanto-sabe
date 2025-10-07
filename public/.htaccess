@@ -5,6 +5,19 @@
 
     RewriteEngine On
 
+    # CRÍTICO: Servir assets de build con la ruta correcta
+    RewriteCond %{REQUEST_URI} ^/build/assets/
+    RewriteRule ^build/assets/(.*)$ public/build/assets/$1 [L]
+    
+    # Servir manifest.json de build
+    RewriteCond %{REQUEST_URI} ^/build/manifest.json$
+    RewriteRule ^build/manifest.json$ public/build/manifest.json [L]
+    
+    # Servir otros assets estáticos del directorio public
+    RewriteCond %{REQUEST_URI} \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ [NC]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ public/$1 [L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

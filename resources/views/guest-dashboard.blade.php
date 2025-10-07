@@ -400,7 +400,7 @@
             @endif
 
             <div class="actions-grid">
-                <a href="#" class="action-btn">
+                <a href="{{ route('about-us') }}" class="action-btn">
                     <span>Conocé</span>
                     <img src="/images/logo.png" alt="Logo" class="btn-icon">
                 </a>

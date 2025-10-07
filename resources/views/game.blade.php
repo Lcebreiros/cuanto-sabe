@@ -3,8 +3,6 @@
 @section('content')
 @php
     $activeSession = \App\Models\GameSession::where('status', 'active')->latest()->first();
-    $categorias = \App\Models\Categoria::all() ?? [];
-    $motivos = \App\Models\Motivo::all() ?? [];
 @endphp
 
 <style>
@@ -503,7 +501,154 @@
     background: linear-gradient(90deg,#22fa68 60%,#19faff 100%);
     color: #0b2314;
 }
+/* Botón Apuesta x2 - azul profesional */
+.apuesta-btn {
+    background-color: #2c3e50; /* gris oscuro apagado */
+    color: #7f8c8d; /* texto gris apagado */
+    border: 2px solid #34495e;
+    border-radius: 50px;
+    padding: 14px 50px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(44, 62, 80, 0.3);
+    transition: all 0.3s ease;
+    min-width: 220px;
+    opacity: 0.5; /* muy apagado por defecto */
+    position: relative;
+}
 
+/* Estado activo */
+.apuesta-btn.on {
+    background: linear-gradient(135deg, #1e90ff 0%, #00bfff 100%);
+    color: #fff;
+    border-color: #00bfff;
+    box-shadow: 
+        0 0 25px rgba(0, 191, 255, 0.8), 
+        0 0 50px rgba(0, 191, 255, 0.5),
+        0 0 5px #fff inset;
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+/* Estado inactivo */
+.apuesta-btn.off {
+    background-color: #1874cd;
+    box-shadow: 0 0 12px rgba(24, 116, 205, 0.4), 0 0 25px rgba(24, 116, 205, 0.2);
+}
+
+/* Botón Descarte - rojo profesional */
+.descarte-btn {
+    background-color: #2c3e50; /* gris oscuro apagado */
+    color: #7f8c8d; /* texto gris apagado */
+    border: 2px solid #34495e;
+    border-radius: 50px;
+    padding: 14px 50px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(44, 62, 80, 0.3);
+    transition: all 0.3s ease;
+    min-width: 220px;
+    opacity: 0.5; /* muy apagado por defecto */
+}
+
+/* Estado activo */
+.descarte-btn.on {
+    background: linear-gradient(135deg, #ff4500 0%, #ff6347 100%);
+    color: #fff;
+    border-color: #ff6347;
+    box-shadow: 
+        0 0 25px rgba(255, 99, 71, 0.8), 
+        0 0 50px rgba(255, 99, 71, 0.5),
+        0 0 5px #fff inset;
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+/* Estado inactivo */
+.descarte-btn.off {
+    background-color: #cd3700;
+    box-shadow: 0 0 12px rgba(205, 55, 0, 0.4), 0 0 25px rgba(205, 55, 0, 0.2);
+}
+
+/* Efecto hover suave */
+.apuesta-btn:hover, .descarte-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+}
+
+.power-toggle-container {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: flex;
+    flex-direction: row;  /* Horizontal */
+    align-items: center;
+    gap: 12px;  /* Espacio entre botones */
+}
+
+.fullscreen-btn-minimal {
+    background: rgba(79, 70, 229, 0.15);
+    color: #818cf8;
+    border: 1.5px solid rgba(129, 140, 248, 0.3);
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;  /* Evita que se comprima */
+}
+
+.fullscreen-btn-minimal:hover {
+    background: rgba(79, 70, 229, 0.25);
+    border-color: rgba(129, 140, 248, 0.5);
+    color: #c7d2fe;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.fullscreen-btn-minimal:active {
+    transform: translateY(0);
+}
+
+.fullscreen-btn-minimal.active {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(52, 211, 153, 0.5);
+    color: #6ee7b7;
+}
+
+.fullscreen-btn-minimal.active:hover {
+    background: rgba(16, 185, 129, 0.3);
+    border-color: rgba(52, 211, 153, 0.7);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.fs-icon {
+    transition: transform 0.3s ease;
+}
+
+.fullscreen-btn-minimal:hover .fs-icon {
+    transform: scale(1.1);
+}
+
+/* Responsive: en móvil apilar verticalmente */
+@media (max-width: 768px) {
+    .power-toggle-container {
+        position: static;
+        flex-direction: column;
+        gap: 10px;
+        align-self: flex-end;
+        margin-bottom: 15px;
+    }
+}
 
     @media (max-width: 1200px) {
         .game-panel-container {
@@ -593,32 +738,132 @@
     <!-- Encabezado con información del invitado -->
     <div class="panel-header">
         <div class="header-content">
-            <div class="guest-info-container">
-                @if($activeSession)
-                    <div class="guest-avatar">
-                        {{ substr($activeSession->guest_name, 0, 1) }}
-                    </div>
-                    <div class="guest-details">
-                        <div class="guest-name">{{ $activeSession->guest_name }}</div>
-                        <div class="guest-meta">
-                            <div class="guest-meta-item">
-                                <strong>Motivo:</strong> {{ $activeSession->motivo->nombre ?? '—' }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="guest-points">
-                        {{ $activeSession->guest_points ?? 0 }} pts
-                    </div>
-                @else
-                    <div class="guest-info-placeholder">
-                        No hay sesión activa
-                    </div>
-                @endif
+<div class="guest-info-container">
+    @if($activeSession)
+        <div class="guest-avatar">
+            {{ substr($activeSession->guest_name, 0, 1) }}
+        </div>
+        <div class="guest-details">
+            <div class="guest-name">{{ $activeSession->guest_name }}</div>
+            <div class="guest-meta">
+                <div class="guest-meta-item">
+                    <strong>Motivo:</strong> {{ $activeSession->motivo->nombre ?? '—' }}
+                </div>
+                <div class="guest-meta-item">
+                <!-- PASTILLA DE MODO (sin texto "Modo:") -->
+                <span class="mode-pill {{ $activeSession->modo_juego }}">
+                    {{ $activeSession->modo_juego === 'express' ? 'Express' : 'Normal' }}
+                </span>
+                </div>
             </div>
+        </div>
+<div class="guest-points">
+    <span id="guestPointsValue">{{ $activeSession->guest_points ?? 0 }}</span> pts
+</div>
+    @else
+        <div class="guest-info-placeholder">
+            No hay sesión activa
+        </div>
+    @endif
+</div>
+
+<style>
+.guest-info-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background-color: #1f1b2e;
+    border-radius: 12px;
+    color: #fff;
+}
+
+.guest-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #4f46e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.guest-details {
+    flex-grow: 1;
+}
+
+.guest-name {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.guest-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 0.85rem;
+    margin-top: 2px;
+}
+
+.guest-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* PASTILLA DE MODO MEJORADA */
+.mode-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.mode-pill::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.mode-pill.normal {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #fff;
+}
+
+.mode-pill.express {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #fff;
+}
+</style>
+
         </div>
         
         <!-- Botón ON/OFF -->
         <div class="power-toggle-container">
+                        <button type="button" 
+            id="fullscreenBtn" 
+            class="fullscreen-btn-minimal" 
+            onclick="toggleFullscreen()"
+            title="Pantalla completa (Ctrl+F)">
+        <!-- Ícono expandir -->
+        <svg class="fs-icon expand" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+        <!-- Ícono contraer -->
+        <svg class="fs-icon compress" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+        </svg>
+    </button>
            @if(!$activeSession)
             <button type="button"
                 class="radio-light-btn off"
@@ -660,6 +905,54 @@
                 Girar Ruleta
             </button>
         </div>
+        <div class="panel-actions">
+    <!-- Botón Apuesta x2 -->
+     @php
+    // calcular límites y disponibles
+    $apuestaLimite = $activeSession ? ($activeSession->isExpress() ? 1 : 2) : 0;
+    $apuestaUsadas = $activeSession ? (int)$activeSession->apuesta_x2_usadas : 0;
+    $apuestaDisponibles = max(0, $apuestaLimite - $apuestaUsadas);
+
+    $descarteLimite = 1; // según tu regla
+    $descarteUsados = $activeSession ? (int)$activeSession->descarte_usados : 0;
+    $descarteDisponibles = max(0, $descarteLimite - $descarteUsados);
+@endphp
+    <form id="form-apuesta-x2">
+        @csrf
+        <button
+            id="apuesta-btn"
+            type="submit"
+            class="bonus-btn apuesta-btn {{ $activeSession && $activeSession->apuesta_x2_active ? 'on' : 'off' }}"
+            data-active="{{ $activeSession && $activeSession->apuesta_x2_active ? '1' : '0' }}"
+            data-usadas="{{ $apuestaUsadas }}"
+            data-limite="{{ $apuestaLimite }}"
+        >
+            <span class="light"></span>
+            <span class="label">
+                {{-- Si quedan 2 mostrar APUESTA X2 (puedes ajustar el texto) --}}
+                APUESTA
+            </span>
+            <span id="apuesta-badge" class="badge" aria-hidden="true">x{{ $apuestaDisponibles }}</span>
+        </button>
+    </form>
+
+    <!-- Botón Descarte -->
+    <form id="form-descarte">
+        @csrf
+        <button
+            id="descarte-btn"
+            type="submit"
+            class="bonus-btn descarte-btn {{ $descarteDisponibles > 0 ? 'on' : 'off' }}"
+            data-usados="{{ $descarteUsados }}"
+            data-limite="{{ $descarteLimite }}"
+        >
+            <span class="light"></span>
+            <span class="label">DESCARTE</span>
+            <span id="descarte-badge" class="badge" aria-hidden="true">x{{ $descarteDisponibles }}</span>
+        </button>
+    </form>
+</div>
+
 
         <!-- Panel de Pregunta -->
         <div class="question-panel">
@@ -673,12 +966,19 @@
                 <button type="button" class="option-btn" id="panelD" style="display:none;" {{ !$activeSession ? 'disabled' : '' }}></button>
             </div>
             <div class="panel-actions">
-                <button type="button" class="panel-action-btn reveal-btn" onclick="revelarRespuesta()" {{ !$activeSession ? 'disabled' : '' }}>
-                    Revelar respuesta
-                </button>
-                <button type="button" class="panel-action-btn reset-btn" onclick="reiniciarOverlay()" {{ !$activeSession ? 'disabled' : '' }}>
-                    Volver a la ruleta
-                </button>
+<button 
+    type="button" 
+    id="revealBtn"
+    class="panel-action-btn reveal-btn" 
+    onclick="revelarRespuesta()" {{ !$activeSession ? 'disabled' : '' }}
+>
+    Revelar respuesta
+</button>
+
+<button type="button" id="botonReiniciar" class="panel-action-btn reset-btn" {{ !$activeSession ? 'disabled' : '' }}>
+    Volver a la ruleta
+</button>
+
             </div>
         </div>
 
@@ -715,31 +1015,144 @@
         </div>
     </div>
 
-    <!-- Formulario Iniciar Juego -->
-    <div id="start-game-form" class="start-game-form">
-        <form action="{{ route('game-session.start') }}" method="POST">
-            @csrf
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Nombre del invitado:</label>
-                    <input type="text" name="guest_name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>Motivo:</label>
-                    <select name="motivo_id" class="form-select" required>
-                        <option value="">Seleccione motivo</option>
-                        @foreach($motivos as $motivo)
-                            <option value="{{ $motivo->id }}">{{ $motivo->nombre }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <button type="submit" class="start-btn">
-                    Iniciar Juego
-                </button>
+<!-- Formulario Iniciar Juego -->
+<div id="start-game-form" class="start-game-form">
+    <form action="{{ route('game-session.start') }}" method="POST">
+        @csrf
+        <div class="form-grid">
+            <!-- Nombre del invitado -->
+            <div class="form-group">
+                <label>Nombre del invitado:</label>
+                <input type="text" name="guest_name" class="form-control" required>
             </div>
-        </form>
-    </div>
+
+            <!-- Motivo -->
+            <div class="form-group">
+                <label>Motivo:</label>
+                <select name="motivo_id" class="form-select" required>
+                    <option value="">Seleccione motivo</option>
+                    @foreach($motivos as $motivo)
+                        <option value="{{ $motivo->id }}">{{ $motivo->nombre }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Modo de juego -->
+                <!-- Modo de juego MEJORADO -->
+                <div class="form-group">
+                    <label>Modo de juego:</label>
+                    <div class="mode-switch-container">
+                        <div class="mode-options">
+                            <div class="mode-option">
+                                <input type="radio" id="mode_normal" name="modo_juego" value="normal" checked>
+                                <label for="mode_normal" class="mode-label">
+                                    <span class="mode-name">Normal</span>
+                                    <span class="mode-target">Meta: 25 puntos</span>
+                                </label>
+                            </div>
+                            <div class="mode-option">
+                                <input type="radio" id="mode_express" name="modo_juego" value="express">
+                                <label for="mode_express" class="mode-label">
+                                    <span class="mode-name">Express</span>
+                                    <span class="mode-target">Meta: 10 puntos</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- Botón Iniciar -->
+            <button type="submit" class="start-btn">Iniciar Juego</button>
+        </div>
+    </form>
 </div>
+
+<!-- CSS del toggle -->
+<style>
+/* SWITCH MEJORADO */
+        .mode-switch-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mode-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 6px;
+            border-radius: 16px;
+            border: 2px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .mode-option {
+            position: relative;
+        }
+
+        .mode-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .mode-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: transparent;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-option input:checked + .mode-label {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .mode-option input:not(:checked) + .mode-label:hover {
+            background: rgba(79, 70, 229, 0.1);
+            border-color: rgba(79, 70, 229, 0.3);
+        }
+
+        .mode-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #e2e8f0;
+            transition: color 0.3s;
+        }
+
+        .mode-option input:checked + .mode-label .mode-name {
+            color: #ffffff;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+        }
+
+        .mode-target {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #94a3b8;
+            transition: color 0.3s;
+        }
+
+        .mode-option input:checked + .mode-label .mode-target {
+            color: #c7d2fe;
+        }
+
+        .mode-option input:checked + .mode-label {
+            opacity: 1;
+        }
+</style>
+
 
 <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.11.3/echo.iife.js"></script>
@@ -754,6 +1167,154 @@ window.Echo = new Echo({
 
 // Estado del botón de ruleta
 let isSpinning = false;
+
+document.addEventListener('DOMContentLoaded', function () {
+    const apuestaForm = document.getElementById('form-apuesta-x2');
+    const descarteForm = document.getElementById('form-descarte');
+
+    const apuestaBtn = document.getElementById('apuesta-btn');
+    const descarteBtn = document.getElementById('descarte-btn');
+
+    const apuestaBadge = document.getElementById('apuesta-badge');
+    const descarteBadge = document.getElementById('descarte-badge');
+
+    // helper UI update
+    function updateApuestaUI(payload) {
+        // payload: { apuesta_x2_active, apuesta_x2_usadas, apuesta_x2_disponibles, modo_juego }
+        const active = !!payload.apuesta_x2_active;
+        const usadas = Number(payload.apuesta_x2_usadas || 0);
+        const disponibles = Number(payload.apuesta_x2_disponibles ?? 0);
+
+        apuestaBtn.classList.toggle('on', active);
+        apuestaBtn.classList.toggle('off', !active);
+        apuestaBtn.dataset.active = active ? '1' : '0';
+        apuestaBtn.dataset.usadas = usadas;
+
+        apuestaBadge.textContent = 'x' + disponibles;
+
+        // si no quedan disponibles, deshabilitar el botón visualmente
+        apuestaBtn.disabled = disponibles <= 0 && !active;
+        if (apuestaBtn.disabled) apuestaBtn.style.opacity = 0.6;
+        else apuestaBtn.style.opacity = 1;
+    }
+
+    function updateDescarteUI(payload) {
+        // payload: { descarte_usados, descarte_disponible (opcional) }
+        const usados = Number(payload.descarte_usados || 0);
+        // si la API devuelve descarte_disponible usalo, sino calcular por limite=1
+        const disponibles = typeof payload.descarte_disponible !== 'undefined'
+            ? (payload.descarte_disponible ? 1 : 0)
+            : Math.max(0, 1 - usados);
+
+        descarteBtn.classList.toggle('on', disponibles > 0);
+        descarteBtn.classList.toggle('off', disponibles <= 0);
+        descarteBadge.textContent = 'x' + disponibles;
+        descarteBtn.disabled = disponibles <= 0;
+        if (descarteBtn.disabled) descarteBtn.style.opacity = 0.6;
+        else descarteBtn.style.opacity = 1;
+    }
+
+    // Fetch: activar/desactivar apuesta
+    apuestaForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        apuestaBtn.disabled = true; // evitar double click
+        fetch("{{ route('game.toggleApuestaX2') }}", {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+        .then(async res => {
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                const err = data.error || 'No se pudo activar la apuesta';
+                alert(err);
+            } else {
+                updateApuestaUI({
+                    apuesta_x2_active: data.apuesta_x2_active,
+                    apuesta_x2_usadas: data.apuesta_x2_usadas,
+                    apuesta_x2_disponibles: data.apuesta_x2_disponibles,
+                    modo_juego: data.modo_juego ?? null
+                });
+
+                // opcional: guardar en session JS si necesitás
+                // sessionStorage.setItem('guest_apuesta_x2', data.apuesta_x2_active ? '1' : '0');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error en la petición (ver consola).');
+        })
+        .finally(() => {
+            apuestaBtn.disabled = false;
+        });
+    });
+
+    // Fetch: usar descarte
+    descarteForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        descarteBtn.disabled = true;
+        fetch("{{ route('game.toggleDescarte') }}", {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+        .then(async res => {
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                const err = data.error || 'No se pudo usar el descarte';
+                alert(err);
+            } else {
+                updateDescarteUI({
+                    descarte_usados: data.descarte_usados ?? data.descarteUsados,
+                    descarte_disponible: data.descarte_disponible ?? (data.descarte_usados < 1)
+                });
+
+                // si el descarte lanza una nueva pregunta aquí puedes manejarlo (por ejemplo refrescar overlay)
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error en la petición (ver consola).');
+        })
+        .finally(() => {
+            descarteBtn.disabled = false;
+        });
+    });
+
+    // Escuchar broadcasts en overlay-channel -> GameBonusUpdated
+    try {
+        if (window.Echo) {
+            window.Echo.channel('overlay-channel')
+                .listen('.GameBonusUpdated', (payload) => {
+                    // payload ejemplo: { apuesta_x2_active, apuesta_x2_usadas, descarte_usados, modo_juego }
+                    // Acomodar nombres si tu backend envía sin prefijos
+                    updateApuestaUI({
+                        apuesta_x2_active: payload.apuesta_x2_active ?? payload.apuesta_x2Active,
+                        apuesta_x2_usadas: payload.apuesta_x2_usadas ?? payload.apuesta_x2Usadas,
+                        apuesta_x2_disponibles: (payload.modo_juego ? ((payload.modo_juego === 'express') ? 1 : 2) : (Number(apuestaBtn.dataset.limite || 2))) - (payload.apuesta_x2_usadas ?? 0),
+                        modo_juego: payload.modo_juego
+                    });
+
+                    updateDescarteUI({
+                        descarte_usados: payload.descarte_usados ?? payload.descarteUsados,
+                        // si el backend no envía descarte_disponible, lo calculamos
+                    });
+                });
+        }
+    } catch (e) {
+        console.warn('Echo/Pusher no disponible: live updates deshabilitadas.', e);
+    }
+
+});
+
 
 // Funciones JavaScript
 function toggleStartForm() {
@@ -786,25 +1347,55 @@ function girarRuleta() {
     });
 }
 
+let lastOverlayQuestion = null;
+
+
+// Función de revelar
 function revelarRespuesta() {
+    if (!lastOverlayQuestion) {
+        console.warn("No hay pregunta activa aún");
+        return;
+    }
+
     fetch("{{ route('game-session.reveal') }}", {
         method: "POST",
         headers: {
             "X-CSRF-TOKEN": "{{ csrf_token() }}",
             "Content-Type": "application/json"
         }
-    });
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            console.log("Respuesta revelada correctamente");
+        } else {
+            console.warn("No se pudo revelar:", data.error);
+        }
+    })
+    .catch(err => console.error("Error al revelar:", err));
 }
 
+// Asignar onclick
+const revealBtn = document.getElementById('revealBtn');
+if (revealBtn) revealBtn.onclick = revelarRespuesta;
+
+
+let overlayResetting = false;
+
 function reiniciarOverlay() {
+    if (overlayResetting) return;
+    overlayResetting = true;
+
     fetch("{{ route('game-session.overlay-reset') }}", {
         method: "POST",
         headers: {
             "X-CSRF-TOKEN": "{{ csrf_token() }}",
             "Content-Type": "application/json"
         }
+    }).finally(() => {
+        overlayResetting = false;
     });
-    
+
     document.getElementById('textoPreguntaPanel').textContent = 'Pregunta aún no enviada';
     ['A','B','C','D'].forEach(l => {
         const btn = document.getElementById('panel'+l);
@@ -814,11 +1405,20 @@ function reiniciarOverlay() {
         btn.classList.remove('selected','trend');
         btn.dataset.baseText = '';
     });
-    
+
     if (isSpinning) {
         toggleSpinButton();
     }
 }
+
+// Asociar el listener después de que el DOM esté cargado
+document.addEventListener('DOMContentLoaded', () => {
+    const boton = document.getElementById('botonReiniciar');
+    if (boton) {
+        boton.addEventListener('click', reiniciarOverlay);
+    }
+});
+
 
 function enviarPreguntaRandom(e) {
     e.preventDefault();
@@ -887,77 +1487,117 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     @endif
 
-    // --- Overlay channel: nueva pregunta + tendencia + reset ---
-    if (window.Echo) {
-        const overlay = Echo.channel('overlay-channel');
+// --- Overlay channel: nueva pregunta + tendencia + reset ---
+if (window.Echo) {
+    const overlay = Echo.channel('overlay-channel');
+    Echo.channel('overlay-channel')
+        .listen('.GameBonusUpdated', (event) => {
+            console.log('[PANEL] Evento bonus recibido:', event);
 
-        // Nueva pregunta
-        overlay.listen('.nueva-pregunta', (e) => {
-            const data = e.data || e || {};
-            const pregunta = data.pregunta || (data.data ? data.data.pregunta : '') || '';
-            const opciones = data.opciones || (data.data ? data.data.opciones : []) || [];
-
-            const txt = document.getElementById('textoPreguntaPanel');
-            if (txt) txt.textContent = pregunta || 'Pregunta aún no enviada';
-
-            ['A','B','C','D'].forEach((l) => {
-                const btn = document.getElementById('panel'+l);
-                if (!btn) return;
-                const opcion = opciones.find(op => op.label === l);
-
-                if (opcion) {
-                    btn.style.display = '';
-                    const base = `${l}: ${opcion.texto}`;
-                    btn.dataset.baseText = base;   // guardar el texto base
-                    btn.textContent = base;
+            // Actualizar botón Apuesta x2
+            const btnApuesta = document.querySelector('.apuesta-btn');
+            if(btnApuesta){
+                if(event.apuesta_x2_active){
+                    btnApuesta.classList.add('on');
+                    btnApuesta.classList.remove('off');
                 } else {
-                    btn.style.display = 'none';
-                    btn.dataset.baseText = '';
-                    btn.textContent = '';
+                    btnApuesta.classList.remove('on');
+                    btnApuesta.classList.add('off');
                 }
-                btn.classList.remove('selected','trend');
-            });
+            }
 
-            // Sincronizar pregunta con backend
-            fetch("{{ route('game-session.sync-question') }}", {
-                method: "POST",
-                headers: {
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ pregunta: data })
-            }).catch(err => console.error('sync-question error', err));
-        });
-
-        // Tendencia actualizada
-        overlay.listen('.tendencia-actualizada', (e) => {
-            // Tu evento envía $data, así que lo leo desde e.data
-            const payload = e.data || {};
-            const label = payload.option_label; // 'A' | 'B' | 'C' | 'D'
-            const total = payload.total;
-
-            // limpiar tendencia previa
-            ['A','B','C','D'].forEach(l => {
-                const btn = document.getElementById('panel'+l);
-                if (!btn) return;
-                btn.classList.remove('trend');
-                if (btn.dataset.baseText) btn.textContent = btn.dataset.baseText;
-            });
-
-            // marcar nueva tendencia
-            if (label) {
-                const btn = document.getElementById('panel'+label);
-                if (btn) {
-                    btn.classList.add('trend');
-                    const base = btn.dataset.baseText || btn.textContent || label;
-                    btn.textContent = `${base} — Tendencia (${total})`;
+            // Actualizar botón Descarte
+            const btnDescarte = document.querySelector('.descarte-btn');
+            if(btnDescarte){
+                if(event.descarte_usados > 0){
+                    btnDescarte.classList.add('on');
+                    btnDescarte.classList.remove('off');
+                } else {
+                    btnDescarte.classList.remove('on');
+                    btnDescarte.classList.add('off');
                 }
             }
         });
 
-        // Reset overlay
-        overlay.listen('.overlay-reset', reiniciarOverlay);
-    }
+    // Nueva pregunta
+    overlay.listen('.nueva-pregunta', (e) => {
+        const data = e.data || e || {};
+        const pregunta = data.pregunta || (data.data ? data.data.pregunta : '') || '';
+        const opciones = data.opciones || (data.data ? data.data.opciones : []) || [];
+
+        // 🔥 GUARDAR EN VARIABLE GLOBAL
+        lastOverlayQuestion = data;
+        console.log('✅ Pregunta guardada en lastOverlayQuestion:', lastOverlayQuestion);
+
+        const txt = document.getElementById('textoPreguntaPanel');
+        if (txt) txt.textContent = pregunta || 'Pregunta aún no enviada';
+
+        ['A','B','C','D'].forEach((l) => {
+            const btn = document.getElementById('panel'+l);
+            if (!btn) return;
+            const opcion = opciones.find(op => op.label === l);
+
+            if (opcion) {
+                btn.style.display = '';
+                const base = `${l}: ${opcion.texto}`;
+                btn.dataset.baseText = base;
+                btn.textContent = base;
+            } else {
+                btn.style.display = 'none';
+                btn.dataset.baseText = '';
+                btn.textContent = '';
+            }
+            btn.classList.remove('selected','trend');
+        });
+
+        // Sincronizar pregunta con backend
+        fetch("{{ route('game-session.sync-question') }}", {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ pregunta: data })
+        })
+        .then(res => res.json())
+        .then(result => {
+            console.log('✅ Pregunta sincronizada con backend:', result);
+        })
+        .catch(err => console.error('❌ Error al sincronizar:', err));
+    });
+
+    // Tendencia actualizada
+    overlay.listen('.tendencia-actualizada', (e) => {
+        const payload = e.data || {};
+        const label = payload.option_label;
+        const total = payload.total;
+
+        // limpiar tendencia previa
+        ['A','B','C','D'].forEach(l => {
+            const btn = document.getElementById('panel'+l);
+            if (!btn) return;
+            btn.classList.remove('trend');
+            if (btn.dataset.baseText) btn.textContent = btn.dataset.baseText;
+        });
+
+        // marcar nueva tendencia
+        if (label) {
+            const btn = document.getElementById('panel'+label);
+            if (btn) {
+                btn.classList.add('trend');
+                const base = btn.dataset.baseText || btn.textContent || label;
+                btn.textContent = `${base} — Tendencia (${total})`;
+            }
+        }
+    });
+
+    // Reset overlay
+    overlay.listen('.overlay-reset', () => {
+        lastOverlayQuestion = null; // 🔥 LIMPIAR AL RESETEAR
+        console.log('🔄 Overlay reseteado, lastOverlayQuestion limpiado');
+        reiniciarOverlay();
+    });
+}
 
     // Deshabilitar funcionalidades si no hay sesión activa
     if (!@json($activeSession ? true : false)) {
@@ -966,6 +1606,104 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+        // Animación al cambiar de modo
+        document.querySelectorAll('input[name="modo_juego"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const label = this.nextElementSibling;
+                label.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    label.style.transform = '';
+                }, 200);
+            });
+        });
+if (window.Echo) {
+    Echo.channel('overlay-channel')
+        .listen('.GuestPointsUpdated', e => {
+            const val = document.getElementById('guestPointsValue');
+            if (val) {
+                val.textContent = e.points; // actualiza el valor
+            }
+        });
+}
+
+if (window.Echo) {
+    Echo.channel('overlay-channel')
+        .listen('.revelar-respuesta', (e) => {
+            const payload = e.data || {};
+
+            // Actualizar texto de tendencia en botones
+            ['A','B','C','D'].forEach(l => {
+                const btn = document.getElementById('panel'+l);
+                if (!btn) return;
+                btn.classList.remove('trend');
+                if (btn.dataset.baseText) btn.textContent = btn.dataset.baseText;
+            });
+
+            if (payload.tendencia?.option_label) {
+                const trendBtn = document.getElementById('panel'+payload.tendencia.option_label);
+                if (trendBtn) {
+                    trendBtn.classList.add('trend');
+                    const base = trendBtn.dataset.baseText || '';
+                    trendBtn.textContent = `${base} — Tendencia (${payload.tendencia.total})`;
+                }
+            }
+
+            // Aquí podés actualizar puntajes y overlay según payload
+            console.log(payload);
+        });
+}
+// Función para activar/desactivar pantalla completa
+function toggleFullscreen() {
+    const btn = document.getElementById('fullscreenBtn');
+    const expandIcon = btn.querySelector('.expand');
+    const compressIcon = btn.querySelector('.compress');
+    
+    if (!document.fullscreenElement) {
+        // Entrar en pantalla completa
+        document.documentElement.requestFullscreen().then(() => {
+            btn.classList.add('active');
+            btn.title = 'Salir de pantalla completa (ESC)';
+            expandIcon.style.display = 'none';
+            compressIcon.style.display = 'block';
+        }).catch(err => {
+            console.error('Error al activar pantalla completa:', err);
+        });
+    } else {
+        // Salir de pantalla completa
+        document.exitFullscreen().then(() => {
+            btn.classList.remove('active');
+            btn.title = 'Pantalla completa (Ctrl+F)';
+            expandIcon.style.display = 'block';
+            compressIcon.style.display = 'none';
+        }).catch(err => {
+            console.error('Error al salir de pantalla completa:', err);
+        });
+    }
+}
+
+// Listener para detectar cambios de pantalla completa (ESC)
+document.addEventListener('fullscreenchange', () => {
+    const btn = document.getElementById('fullscreenBtn');
+    const expandIcon = btn.querySelector('.expand');
+    const compressIcon = btn.querySelector('.compress');
+    
+    if (!document.fullscreenElement) {
+        btn.classList.remove('active');
+        btn.title = 'Pantalla completa (Ctrl+F)';
+        expandIcon.style.display = 'block';
+        compressIcon.style.display = 'none';
+    }
+});
+
+// Atajo de teclado: Ctrl+F
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'f' && e.ctrlKey) {
+        e.preventDefault();
+        toggleFullscreen();
+    }
+});
+
 </script>
 
 @endsection

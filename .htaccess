@@ -1,34 +1,21 @@
 <IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
-
+    Options -MultiViews -Indexes
     RewriteEngine On
 
-    # Servir assets estáticos directamente (CSS, JS, imágenes, etc.)
-    RewriteCond %{REQUEST_URI} ^/build/
-    RewriteRule ^build/(.*)$ public/build/$1 [L]
-    
-    # Servir otros assets del directorio public
-    RewriteCond %{REQUEST_URI} \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ [NC]
+    # Redirigir todo a index.php si no es un archivo o carpeta existente
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^(.*)$ public/$1 [L]
-
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
-    # Handle X-XSRF-Token Header
-    RewriteCond %{HTTP:x-xsrf-token} .
-    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
-
-    # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
-
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+
+    # Cacheo básico para assets estáticos
+    <FilesMatch "\.(jpg|jpeg|png|gif|ico|svg|css|js|woff|woff2|ttf|eot)$">
+        ExpiresActive On
+        ExpiresDefault "access plus 1 month"
+        Header set Cache-Control "public"
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Permitir headers para CSRF/XSRF de Livewire
+    Header set Access-Control-Allow-Origin "*"
 </IfModule>

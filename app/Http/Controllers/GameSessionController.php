@@ -15,26 +15,43 @@ use Illuminate\Support\Facades\Cookie;
 use App\Models\ParticipantAnswer;
 use Illuminate\Support\Facades\DB;
 use App\Services\GamePointsService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class GameSessionController extends Controller
 {
-    public function start(Request $request)
+        protected function getActiveSessionCached($ttlSeconds = 8)
     {
-        $request->validate([
-            'guest_name' => 'required|string|max:50',
-            'motivo_id' => 'required|exists:motivos,id',
-        ]);
-
-        GameSession::where('status', 'active')->update(['status' => 'ended']);
-
-        $session = GameSession::create([
-            'guest_name' => $request->guest_name,
-            'motivo_id' => $request->motivo_id,
-            'status' => 'active',
-        ]);
-
-        return redirect()->back()->with('success', '¡Juego iniciado para ' . $session->guest_name . '!');
+        return Cache::remember("game_session_active", $ttlSeconds, function () {
+            return GameSession::where('status', 'active')->latest()->first();
+        });
     }
+    public function start(Request $request)
+{
+    $request->validate([
+        'guest_name' => 'required|string|max:50',
+        'motivo_id' => 'required|exists:motivos,id',
+        'modo_juego' => 'required|in:normal,express',
+    ]);
+
+    GameSession::where('status', 'active')->update(['status' => 'ended']);
+
+    $session = GameSession::create([
+        'guest_name' => $request->guest_name,
+        'motivo_id' => $request->motivo_id,
+        'status' => 'active',
+        'modo_juego' => $request->modo_juego,
+        // inicializar contadores explícitamente
+        'apuesta_x2_active' => false,
+        'apuesta_x2_usadas' => 0,
+        'descarte_usados' => 0,
+    ]);
+
+    \Cache::forget('game_session_active');
+
+    $modoTexto = $session->isExpress() ? 'Express (10 pts)' : 'Normal (25 pts)';
+    return redirect()->back()->with('success', "¡Juego iniciado para {$session->guest_name} en modo {$modoTexto}!");
+}
 
     public function end()
 {
@@ -51,107 +68,137 @@ class GameSessionController extends Controller
     return redirect()->back()->with('success', 'Juego finalizado y participantes eliminados.');
 }
 
+public function cambiarModo(Request $request, $id)
+{
+    $request->validate([
+        'modo_juego' => 'required|in:normal,express',
+    ]);
+
+    $gameSession = GameSession::findOrFail($id);
+
+    $gameSession->modo_juego = $request->modo_juego;
+    $gameSession->save();
+
+    // Ejemplo de uso de los helpers para lógica adicional
+    if ($gameSession->isExpress()) {
+        // lógica específica para modo express
+    } elseif ($gameSession->isNormal()) {
+        // lógica específica para modo normal
+    }
+
+    return response()->json([
+        'message' => 'Modo de juego actualizado con éxito',
+        'data' => $gameSession
+    ]);
+}
+
 
 public function revealAnswer(Request $request)
 {
-    // 1) Recuperar la última pregunta enviada al overlay
-    $data = session('last_overlay_question', null);
-    if (!$data) {
-        return response()->json(['error' => 'No hay pregunta activa en sesión'], 400);
-    }
-
-    // 2) Sesión activa
-    $session = \App\Models\GameSession::where('status', 'active')->latest()->first();
-
-    // 3) PREGUNTA DE ORO: suma 5 y termina
-    if (
-        $session &&
-        isset($data['special_indicator']) &&
-        strcasecmp($data['special_indicator'], 'PREGUNTA DE ORO') === 0
-    ) {
-        $session->guest_points = ($session->guest_points ?? 0) + 5;
-        $session->save();
-        broadcast(new \App\Events\GuestPointsUpdated($session->id, $session->guest_points));
-
-        // Revelar en overlay y salir
-        broadcast(new \App\Events\RevealAnswerOverlay($data));
-        return response()->json(['success' => true, 'golden' => true]);
-    }
-
-    // 4) Puntaje del invitado SEGÚN TENDENCIA (solo para preguntas con opciones)
-    if ($session && isset($data['label_correcto']) && isset($data['pregunta_id'])) {
-        $selectedOption = session('selected_guest_option', null); // 'A' | 'B' | 'C' | 'D'
-        if ($selectedOption) {
-            // 4.1) Calcular TENDENCIA (mayoría del chat) para esta pregunta dentro de la sesión
-            $votes = \App\Models\ParticipantAnswer::whereHas('participantSession', function($q) use ($session) {
-                    $q->where('game_session_id', $session->id);
-                })
-                ->where('question_id', $data['pregunta_id'])
-                ->select('option_label', \DB::raw('count(*) as total'))
-                ->groupBy('option_label')
-                ->get();
-
-            $trendOption = null; // 'A' | 'B' | 'C' | 'D' | null (si no hay mayoría)
-            if ($votes->isNotEmpty()) {
-                $max = $votes->max('total');
-                $candidates = $votes->where('total', $max)->pluck('option_label')->values();
-                // Si hay más de un candidato con el mismo máximo => empate => sin mayoría
-                if ($candidates->count() === 1) {
-                    $trendOption = $candidates[0];
-                } else {
-                    $trendOption = null; // sin mayoría
-                }
+    try {
+        $data = session('last_overlay_question', null);
+        \Log::info('🔴 REVEAL: Sesión PHP', ['data' => $data]);
+        
+        if (!$data) {
+            $session = $this->getActiveSessionCached(5);
+            if ($session && $session->pregunta_json) {
+                $data = json_decode($session->pregunta_json, true);
+                \Log::info('🟡 REVEAL: Recuperado de BD', ['data' => $data]);
+                session(['last_overlay_question' => $data]);
             }
+        }
+        
+        if (!$data) {
+            \Log::warning('🔴 REVEAL: No hay pregunta activa');
+            return response()->json(['error' => 'No hay pregunta activa en sesión'], 400);
+        }
 
-            // 4.2) Aplicar REGLAS
-            $correctLabel  = $data['label_correcto'];
-            $guestCorrect  = ($selectedOption === $correctLabel);
-            $trendCorrect  = ($trendOption !== null && $trendOption === $correctLabel);
+        $session = $this->getActiveSessionCached(5);
+        if (!$session) {
+            return response()->json(['error' => 'No hay sesión activa'], 400);
+        }
 
-            $delta = 0;
-            if ($guestCorrect && $trendCorrect) {
-                $delta = 2;
-            } elseif ($guestCorrect && !$trendCorrect) {
-                $delta = 3;
-            } elseif (!$guestCorrect && $trendCorrect) {
-                $delta = -2;
-            } else {
-                // Ninguno acierta o no hay mayoría
-                $delta = -2;
-            }
+        $gamePoints = app(\App\Services\GamePointsService::class);
 
-            $session->guest_points = ($session->guest_points ?? 0) + $delta;
+        $delta = 0;
+        $tendencia = null;
 
-            // Si preferís no permitir negativos para el invitado, descomentá:
-            // $session->guest_points = max(0, $session->guest_points);
+        $selectedOption = session('selected_guest_option', null);
 
+        if ($selectedOption && isset($data['label_correcto'], $data['pregunta_id'])) {
+            // Calcular puntaje invitado
+            $delta = $gamePoints->calcularPuntajeInvitado(
+                $session->id,
+                $selectedOption,
+                $data['pregunta_id'],
+                $data['label_correcto'],
+                false,
+                false,
+                null
+            );
+
+            // Actualizar puntos del invitado
+            $session->guest_points = ($session->guest_points ?? 0) + (int)$delta;
             $session->save();
+
+            // Emitir evento para actualizar puntaje en vivo
             broadcast(new \App\Events\GuestPointsUpdated($session->id, $session->guest_points));
 
-            // Limpiar la opción del invitado para la próxima pregunta
             session()->forget('selected_guest_option');
+
+            // Calcular tendencia del público
+            $tendencia = $gamePoints->calcularTendencia($session->id, $data['pregunta_id']);
         }
-    } else {
-        // Preguntas especiales como "Responde el chat" o "Solo yo" no alteran puntaje del invitado aquí.
-        session()->forget('selected_guest_option');
-    }
 
-    // 5) Recalcular puntajes de TODOS LOS PARTICIPANTES (igual que ya hacías)
-    if ($session) {
-        $participants = $session->participants()->get();
-        foreach ($participants as $participant) {
-            $puntaje = \App\Services\GamePointsService::calcularPuntaje($participant->id);
-            $participant->puntaje = $puntaje['total'];
-            $participant->save();
+        // ✅ PUNTAJES DE PARTICIPANTES - INDIVIDUAL
+        $participantIds = $session->participants()->pluck('id')->toArray();
+        $puntajes = $gamePoints->calcularPuntajesParticipantes($participantIds, $session->id);
 
-            broadcast(new \App\Events\PuntajeActualizado($participant->id, $puntaje));
+        // ✅ DISPARAR EVENTO INDIVIDUAL PARA CADA PARTICIPANTE
+        foreach ($puntajes as $participantId => $puntajeTotal) {
+            \Log::info('📤 Enviando PuntajeActualizado', [
+                'participant_id' => $participantId,
+                'puntaje' => $puntajeTotal,
+                'canal' => 'puntaje.' . $participantId
+            ]);
+            
+            broadcast(new \App\Events\PuntajeActualizado($participantId, $puntajeTotal));
         }
-        broadcast(new \App\Events\ParticipantQueueUpdated($session->id));
-    }
 
-    // 6) Revelar en overlay
-    broadcast(new \App\Events\RevealAnswerOverlay($data));
-    return response()->json(['success' => true]);
+        // Racha del público
+        $rachaPublico = $gamePoints->verificarTendenciaPublico($session->id);
+
+        // Verificar victoria del invitado
+        $victoria = $gamePoints->verificarVictoriaInvitado($session->id);
+
+        // ✅ Broadcast general con toda la data necesaria
+        broadcast(new \App\Events\RevealAnswerOverlay([
+            'pregunta_id' => $data['pregunta_id'],
+            'label_correcto' => $data['label_correcto'],
+            'opciones' => $data['opciones'] ?? [],
+            'pregunta' => $data['pregunta'] ?? '',
+            'delta_invitado' => $delta,
+            'puntaje_invitado' => $session->guest_points,
+            'puntajes_participantes' => $puntajes, // Para el overlay del host
+            'tendencia' => $tendencia,
+            'racha_publico' => $rachaPublico,
+            'victoria' => $victoria,
+            'golden' => ($data['special_indicator'] ?? null) === 'PREGUNTA DE ORO',
+        ]));
+
+        \Log::info('✅ REVEAL: Completado exitosamente', [
+            'participantes_notificados' => count($puntajes)
+        ]);
+        
+        return response()->json(['success' => true]);
+        
+    } catch (\Throwable $e) {
+        \Log::error('❌ Error en revealAnswer: '.$e->getMessage(), [
+            'exception' => $e,
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json(['error' => 'Ocurrió un error al procesar la petición'], 500);
+    }
 }
 
     public function sendRandomQuestion(Request $request)
@@ -225,15 +272,23 @@ public function selectOption(Request $request)
 
 public function overlayReset(Request $request)
 {
-    $session = \App\Models\GameSession::where('status', 'active')->latest()->first();
+    $session = $this->getActiveSessionCached(5);
+
     if ($session) {
-        $session->active_question_id = null;
-        $session->pregunta_json = null; // ← AGREGA ESTA LÍNEA
-        $session->save();
+        if ($session->active_question_id !== null || $session->pregunta_json !== null) {
+            $session->active_question_id = null;
+            $session->pregunta_json = null;
+            $session->save();
+            Cache::forget("game_session_active");
+
+            // broadcast solo si hubo write real
+            broadcast(new \App\Events\OverlayReset());
+        }
     }
-    broadcast(new \App\Events\OverlayReset());
+
     return response()->json(['success' => true]);
 }
+
 
 
 
@@ -356,6 +411,9 @@ public function lanzarPreguntaCategoria(Request $request)
         return response()->json(['error' => 'No hay sesión activa'], 400);
     }
 
+    // ✅ Obtener ID de la pregunta anterior para no repetirla
+    $preguntaAnteriorId = $session->active_question_id;
+
     // Si es random, buscar una categoría random del motivo
     if ($categoriaLower === 'random') {
         $motivo = Motivo::find($session->motivo_id);
@@ -379,6 +437,9 @@ public function lanzarPreguntaCategoria(Request $request)
         $session->active_question_id = null;
         $session->pregunta_json = null;
         $session->save();
+        
+        session(['last_overlay_question' => $data]);
+        
         broadcast(new NuevaPreguntaOverlay($data));
         return response()->json(['ok' => true]);
     }
@@ -396,6 +457,9 @@ public function lanzarPreguntaCategoria(Request $request)
         $session->active_question_id = null;
         $session->pregunta_json = null;
         $session->save();
+        
+        session(['last_overlay_question' => $data]);
+        
         broadcast(new NuevaPreguntaOverlay($data));
         return response()->json(['ok' => true]);
     }
@@ -407,8 +471,22 @@ public function lanzarPreguntaCategoria(Request $request)
         }
     }
 
-    // Pregunta aleatoria de la categoría
-    $pregunta = Question::where('category_id', $categoriaModel->id)->inRandomOrder()->first();
+    // ✅ BUSCAR PREGUNTA ALEATORIA EXCLUYENDO LA ANTERIOR
+    $query = Question::where('category_id', $categoriaModel->id);
+    
+    // Excluir la pregunta anterior si existe
+    if ($preguntaAnteriorId) {
+        $query->where('id', '!=', $preguntaAnteriorId);
+    }
+    
+    $pregunta = $query->inRandomOrder()->first();
+    
+    // Si no hay más preguntas (solo había 1 y era la anterior), permitir repetirla
+    if (!$pregunta) {
+        \Log::warning('⚠️ No hay más preguntas disponibles, permitiendo repetir');
+        $pregunta = Question::where('category_id', $categoriaModel->id)->inRandomOrder()->first();
+    }
+    
     if (!$pregunta) {
         return response()->json(['error' => 'No hay preguntas disponibles en esta categoría: '.$categoriaModel->nombre], 404);
     }
@@ -448,15 +526,22 @@ public function lanzarPreguntaCategoria(Request $request)
         $data['special_indicator'] = $specialSlot;
     }
 
-    // Guardar la pregunta en la sesión activa
+    // Guardar la pregunta en la sesión activa (BD)
     $session->active_question_id = $pregunta->id;
     $session->pregunta_json = json_encode($data);
     $session->save();
+    
+    session(['last_overlay_question' => $data]);
+    
+    \Log::info('🟢 PREGUNTA GUARDADA', [
+        'pregunta_id' => $pregunta->id, 
+        'label_correcto' => $label_correcto,
+        'anterior_id' => $preguntaAnteriorId
+    ]);
 
     broadcast(new NuevaPreguntaOverlay($data));
     return response()->json(['success' => true, 'data' => $data]);
 }
-
 
     public function girarRuleta() {
         broadcast(new \App\Events\GirarRuleta());
@@ -501,7 +586,18 @@ public function participar(Request $request)
     }
 
     // SIEMPRE calcular puntaje, y si es null, poner en 0
-    $puntaje = $participant ? \App\Services\GamePointsService::calcularPuntaje($participant->id) : ['total' => 0, 'detalles' => []];
+// obtener session/servicio
+$session = GameSession::where('status', 'active')->latest()->first();
+$gamePoints = app(\App\Services\GamePointsService::class);
+
+if ($participant && $session) {
+    // recalculamos puntajes usando el método de lote que ya existe en el service
+    $puntajesMap = $gamePoints->calcularPuntajesParticipantes([$participant->id], $session->id);
+    // $puntajesMap debería ser algo como [participant_id => ['total'=>X,'detalles'=>...]]
+    $puntaje = $puntajesMap[$participant->id] ?? ['total' => 0, 'detalles' => []];
+} else {
+    $puntaje = ['total' => 0, 'detalles' => []];
+}
 
     // SIEMPRE pasar participant y puntaje a la vista
     return view('participar', [
@@ -609,13 +705,20 @@ public function enviarParticipacion(Request $request)
 
 public function apiActiveQuestion()
 {
-    $session = \App\Models\GameSession::where('status', 'active')->latest()->first();
-    // Si no hay sesión activa, o no hay pregunta activa, devolvé null
-    if (!$session || !$session->pregunta_json) {
+    // 🔥 Aumentar TTL y evitar writes innecesarios
+    $session = Cache::remember("game_session_active_question", 8, function () {
+        $session = GameSession::where('status', 'active')->latest()->first();
+        return $session ? [
+            'pregunta_json' => $session->pregunta_json,
+            'id' => $session->id
+        ] : null;
+    });
+
+    if (!$session || !$session['pregunta_json']) {
         return response()->json(['pregunta' => null]);
     }
-    // Devolvé el JSON completo de la pregunta
-    return response()->json(json_decode($session->pregunta_json, true));
+    
+    return response()->json(json_decode($session['pregunta_json'], true));
 }
 
 public function limpiarPreguntaParticipante()
@@ -685,10 +788,64 @@ public function salirDelJuego(Request $request)
 // En GameSessionController:
 public function apiGuestPoints()
 {
-    $session = \App\Models\GameSession::where('status', 'active')->latest()->first();
-    if (!$session) return response()->json(['points' => 0]);
-    return response()->json(['points' => $session->guest_points ?? 0]);
+    $points = Cache::remember("guest_points_overlay", 3, function () {
+        $session = GameSession::where('status', 'active')->latest()->first();
+        return $session ? $session->guest_points ?? 0 : 0;
+    });
+    
+    return response()->json(['points' => $points]);
+}
+/* public function activarApuestaX2($id)
+{
+    $session = GameSession::findOrFail($id);
+
+    if ($session->apuesta_x2_active) {
+        return response()->json(['ok' => false, 'msg' => 'Ya tienes una apuesta x2 activa']);
+    }
+
+    $session->apuesta_x2_active = true;
+    $session->save();
+
+    session(['guest_apuesta_x2' => true]);
+
+    return response()->json(['ok' => true, 'msg' => 'Apuesta x2 activada']);
 }
 
+public function desactivarApuestaX2($id)
+{
+    $session = GameSession::findOrFail($id);
+
+    $session->apuesta_x2_active = false;
+    $session->save();
+
+    session()->forget('guest_apuesta_x2');
+
+    return response()->json(['ok' => true, 'msg' => 'Apuesta x2 desactivada']);
+}
+
+public function usarDescarte($id)
+{
+    $session = GameSession::findOrFail($id);
+
+    if ($session->descarte_usados >= 3) { // por ejemplo, máximo 3 descartes
+        return response()->json(['ok' => false, 'msg' => 'Ya usaste todos los descartes disponibles']);
+    }
+
+    $session->descarte_usados++;
+    $session->save();
+
+    return response()->json(['ok' => true, 'msg' => 'Descarte usado', 'total_usados' => $session->descarte_usados]);
+}
+
+public function resetearDescarte($id)
+{
+    $session = GameSession::findOrFail($id);
+
+    $session->descarte_usados = 0;
+    $session->save();
+
+    return response()->json(['ok' => true, 'msg' => 'Descartes reseteados']);
+}
+*/
 
 }

@@ -698,7 +698,13 @@ window.Echo = new Echo({
   forceTLS: true
 });
 
+// ============================================
+// SCRIPT CONSOLIDADO PARA participar.blade.php
+// Reemplaza AMBOS scripts @if(session('participant_session_id'))
+// ============================================
+
 document.addEventListener('DOMContentLoaded', function() {
+  // ===== CONFIGURACIÓN INICIAL =====
   const form = document.getElementById('participar-form');
   const msg = document.getElementById('respuesta-msg');
   const main = document.getElementById('main-question-box');
@@ -706,6 +712,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let yaRespondio = null;
   let lastQuestionId = form ? form.querySelector('input[name="question_id"]').value : null;
 
+  // ===== FUNCIONES DE UI =====
   function limpiarSeleccionUI() {
     document.querySelectorAll('.option-card').forEach(btn => {
       btn.classList.remove('selected', 'disabled', 'correct', 'incorrect', 'blinking');
@@ -736,12 +743,37 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  function marcarCorrecta(label) {
+    document.querySelectorAll('.option-card').forEach(btn => {
+      if (btn.getAttribute('data-label') === label) {
+        btn.classList.add('correct');
+        btn.classList.remove('incorrect', 'disabled');
+        btn.style.opacity = '1';
+        btn.style.filter = 'none';
+      } else {
+        btn.classList.remove('correct');
+      }
+    });
+  }
+
+  function marcarIncorrecta(label) {
+    document.querySelectorAll('.option-card').forEach(btn => {
+      if (btn.getAttribute('data-label') === label) {
+        btn.classList.add('incorrect', 'blinking');
+        btn.classList.remove('correct');
+      }
+    });
+  }
+
+  // ===== MANEJO DE RESPUESTAS =====
   function handleOptionClick() {
     if (enviado) return;
     const selectedLabel = this.getAttribute('data-label');
     const questionId = form.querySelector('input[name="question_id"]').value;
+    
     limpiarSeleccionUI();
     marcarSeleccionUI(selectedLabel);
+    
     fetch("{{ route('participar.enviar') }}", {
         method: 'POST',
         headers: {
@@ -763,9 +795,11 @@ document.addEventListener('DOMContentLoaded', function() {
             msg.innerHTML = '¡Respuesta enviada! Esperá la siguiente pregunta...';
             msg.style.color = '#19ff8c';
         }
+        console.log('[RESPUESTA] Enviada correctamente:', selectedLabel);
     })
     .catch(err => {
         enviado = false;
+        console.error('[ERROR] Al enviar respuesta:', err);
         if (msg) {
             msg.style.display = 'block';
             msg.style.color = '#ff4444';
@@ -775,25 +809,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Estado inicial: limpiar todo
-  limpiarSeleccionUI();
+  // ===== RENDERIZADO DE PREGUNTAS =====
+  function renderPregunta(data) {
+    const mainBox = document.getElementById('main-question-box');
+    if (mainBox) mainBox.style.display = 'block';
 
-  if (form) {
-    form.querySelectorAll('.option-card').forEach(btn => {
-      btn.addEventListener('click', handleOptionClick);
-    });
-    form.addEventListener('submit', function(e) { e.preventDefault(); });
-  }
-
-function renderPregunta(data) {
-  // MOSTRAR el contenedor de la pregunta
-  const mainBox = document.getElementById('main-question-box');
-  if (mainBox) mainBox.style.display = 'block';
-
-  if (form) {
-    form.querySelector('input[name="question_id"]').value = data.pregunta_id || '';
-  }
-  // ...el resto de tu código igual...
+    if (form) {
+      form.querySelector('input[name="question_id"]').value = data.pregunta_id || '';
+    }
 
     const optionsGrid = form ? form.querySelector('.options-grid') : null;
     if (optionsGrid) {
@@ -812,6 +835,7 @@ function renderPregunta(data) {
         optionsGrid.appendChild(btn);
       });
     }
+
     const questionTitle = document.querySelector('.question-title');
     if (questionTitle) questionTitle.textContent = data.pregunta || '';
 
@@ -821,158 +845,191 @@ function renderPregunta(data) {
     limpiarSeleccionUI();
     if (msg) msg.style.display = 'none';
     if (form) form.style.display = 'block';
+    
     const msgNoQuestion = document.getElementById('msg-no-question');
     if (msgNoQuestion) msgNoQuestion.style.display = 'none';
   }
 
-  // EVENTOS PUSHER/ECHO
-  window.Echo.channel('overlay-channel')
-    .listen('.nueva-pregunta', function(e) {
-      const data = e.data || e;
-      if (data.opciones && data.opciones.length > 0) {
-        renderPregunta(data);
-      }
-    })
-    .listen('.revelar-respuesta', function(e) {
-      let data = e.data || e;
-      let qid = form ? form.querySelector('input[name="question_id"]').value : null;
-      if (String(data.pregunta_id) !== String(qid)) return;
-      let respondida = yaRespondio;
-      if (!respondida) {
-        marcarCorrecta(data.label_correcto);
-        return;
-      }
-      if (respondida === data.label_correcto) {
-        marcarCorrecta(data.label_correcto);
-        return;
-      }
-      marcarIncorrecta(respondida);
-      if (msg) {
-        msg.innerHTML = 'Respuesta incorrecta 😢';
-        msg.style.color = '#ff4444';
-        msg.style.display = 'block';
-      }
-      setTimeout(() => {
-        marcarCorrecta(data.label_correcto);
-        if (msg) {
-          msg.innerHTML = 'La respuesta correcta era la opción ' + data.label_correcto + '!';
-          msg.style.color = '#19ff8c';
+  // ===== INICIALIZACIÓN DEL FORMULARIO =====
+  limpiarSeleccionUI();
+  if (form) {
+    form.querySelectorAll('.option-card').forEach(btn => {
+      btn.addEventListener('click', handleOptionClick);
+    });
+    form.addEventListener('submit', function(e) { e.preventDefault(); });
+  }
+
+  // ===== PUSHER/ECHO PARA PREGUNTAS =====
+  if (window.Echo) {
+    console.log('[ECHO] Inicializando canales...');
+    
+    window.Echo.channel('overlay-channel')
+      .listen('.nueva-pregunta', function(e) {
+        console.log('[PUSHER] Nueva pregunta recibida:', e);
+        const data = e.data || e;
+        if (data.opciones && data.opciones.length > 0) {
+          renderPregunta(data);
         }
-      }, 5000);
-    })
-    .listen('.overlay-reset', function() {
-      const mainBox = document.getElementById('main-question-box');
-      if (mainBox) mainBox.style.display = 'none';
-      if (form) {
-        // Oculta el form y limpia inputs
-        form.style.display = 'none';
-        form.querySelector('input[name="question_id"]').value = '';
-        const optionsGrid = form.querySelector('.options-grid');
-        if (optionsGrid) optionsGrid.innerHTML = '';
-      }
-      // Limpia el texto de la pregunta arriba
-      const questionTitle = document.querySelector('.question-title');
-      if (questionTitle) questionTitle.textContent = '';
-      if (msg) msg.style.display = 'none';
+      })
+      .listen('.revelar-respuesta', function(e) {
+        console.log('[PUSHER] Revelar respuesta:', e);
+        let data = e.data || e;
+        let qid = form ? form.querySelector('input[name="question_id"]').value : null;
+        if (String(data.pregunta_id) !== String(qid)) return;
+        
+        let respondida = yaRespondio;
+        if (!respondida) {
+          marcarCorrecta(data.label_correcto);
+          return;
+        }
+        
+        if (respondida === data.label_correcto) {
+          marcarCorrecta(data.label_correcto);
+          return;
+        }
+        
+        marcarIncorrecta(respondida);
+        if (msg) {
+          msg.innerHTML = 'Respuesta incorrecta 😢';
+          msg.style.color = '#ff4444';
+          msg.style.display = 'block';
+        }
+        
+        setTimeout(() => {
+          marcarCorrecta(data.label_correcto);
+          if (msg) {
+            msg.innerHTML = 'La respuesta correcta era la opción ' + data.label_correcto + '!';
+            msg.style.color = '#19ff8c';
+          }
+        }, 5000);
+      })
+      .listen('.overlay-reset', function() {
+        console.log('[PUSHER] Reset del overlay');
+        const mainBox = document.getElementById('main-question-box');
+        if (mainBox) mainBox.style.display = 'none';
+        if (form) {
+          form.style.display = 'none';
+          form.querySelector('input[name="question_id"]').value = '';
+          const optionsGrid = form.querySelector('.options-grid');
+          if (optionsGrid) optionsGrid.innerHTML = '';
+        }
+        
+        const questionTitle = document.querySelector('.question-title');
+        if (questionTitle) questionTitle.textContent = '';
+        if (msg) msg.style.display = 'none';
 
-      // Mensaje de "No hay pregunta activa"
-      let msgNoQuestion = document.getElementById('msg-no-question');
-      if (!msgNoQuestion && main) {
-        msgNoQuestion = document.createElement('div');
-        msgNoQuestion.id = 'msg-no-question';
-        msgNoQuestion.className = 'bg-[#171c2e] rounded-[2.5rem] px-12 py-12 shadow-2xl border-4 border-[#01e3fd4d] text-2xl text-white font-semibold text-center max-w-2xl mx-auto tracking-wide neon-glow';
-        main.appendChild(msgNoQuestion);
-      }
-      if (msgNoQuestion) {
-        msgNoQuestion.innerHTML = `
-          No hay pregunta activa.<br><br>
-          Esperá que el host envíe una nueva pregunta...
-        `;
-        msgNoQuestion.style.display = 'block';
-      }
-    });
-
-  // --- Corrección: Cuando marco la correcta, quito opacidad/filtro a esa también
-  function marcarCorrecta(label) {
-    document.querySelectorAll('.option-card').forEach(btn => {
-      if (btn.getAttribute('data-label') === label) {
-        btn.classList.add('correct');
-        btn.classList.remove('incorrect', 'disabled');
-        btn.style.opacity = '1';
-        btn.style.filter = 'none';
-      } else {
-        btn.classList.remove('correct');
-      }
-    });
+        let msgNoQuestion = document.getElementById('msg-no-question');
+        if (!msgNoQuestion && main) {
+          msgNoQuestion = document.createElement('div');
+          msgNoQuestion.id = 'msg-no-question';
+          msgNoQuestion.className = 'bg-[#171c2e] rounded-[2.5rem] px-12 py-12 shadow-2xl border-4 border-[#01e3fd4d] text-2xl text-white font-semibold text-center max-w-2xl mx-auto tracking-wide neon-glow';
+          main.appendChild(msgNoQuestion);
+        }
+        if (msgNoQuestion) {
+          msgNoQuestion.innerHTML = `
+            No hay pregunta activa.<br><br>
+            Esperá que el host envíe una nueva pregunta...
+          `;
+          msgNoQuestion.style.display = 'block';
+        }
+      });
   }
 
-  function marcarIncorrecta(label) {
-    document.querySelectorAll('.option-card').forEach(btn => {
-      if (btn.getAttribute('data-label') === label) {
-        btn.classList.add('incorrect', 'blinking');
-        btn.classList.remove('correct');
-        // Mantiene la opacidad/filtro para la incorrecta seleccionada
-      }
-    });
-  }
-
-});
-</script>
-@if(session('participant_session_id'))
-<script>
-document.addEventListener('DOMContentLoaded', function() {
+  // ===== PUSHER/ECHO PARA PUNTAJE (SOLO SI HAY SESIÓN) =====
+  @if(session('participant_session_id'))
+  (function() {
     window.PARTICIPANT_SESSION_ID = '{{ session('participant_session_id') }}';
-    if (window.Echo && window.PARTICIPANT_SESSION_ID) {
-        let canal = 'puntaje.' + window.PARTICIPANT_SESSION_ID;
-        window.Echo.channel(canal)
-            .listen('.PuntajeActualizado', function(e) {
-                const nuevoPuntaje = (typeof e.puntaje === 'object') ? e.puntaje.total : e.puntaje;
-                let el = document.getElementById('puntaje-num');
-                let container = document.getElementById('puntaje-container');
-                if (el) {
-                    let puntajePrevio = parseInt(el.textContent) || 0;
-                    el.textContent = nuevoPuntaje;
-                    // ANIMACIÓN
-                    if (container) {
-                        container.classList.remove('puntaje-anim-bounce', 'puntaje-anim-shake');
-                        setTimeout(function() {
-                            if (nuevoPuntaje > puntajePrevio) {
-                                container.classList.add('puntaje-anim-bounce');
-                            } else if (nuevoPuntaje < puntajePrevio) {
-                                container.classList.add('puntaje-anim-shake');
-                            }
-                        }, 10);
-                        // Borrar animación al terminar
-                        container.addEventListener('animationend', function limpiarAnim() {
-                            container.classList.remove('puntaje-anim-bounce', 'puntaje-anim-shake');
-                            container.removeEventListener('animationend', limpiarAnim);
-                        });
-                    }
-                }
-            });
+    console.log('[PUNTAJE] Participant session ID:', window.PARTICIPANT_SESSION_ID);
+
+    if (!window.Echo) {
+      console.error('[PUNTAJE] Echo no está disponible');
+      return;
     }
+
+    if (!window.PARTICIPANT_SESSION_ID) {
+      console.error('[PUNTAJE] PARTICIPANT_SESSION_ID no está disponible');
+      return;
+    }
+
+    const canal = 'puntaje.' + window.PARTICIPANT_SESSION_ID;
+    console.log('[PUNTAJE] Suscribiendo a canal:', canal);
+
+    window.Echo.channel(canal)
+      .listen('.PuntajeActualizado', function(e) {
+        console.log('[PUNTAJE] Evento recibido:', e);
+
+        const nuevoPuntaje = (typeof e.puntaje === 'object') ? e.puntaje.total : e.puntaje;
+        const el = document.getElementById('puntaje-num');
+        const container = document.getElementById('puntaje-card'); // ✅ CAMBIADO: Ahora apunta al card interno
+
+        if (!el) {
+          console.error('[PUNTAJE] Elemento #puntaje-num no encontrado');
+          return;
+        }
+
+        const puntajePrevio = parseInt(el.textContent) || 0;
+        el.textContent = nuevoPuntaje;
+        console.log('[PUNTAJE] Actualizado de', puntajePrevio, 'a', nuevoPuntaje);
+
+        // ✅ ANIMACIÓN CORREGIDA: Aplicada al card que existe
+        if (container) {
+          container.classList.remove('puntaje-anim-bounce', 'puntaje-anim-shake');
+          
+          // Forzar reflow para reiniciar animación
+          void container.offsetWidth;
+          
+          setTimeout(function() {
+            if (nuevoPuntaje > puntajePrevio) {
+              container.classList.add('puntaje-anim-bounce');
+              console.log('[PUNTAJE] Animación bounce aplicada');
+              
+              // Cleanup simple con setTimeout
+              setTimeout(function() {
+                container.classList.remove('puntaje-anim-bounce');
+              }, 550); // Duración de la animación
+              
+            } else if (nuevoPuntaje < puntajePrevio) {
+              container.classList.add('puntaje-anim-shake');
+              console.log('[PUNTAJE] Animación shake aplicada');
+              
+              // Cleanup simple con setTimeout
+              setTimeout(function() {
+                container.classList.remove('puntaje-anim-shake');
+              }, 450); // Duración de la animación
+            }
+          }, 15);
+        } else {
+          console.warn('[PUNTAJE] Container #puntaje-card no encontrado para animación');
+        }
+      });
+  })();
+  @endif
 });
-</script>
-<script>
+
+// ===== MODAL DE SALIDA =====
 function abrirModalSalir() {
     document.getElementById('modalSalir').style.display = 'flex';
 }
+
 function cerrarModalSalir() {
     document.getElementById('modalSalir').style.display = 'none';
 }
+
 function confirmarSalidaFinal() {
     cerrarModalSalir();
-    // Enviá el form de verdad
     document.getElementById('salir-form').submit();
 }
 
-// Opcional: Cerrar con Esc o clic fuera
 window.addEventListener('keydown', function(e){
     if(e.key === 'Escape') cerrarModalSalir();
 });
-document.getElementById('modalSalir').addEventListener('click', function(e) {
-    if (e.target === this) cerrarModalSalir();
-});
+
+const modalSalir = document.getElementById('modalSalir');
+if (modalSalir) {
+  modalSalir.addEventListener('click', function(e) {
+      if (e.target === this) cerrarModalSalir();
+  });
+}
 </script>
 
 @endif

@@ -5,9 +5,12 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Middleware\IsAdmin;
+use App\Models\Question;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\GameSessionController;
 use App\Http\Controllers\QuestionImportController;
+use App\Http\Controllers\GameBonusController;
+use App\Livewire\TeamAdmin;
 
 // Ruta raíz
 Route::get('/', fn() => view('welcome'))->name('home');
@@ -41,7 +44,9 @@ Route::middleware(['auth', IsAdmin::class])->group(function () {
 });
 
 // Juego (panel y alta)
-Route::get('/juego', [GameController::class, 'controlPanel'])->name('juego.panel');
+Route::get('/juego', [GameController::class, 'controlPanel'])
+    ->name('juego.panel')
+    ->middleware(['auth', 'admin']);
 Route::post('/motivo', [GameController::class, 'storeMotivo'])->name('motivo.store');
 Route::post('/categoria', [GameController::class, 'storeCategoria'])->name('categoria.store');
 Route::post('/pregunta', [GameController::class, 'storePregunta'])->name('pregunta.store');
@@ -53,23 +58,6 @@ Route::post('/game-session/end', [GameSessionController::class, 'end'])->name('g
 // Overlay de juego para invitados (puede ser el panel público)
 Route::get('/jugar', fn() => view('game.participate'))->name('game.participate');
 
-// Overlay clásico (opcional, si lo usás)
-use App\Models\Question;
-// Route::get('/overlay', function() {
-//     $preguntaActual = Question::where('is_active', true)->first();
-//     return view('overlay', [
-//         'pregunta' => $preguntaActual?->texto ?? 'Esperando pregunta...',
-//         'opciones' => [
-//             'A' => $preguntaActual?->opcion_correcta ?? 'Opción A',
-//             'B' => $preguntaActual?->opcion_1 ?? 'Opción B',
-//             'C' => $preguntaActual?->opcion_2 ?? 'Opción C',
-//             'D' => $preguntaActual?->opcion_3 ?? 'Opción D',
-//         ],
-//         'votos' => ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0],
-//         'record' => 0,
-//     ]);
-// });
-
 Route::get('/overlay', [App\Http\Controllers\GameSessionController::class, 'ruletaOverlay'])->name('overlay');
 
 
@@ -80,6 +68,12 @@ Route::post('/game-session/overlay-reset', [GameSessionController::class, 'overl
 Route::post('/game-session/select-option', [GameSessionController::class, 'selectOption'])->name('game-session.select-option');
 Route::get('/overlay/api/puntos', [GameSessionController::class, 'apiGuestPoints']);
 Route::get('/overlay/api/pregunta', [GameSessionController::class, 'apiActiveQuestion']);
+
+// bonos y descartes
+Route::prefix('game')->group(function () {
+    Route::post('/apuesta-x2/toggle', [GameBonusController::class, 'toggleApuestaX2'])->name('game.toggleApuestaX2');
+    Route::post('/descarte/toggle', [GameBonusController::class, 'toggleDescarte'])->name('game.toggleDescarte');
+});
 
 
 // Participantes
@@ -94,7 +88,9 @@ Route::get('/game-sessions/{sessionId}/queue-list', [GameSessionController::clas
 
 // RULETA OVERLAY y POST para lanzar pregunta
 Route::get('/ruleta', [GameSessionController::class, 'ruletaOverlay'])->name('ruleta');
-Route::post('/overlay/lanzar-pregunta', [GameSessionController::class, 'lanzarPreguntaCategoria']);
+Route::post('/overlay/lanzar-pregunta', [GameSessionController::class, 'lanzarPreguntaCategoria'])
+    ->name('overlay.lanzar-pregunta')
+    ->middleware('auth');
 
 Route::post('/game-session/girar-ruleta', [GameSessionController::class, 'girarRuleta']);
 
@@ -114,6 +110,27 @@ Route::view('/demo', 'demo')->name('demo');
 
 Route::get('/questions/import', [QuestionImportController::class, 'create'])->name('questions.import.create');
 Route::post('/questions/import', [QuestionImportController::class, 'store'])->name('questions.import.store');
+
+// vista conocenos
+
+Route::get('/about', function () {
+    return view('about-us');
+})->name('about-us');
+
+Route::middleware(['auth', 'can:edit pages'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('team', \App\Http\Controllers\Admin\TeamController::class);
+});
+
+// vista team
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::view('/team', 'admin.team')->name('team');
+});
+
+// reglas
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::view('/rules', 'admin.rules')->name('rules');
+});
+
 
 
 require __DIR__.'/auth.php';

@@ -6,12 +6,12 @@
     @if(count($participants))
         <ol class="neon-queue-list">
             @foreach($participants->sortByDesc('puntaje') as $p)
-                <li>
+                <li data-participant-id="{{ $p->id }}">
                     <span class="neon-queue-num">#{{ $loop->iteration }}</span>
                     <span class="neon-queue-username">{{ $p->username }}</span>
                     <span class="neon-queue-dni">({{ $p->dni_last4 }})</span>
                     @if(isset($p->puntaje))
-                        <span class="neon-queue-score">
+                        <span class="neon-queue-score" data-score="{{ $p->puntaje }}">
                             {{ $p->puntaje }} pts
                         </span>
                     @endif
@@ -48,7 +48,7 @@
     letter-spacing: 1px;
 }
 .neon-queue-list {
-    padding-left: 6px; /* Mueve la lista levemente a la izquierda */
+    padding-left: 6px;
     margin-bottom: 0;
 }
 .neon-queue-list li {
@@ -61,6 +61,14 @@
     border-bottom: 1px dashed #19faff22;
     padding-bottom: 2px;
     gap: 5px;
+    transition: transform 0.3s ease;
+}
+.neon-queue-list li.pulse {
+    animation: pulse-green 0.6s ease;
+}
+@keyframes pulse-green {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); background: rgba(25, 255, 140, 0.1); }
 }
 .neon-queue-num {
     color: #00f0ff;
@@ -81,7 +89,7 @@
 .neon-queue-score {
     color: #19ff8c;
     font-weight: 700;
-    font-size: 1em;       /* Más pequeño y elegante */
+    font-size: 1em;
     margin-left: 6px;
     margin-right: 0;
     text-shadow: 0 0 7px #19ff8c, 0 0 2px #fff3;
@@ -116,3 +124,63 @@
     }
 }
 </style>
+
+<script>
+// Solo ejecutar si Echo está disponible
+if (window.Echo) {
+    // Escuchar evento de actualización de puntajes de participantes
+    window.Echo.channel('overlay-channel')
+        .listen('.revelar-respuesta', (e) => {
+            console.log('[QUEUE] Evento revelar recibido:', e);
+            
+            const puntajes = e.puntajes_participantes || e.data?.puntajes_participantes || {};
+            
+            // Actualizar cada participante en la lista
+            Object.keys(puntajes).forEach(participantId => {
+                const nuevosPuntos = puntajes[participantId];
+                const li = document.querySelector(`li[data-participant-id="${participantId}"]`);
+                
+                if (li) {
+                    const scoreSpan = li.querySelector('.neon-queue-score');
+                    if (scoreSpan) {
+                        const puntosAnteriores = parseInt(scoreSpan.dataset.score) || 0;
+                        
+                        // Solo actualizar si cambió
+                        if (nuevosPuntos !== puntosAnteriores) {
+                            scoreSpan.textContent = nuevosPuntos + ' pts';
+                            scoreSpan.dataset.score = nuevosPuntos;
+                            
+                            // Animación de pulso
+                            li.classList.add('pulse');
+                            setTimeout(() => li.classList.remove('pulse'), 600);
+                        }
+                    }
+                }
+            });
+            
+            // Reordenar lista por puntaje (opcional)
+            reordenarLista();
+        });
+}
+
+function reordenarLista() {
+    const lista = document.querySelector('.neon-queue-list');
+    if (!lista) return;
+    
+    const items = Array.from(lista.querySelectorAll('li'));
+    
+    // Ordenar por puntaje descendente
+    items.sort((a, b) => {
+        const scoreA = parseInt(a.querySelector('.neon-queue-score')?.dataset.score || 0);
+        const scoreB = parseInt(b.querySelector('.neon-queue-score')?.dataset.score || 0);
+        return scoreB - scoreA;
+    });
+    
+    // Reordenar en el DOM
+    items.forEach((item, index) => {
+        const numSpan = item.querySelector('.neon-queue-num');
+        if (numSpan) numSpan.textContent = '#' + (index + 1);
+        lista.appendChild(item);
+    });
+}
+</script>

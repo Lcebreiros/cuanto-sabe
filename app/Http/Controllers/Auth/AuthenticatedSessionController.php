@@ -32,7 +32,7 @@ public function store(LoginRequest $request): RedirectResponse
 
     // Redirigir según el rol
     if ($user->role === 'admin') {
-        return redirect('/admin');
+        return redirect('/dashboard');
     }
 
     return redirect()->intended(route('dashboard', absolute: false));
@@ -50,6 +50,6 @@ public function store(LoginRequest $request): RedirectResponse
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/login');
     }
 }
