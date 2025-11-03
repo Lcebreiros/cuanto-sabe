@@ -6,6 +6,6 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
 class GirarRuleta implements ShouldBroadcastNow
 {
-    public function broadcastOn() { return new Channel('overlay-channel'); }
+    public function broadcastOn() { return new Channel('cuanto-sabe-overlay'); }
     public function broadcastAs() { return 'girar-ruleta'; }
 }

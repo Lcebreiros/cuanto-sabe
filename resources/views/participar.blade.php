@@ -683,7 +683,36 @@ body::before { display: none !important; }
     text-align: center;
   }
 }
+/* Opciones bloqueadas (Ahora yo) */
+.option-card.locked {
+  opacity: 0.35 !important;
+  filter: grayscale(1) !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+  background-color: rgba(5, 30, 56, 0.3) !important;
+  border-color: #555 !important;
+}
 
+.option-card.locked:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Mensaje de "Solo invitado" más sutil */
+#respuesta-msg {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(255, 228, 122, 0.1);
+  border: 1px dashed #ffe47a;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffe47a;
+  text-shadow: 0 0 8px rgba(255, 228, 122, 0.5);
+  letter-spacing: 0.5px;
+}
   </style>
 
 
@@ -810,7 +839,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ===== RENDERIZADO DE PREGUNTAS =====
-  function renderPregunta(data) {
+function renderPregunta(data) {
+    console.log('[PREGUNTA] Renderizando:', data);
+    
     const mainBox = document.getElementById('main-question-box');
     if (mainBox) mainBox.style.display = 'block';
 
@@ -818,20 +849,42 @@ document.addEventListener('DOMContentLoaded', function() {
       form.querySelector('input[name="question_id"]').value = data.pregunta_id || '';
     }
 
+    // ✅ DETECTAR SI ES "AHORA YO" (Solo invitado)
+    const isAhoraYo = data.disable_public_answers === true 
+        || (data.special_indicator && data.special_indicator.toLowerCase().includes('solo yo'))
+        || (data.special_indicator && data.special_indicator.toLowerCase().includes('ahora yo'));
+
     const optionsGrid = form ? form.querySelector('.options-grid') : null;
+    
+    // ✅ RENDERIZAR OPCIONES (SIEMPRE, pero deshabilitadas si es Ahora Yo)
     if (optionsGrid) {
       optionsGrid.innerHTML = '';
       (data.opciones || []).forEach(op => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.setAttribute('data-label', op.label);
-        btn.className = "option-card group relative flex flex-col items-center justify-center min-h-[108px] md:min-h-[138px] h-full bg-[#051e38fa] border-[3px] border-[#00f0ff44] text-[#d7f6ff] font-bold text-xl md:text-2xl rounded-2xl transition-all duration-200 ease-out shadow-lg hover:bg-[#00f0ff] hover:text-[#002640] hover:scale-105 focus:ring-4 focus:ring-[#00f0ff77] select-none outline-none tracking-wide neon-glow-btn";
+        
+        // ✅ Agregar clase 'locked' si es Ahora Yo
+        let classes = "option-card group relative flex flex-col items-center justify-center min-h-[108px] md:min-h-[138px] h-full bg-[#051e38fa] border-[3px] border-[#00f0ff44] text-[#d7f6ff] font-bold text-xl md:text-2xl rounded-2xl transition-all duration-200 ease-out shadow-lg select-none outline-none tracking-wide neon-glow-btn";
+        
+        if (isAhoraYo) {
+            classes += " locked"; // ✅ Clase especial para deshabilitar
+            btn.disabled = true;
+        } else {
+            classes += " hover:bg-[#00f0ff] hover:text-[#002640] hover:scale-105 focus:ring-4 focus:ring-[#00f0ff77]";
+        }
+        
+        btn.className = classes;
         btn.innerHTML = `
             <span class="block text-3xl md:text-4xl font-black mb-2 group-hover:text-[#ff1fff] transition">${op.label}</span>
             <span class="block text-center w-full font-bold text-lg md:text-2xl">${op.texto}</span>
             <span class="selected-animation absolute inset-0 opacity-0 pointer-events-none"></span>
         `;
-        btn.addEventListener('click', handleOptionClick);
+        
+        if (!isAhoraYo) {
+            btn.addEventListener('click', handleOptionClick);
+        }
+        
         optionsGrid.appendChild(btn);
       });
     }
@@ -843,12 +896,28 @@ document.addEventListener('DOMContentLoaded', function() {
     yaRespondio = null;
     lastQuestionId = data.pregunta_id;
     limpiarSeleccionUI();
-    if (msg) msg.style.display = 'none';
+    
+    // ✅ MOSTRAR MENSAJE SUTIL ARRIBA DE LAS OPCIONES
+    if (isAhoraYo) {
+        if (msg) {
+            msg.style.display = 'block';
+            msg.innerHTML =  'Solo el invitado puede responder';
+            msg.style.color = '#ffe47a';
+            msg.style.fontSize = '1.1rem';
+            msg.style.fontWeight = '700';
+            msg.style.marginTop = '0';
+            msg.style.marginBottom = '15px';
+        }
+        console.log('[AHORA YO] Opciones deshabilitadas para el público');
+    } else {
+        if (msg) msg.style.display = 'none';
+    }
+    
     if (form) form.style.display = 'block';
     
     const msgNoQuestion = document.getElementById('msg-no-question');
     if (msgNoQuestion) msgNoQuestion.style.display = 'none';
-  }
+}
 
   // ===== INICIALIZACIÓN DEL FORMULARIO =====
   limpiarSeleccionUI();

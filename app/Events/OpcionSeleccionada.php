@@ -22,7 +22,7 @@ class OpcionSeleccionada implements ShouldBroadcastNow // <-- CAMBIÁ ESTO
 
     public function broadcastOn()
     {
-        return new Channel('overlay-channel');
+        return new Channel('cuanto-sabe-overlay');
     }
 
     public function broadcastAs()

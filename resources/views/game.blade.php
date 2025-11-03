@@ -1292,7 +1292,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Escuchar broadcasts en overlay-channel -> GameBonusUpdated
     try {
         if (window.Echo) {
-            window.Echo.channel('overlay-channel')
+            window.Echo.channel('cuanto-sabe-overlay')
                 .listen('.GameBonusUpdated', (payload) => {
                     // payload ejemplo: { apuesta_x2_active, apuesta_x2_usadas, descarte_usados, modo_juego }
                     // Acomodar nombres si tu backend envía sin prefijos
@@ -1337,13 +1337,31 @@ function toggleSpinButton() {
 }
 
 function girarRuleta() {
+    console.log('🎲 [Panel] Botón Girar Ruleta presionado, isSpinning:', isSpinning);
+
     fetch('/game-session/girar-ruleta', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         },
         body: JSON.stringify({ action: isSpinning ? 'start' : 'stop' })
+    })
+    .then(response => {
+        console.log('📡 [Panel] Respuesta recibida:', response.status, response.statusText);
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ [Panel] Ruleta girada exitosamente:', data);
+        if (data.error) {
+            console.error('❌ [Panel] Error del servidor:', data.error);
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('❌ [Panel] Error en fetch:', error);
+        alert('Error al girar ruleta. Ver consola para detalles.');
     });
 }
 
@@ -1489,8 +1507,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // --- Overlay channel: nueva pregunta + tendencia + reset ---
 if (window.Echo) {
-    const overlay = Echo.channel('overlay-channel');
-    Echo.channel('overlay-channel')
+    const overlay = Echo.channel('cuanto-sabe-overlay');
+    Echo.channel('cuanto-sabe-overlay')
         .listen('.GameBonusUpdated', (event) => {
             console.log('[PANEL] Evento bonus recibido:', event);
 
@@ -1618,7 +1636,7 @@ if (window.Echo) {
             });
         });
 if (window.Echo) {
-    Echo.channel('overlay-channel')
+    Echo.channel('cuanto-sabe-overlay')
         .listen('.GuestPointsUpdated', e => {
             const val = document.getElementById('guestPointsValue');
             if (val) {
@@ -1628,7 +1646,7 @@ if (window.Echo) {
 }
 
 if (window.Echo) {
-    Echo.channel('overlay-channel')
+    Echo.channel('cuanto-sabe-overlay')
         .listen('.revelar-respuesta', (e) => {
             const payload = e.data || {};
 

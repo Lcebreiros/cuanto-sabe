@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
 use App\Models\GameSession;
+use App\Http\Controllers\GameSessionController;
 
 class GameControl extends Component
 {
@@ -76,13 +77,27 @@ class GameControl extends Component
     public function girarRuleta()
     {
         try {
-            Http::asJson()->post(url('/game-session/girar-ruleta'), [
-                '_token' => csrf_token(),
-            ]);
-            $this->dispatchBrowserEvent('toast', ['message' => 'Ruleta girada']);
+            Log::info('🎮 [GameControl] Botón "Girar Ruleta" presionado');
+
+            // Llamar directamente al controlador en lugar de hacer petición HTTP
+            $controller = app(GameSessionController::class);
+            $request = new \Illuminate\Http\Request();
+            $response = $controller->girarRuleta($request);
+
+            if ($response->status() === 200) {
+                $this->dispatchBrowserEvent('toast', ['message' => 'Ruleta girada y pregunta lanzada']);
+                Log::info('✅ [GameControl] Ruleta girada exitosamente');
+            } else {
+                $data = $response->getData();
+                $errorMsg = $data->error ?? 'Error desconocido';
+                $this->dispatchBrowserEvent('toast', ['message' => 'Error: ' . $errorMsg]);
+                Log::error('❌ [GameControl] Error al girar ruleta: ' . $errorMsg);
+            }
         } catch (\Throwable $e) {
-            Log::error('Error girarRuleta: '.$e->getMessage());
-            $this->dispatchBrowserEvent('toast', ['message' => 'Error al girar ruleta']);
+            Log::error('❌ [GameControl] Excepción en girarRuleta: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->dispatchBrowserEvent('toast', ['message' => 'Error al girar ruleta: ' . $e->getMessage()]);
         }
     }
 

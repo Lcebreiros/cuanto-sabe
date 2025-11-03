@@ -9,7 +9,10 @@ class RuleAdmin extends Component
 {
     public $rules = [];
     public $showModal = false;
+    public $showDeleteModal = false; // ✅ Variable añadida
     public $editingId = null;
+    public $deleteId = null; // ✅ Variable añadida
+    public $deleteTitle = ''; // ✅ Variable añadida
 
     public $title;
     public $content;
@@ -55,45 +58,62 @@ class RuleAdmin extends Component
         $this->showModal = true;
     }
 
-public function save()
-{
-    $this->validate($this->rulesValidation());
+    public function save()
+    {
+        $this->validate($this->rulesValidation());
 
-    $data = [
-        'title' => $this->title,
-        'content' => $this->content,
-        'sort_order' => $this->sort_order ?? 0,
-        'active' => $this->active ?? false,
-    ];
+        $data = [
+            'title' => $this->title,
+            'content' => $this->content,
+            'sort_order' => $this->sort_order ?? 0,
+            'active' => $this->active ?? false,
+        ];
 
-    if ($this->editingId) {
-        $rule = Rule::findOrFail($this->editingId);
-        $rule->update($data);
-    } else {
-        Rule::create($data);
+        if ($this->editingId) {
+            $rule = Rule::findOrFail($this->editingId);
+            $rule->update($data);
+        } else {
+            Rule::create($data);
+        }
+
+        $this->resetForm();
+        $this->loadRules();
+
+        // Livewire 3: reemplazamos emit
+        $this->dispatch('rulesUpdated');
+
+        session()->flash('success', 'Regla guardada correctamente.');
     }
 
-    $this->resetForm();
-    $this->loadRules();
+    // ✅ Nuevo método para confirmar eliminación
+    public function confirmDelete($id)
+    {
+        $rule = Rule::findOrFail($id);
+        $this->deleteId = $rule->id;
+        $this->deleteTitle = $rule->title;
+        $this->showDeleteModal = true;
+    }
 
-    // Livewire 3: reemplazamos emit
-    $this->dispatch('rulesUpdated');
+    // ✅ Método para ejecutar la eliminación
+    public function delete()
+    {
+        if ($this->deleteId) {
+            Rule::findOrFail($this->deleteId)->delete();
+            $this->loadRules();
+            $this->dispatch('rulesUpdated');
+            session()->flash('success', 'Regla eliminada.');
+        }
+        
+        $this->closeDeleteModal();
+    }
 
-    session()->flash('success', 'Regla guardada correctamente.');
-}
-
-public function delete($id)
-{
-    Rule::findOrFail($id)->delete();
-    $this->loadRules();
-
-    // Livewire 3
-    $this->dispatch('rulesUpdated');
-
-    session()->flash('success', 'Regla eliminada.');
-}
-
-
+    // ✅ Método para cerrar modal de eliminación
+    public function closeDeleteModal()
+    {
+        $this->showDeleteModal = false;
+        $this->deleteId = null;
+        $this->deleteTitle = '';
+    }
 
     public function resetForm()
     {

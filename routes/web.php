@@ -89,10 +89,10 @@ Route::get('/game-sessions/{sessionId}/queue-list', [GameSessionController::clas
 // RULETA OVERLAY y POST para lanzar pregunta
 Route::get('/ruleta', [GameSessionController::class, 'ruletaOverlay'])->name('ruleta');
 Route::post('/overlay/lanzar-pregunta', [GameSessionController::class, 'lanzarPreguntaCategoria'])
-    ->name('overlay.lanzar-pregunta')
-    ->middleware('auth');
+    ->name('overlay.lanzar-pregunta');
 
-Route::post('/game-session/girar-ruleta', [GameSessionController::class, 'girarRuleta']);
+Route::post('/game-session/girar-ruleta', [GameSessionController::class, 'girarRuleta'])->name('game-session.girar-ruleta');
+Route::post('/game-session/lanzar-pregunta-finalizar', [GameSessionController::class, 'lanzarPreguntaAlFinalizar'])->name('game-session.lanzar-pregunta-finalizar');
 
 Route::post('/game-session/sync-question', [GameSessionController::class, 'syncQuestion'])->name('game-session.sync-question');
 

@@ -24,7 +24,7 @@ public function broadcastOn()
 {
     $channels = [];
     if ($this->sessionId) $channels[] = new Channel('overlay-session-' . $this->sessionId);
-    $channels[] = new Channel('overlay-channel'); // <- SIEMPRE
+    $channels[] = new Channel('cuanto-sabe-overlay'); // <- SIEMPRE
     return $channels;
 }
 

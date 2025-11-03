@@ -21,7 +21,7 @@ class NuevaPreguntaOverlay implements ShouldBroadcastNow
 
     public function broadcastOn()
     {
-        return new Channel('overlay-channel');
+        return new Channel('cuanto-sabe-overlay');
     }
 
     public function broadcastAs()

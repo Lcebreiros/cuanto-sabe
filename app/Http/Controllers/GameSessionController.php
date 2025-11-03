@@ -154,6 +154,17 @@ public function revealAnswer(Request $request)
         $participantIds = $session->participants()->pluck('id')->toArray();
         $puntajes = $gamePoints->calcularPuntajesParticipantes($participantIds, $session->id);
 
+        // ✅ GUARDAR PUNTAJES EN BASE DE DATOS
+        foreach ($puntajes as $participantId => $puntajeTotal) {
+            \App\Models\ParticipantSession::where('id', $participantId)
+                ->update(['puntaje' => $puntajeTotal]);
+            
+            \Log::info('💾 Puntaje guardado en BD', [
+                'participant_id' => $participantId,
+                'puntaje' => $puntajeTotal
+            ]);
+        }
+
         // ✅ DISPARAR EVENTO INDIVIDUAL PARA CADA PARTICIPANTE
         foreach ($puntajes as $participantId => $puntajeTotal) {
             \Log::info('📤 Enviando PuntajeActualizado', [
@@ -279,9 +290,17 @@ public function overlayReset(Request $request)
             $session->active_question_id = null;
             $session->pregunta_json = null;
             $session->save();
+            // Invalida todos los caches relacionados al estado del overlay
             Cache::forget("game_session_active");
+            Cache::forget("game_session_active_question");
 
             // broadcast solo si hubo write real
+            broadcast(new \App\Events\OverlayReset());
+        } else {
+            // Aun si no hubo write, limpia caches para evitar datos stales en el overlay
+            Cache::forget("game_session_active");
+            Cache::forget("game_session_active_question");
+            // y avisa al overlay para que se resetee visualmente
             broadcast(new \App\Events\OverlayReset());
         }
     }
@@ -406,10 +425,19 @@ public function lanzarPreguntaCategoria(Request $request)
     $categoriaLower = strtolower($categoria);
     $specialSlot = $request->input('special_slot');
 
+    \Log::info('🎯 [LANZAR PREGUNTA] Solicitud recibida', [
+        'categoria' => $categoria,
+        'special_slot' => $specialSlot,
+        'request_data' => $request->all()
+    ]);
+
     $session = GameSession::where('status', 'active')->latest()->first();
     if (!$session) {
+        \Log::error('❌ [LANZAR PREGUNTA] No hay sesión activa');
         return response()->json(['error' => 'No hay sesión activa'], 400);
     }
+
+    \Log::info('✅ [LANZAR PREGUNTA] Sesión activa encontrada', ['session_id' => $session->id]);
 
     // ✅ Obtener ID de la pregunta anterior para no repetirla
     $preguntaAnteriorId = $session->active_question_id;
@@ -431,35 +459,49 @@ public function lanzarPreguntaCategoria(Request $request)
             'label_correcto' => null,
             'pregunta_id' => null,
             'categoria_id' => null,
+            'categoria_nombre' => 'Pregunta de Oro', // ✅ AGREGADO
             'timestamp' => now()->toISOString(),
             'special_indicator' => $specialSlot ?? strtoupper($categoria),
         ];
         $session->active_question_id = null;
-        $session->pregunta_json = null;
+        $session->pregunta_json = json_encode($data); // 🔥 FIX: Guardar data en lugar de null
         $session->save();
-        
+
+        // 🔥 Invalidar caché para que OBS lo vea inmediatamente
+        Cache::forget('game_session_active');
+        Cache::forget('game_session_active_question');
+
         session(['last_overlay_question' => $data]);
-        
+
         broadcast(new NuevaPreguntaOverlay($data));
         return response()->json(['ok' => true]);
     }
     // Chat o Solo Yo
     elseif ($categoriaLower === 'responde el chat' || $categoriaLower === 'solo yo') {
+        // ✅ Diferenciar: "Solo yo" deshabilita público, "Responde el chat" no
+        $disablePublic = ($categoriaLower === 'solo yo');
+
         $data = [
             'pregunta' => strtoupper($categoria),
             'opciones' => [],
             'label_correcto' => null,
             'pregunta_id' => null,
             'categoria_id' => null,
+            'categoria_nombre' => ucwords($categoria), // ✅ AGREGADO (capitaliza: "Solo Yo", "Responde El Chat")
             'timestamp' => now()->toISOString(),
             'special_indicator' => $specialSlot ?? strtoupper($categoria),
+            'disable_public_answers' => $disablePublic,
         ];
         $session->active_question_id = null;
-        $session->pregunta_json = null;
+        $session->pregunta_json = json_encode($data); // 🔥 FIX: Guardar data en lugar de null
         $session->save();
-        
+
+        // 🔥 Invalidar caché para que OBS lo vea inmediatamente
+        Cache::forget('game_session_active');
+        Cache::forget('game_session_active_question');
+
         session(['last_overlay_question' => $data]);
-        
+
         broadcast(new NuevaPreguntaOverlay($data));
         return response()->json(['ok' => true]);
     }
@@ -519,6 +561,7 @@ public function lanzarPreguntaCategoria(Request $request)
         'label_correcto' => $label_correcto,
         'pregunta_id' => $pregunta->id,
         'categoria_id' => $pregunta->category_id,
+        'categoria_nombre' => $categoriaModel->nombre, // ✅ AGREGADO - Este es el más importante
         'timestamp' => now()->toISOString(),
     ];
 
@@ -530,22 +573,138 @@ public function lanzarPreguntaCategoria(Request $request)
     $session->active_question_id = $pregunta->id;
     $session->pregunta_json = json_encode($data);
     $session->save();
-    
+
+    // 🔥 Invalidar caché para que OBS lo vea inmediatamente
+    Cache::forget('game_session_active');
+    Cache::forget('game_session_active_question');
+
     session(['last_overlay_question' => $data]);
-    
+
     \Log::info('🟢 PREGUNTA GUARDADA', [
-        'pregunta_id' => $pregunta->id, 
+        'pregunta_id' => $pregunta->id,
         'label_correcto' => $label_correcto,
-        'anterior_id' => $preguntaAnteriorId
+        'anterior_id' => $preguntaAnteriorId,
+        'categoria' => $categoriaModel->nombre // ✅ AGREGADO al log
     ]);
 
     broadcast(new NuevaPreguntaOverlay($data));
     return response()->json(['success' => true, 'data' => $data]);
 }
 
-    public function girarRuleta() {
+    public function girarRuleta(Request $request) {
+        \Log::info('🎲 [GIRAR RULETA] Solicitud recibida');
+
+        $session = GameSession::where('status', 'active')->latest()->first();
+        if (!$session) {
+            \Log::error('❌ [GIRAR RULETA] No hay sesión activa');
+            return response()->json(['error' => 'No hay sesión activa'], 400);
+        }
+
+        // Activar flag para que el overlay detecte mediante polling que debe girar
+        $session->pending_spin = true;
+        $session->spin_requested_at = now();
+        $session->save();
+
+        \Log::info('📤 [GIRAR RULETA] Flag pending_spin activado en sesión');
+
+        // También enviar evento de Pusher (por si acaso funciona)
         broadcast(new \App\Events\GirarRuleta());
-        return response()->json(['ok' => true]);
+        \Log::info('✅ [GIRAR RULETA] Evento broadcast enviado + flag activado');
+
+        return response()->json(['ok' => true, 'message' => 'Ruleta girando', 'pending_spin' => true]);
+    }
+
+    public function lanzarPreguntaAlFinalizar(Request $request) {
+        \Log::info('🎯 [FINALIZAR RULETA] Ruleta detenida, categoría seleccionada', $request->all());
+
+        $categoriaNombre = $request->input('categoria');
+        if (!$categoriaNombre) {
+            \Log::error('❌ [FINALIZAR RULETA] No se recibió categoría');
+            return response()->json(['error' => 'Categoría no especificada'], 400);
+        }
+
+        $session = GameSession::where('status', 'active')->latest()->first();
+        if (!$session) {
+            \Log::error('❌ [FINALIZAR RULETA] No hay sesión activa');
+            return response()->json(['error' => 'No hay sesión activa'], 400);
+        }
+
+        // Buscar la categoría por nombre
+        $categoria = \App\Models\Categoria::where('nombre', $categoriaNombre)->first();
+        if (!$categoria) {
+            \Log::error('❌ [FINALIZAR RULETA] Categoría no encontrada: ' . $categoriaNombre);
+            return response()->json(['error' => 'Categoría no encontrada'], 404);
+        }
+
+        \Log::info('📤 [FINALIZAR RULETA] Lanzando pregunta de categoría: ' . $categoria->nombre);
+
+        // Buscar pregunta aleatoria de esa categoría
+        $preguntaAnteriorId = $session->active_question_id;
+        $query = Question::where('category_id', $categoria->id);
+
+        if ($preguntaAnteriorId) {
+            $query->where('id', '!=', $preguntaAnteriorId);
+        }
+
+        $pregunta = $query->inRandomOrder()->first();
+
+        if (!$pregunta) {
+            $pregunta = Question::where('category_id', $categoria->id)->inRandomOrder()->first();
+        }
+
+        if (!$pregunta) {
+            \Log::error('❌ [FINALIZAR RULETA] No hay preguntas en la categoría: ' . $categoria->nombre);
+            return response()->json(['error' => 'No hay preguntas disponibles'], 404);
+        }
+
+        // Armar y guardar la pregunta
+        $opciones = [
+            ['text' => $pregunta->opcion_correcta],
+            ['text' => $pregunta->opcion_1],
+            ['text' => $pregunta->opcion_2],
+            ['text' => $pregunta->opcion_3],
+        ];
+        shuffle($opciones);
+
+        $data_opciones = [];
+        $label_correcto = null;
+        foreach ($opciones as $i => $op) {
+            $label = chr(65 + $i);
+            $data_opciones[] = [
+                'label' => $label,
+                'texto' => $op['text'],
+            ];
+            if ($label_correcto === null && $op['text'] === $pregunta->opcion_correcta) {
+                $label_correcto = $label;
+            }
+        }
+
+        $data = [
+            'pregunta' => $pregunta->texto,
+            'opciones' => $data_opciones,
+            'label_correcto' => $label_correcto,
+            'pregunta_id' => $pregunta->id,
+            'categoria_id' => $categoria->id,
+            'categoria_nombre' => $categoria->nombre,
+            'timestamp' => now()->toISOString(),
+        ];
+
+        // Guardar en BD
+        $session->active_question_id = $pregunta->id;
+        $session->pregunta_json = json_encode($data);
+        $session->pending_spin = false; // Limpiar flag de spin pendiente
+        $session->save();
+
+        Cache::forget('game_session_active');
+        Cache::forget('game_session_active_question');
+
+        session(['last_overlay_question' => $data]);
+
+        \Log::info('✅ [FINALIZAR RULETA] Pregunta guardada y enviada, pending_spin limpiado', ['pregunta_id' => $pregunta->id]);
+
+        broadcast(new NuevaPreguntaOverlay($data));
+
+        return response()->json(['ok' => true, 'categoria' => $categoria->nombre, 'pregunta' => $data]);
     }
 
     public function syncQuestion(Request $request) {
@@ -705,20 +864,34 @@ public function enviarParticipacion(Request $request)
 
 public function apiActiveQuestion()
 {
-    // 🔥 Aumentar TTL y evitar writes innecesarios
-    $session = Cache::remember("game_session_active_question", 8, function () {
-        $session = GameSession::where('status', 'active')->latest()->first();
-        return $session ? [
-            'pregunta_json' => $session->pregunta_json,
-            'id' => $session->id
-        ] : null;
-    });
+    // 🔥 SIN CACHE - OBS necesita la pregunta más reciente siempre
+    $session = GameSession::where('status', 'active')->latest()->first();
 
-    if (!$session || !$session['pregunta_json']) {
-        return response()->json(['pregunta' => null]);
+    if (!$session) {
+        return response()->json(['pregunta' => null, 'pending_spin' => false]);
     }
-    
-    return response()->json(json_decode($session['pregunta_json'], true));
+
+    $response = [];
+
+    // Incluir pending_spin para que el overlay sepa si debe girar
+    $response['pending_spin'] = (bool) ($session->pending_spin ?? false);
+
+    if (!$session->pregunta_json) {
+        $response['pregunta'] = null;
+        return response()->json($response);
+    }
+
+    $preguntaData = json_decode($session->pregunta_json, true);
+    $response = array_merge($preguntaData, $response);
+
+    // Log para debugging
+    \Log::info('📤 [API] Pregunta solicitada', [
+        'pregunta_id' => $preguntaData['pregunta_id'] ?? null,
+        'pregunta' => substr($preguntaData['pregunta'] ?? '', 0, 50),
+        'pending_spin' => $response['pending_spin']
+    ]);
+
+    return response()->json($response);
 }
 
 public function limpiarPreguntaParticipante()

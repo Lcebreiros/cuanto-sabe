@@ -372,8 +372,8 @@
     <div class="banner-holder">
       <div id="indicator-banner"></div>
     </div>
-<div class="guest-points-bar" id="guestPointsBar">
-  <span class="gp-value" id="categoryValue">-</span>
+<div class="guest-points-bar" id="categoriaBar" style="display: none;">
+  <span class="gp-value" id="categoriaValue">-</span>
 </div>
   </div>
   <div class="question-bar" id="questionBar">Esperando pregunta...</div>
@@ -429,14 +429,64 @@ window.Echo = new Echo({
     key: "{{ config('broadcasting.connections.pusher.key') }}",
     cluster: "{{ config('broadcasting.connections.pusher.options.cluster') }}",
     forceTLS: true,
+    // 🔥 IMPORTANTE: Forzar conexión independiente para cada instancia (OBS, navegador, etc.)
+    enabledTransports: ['ws', 'wss'],
+    disableStats: true,
+    // Cada pestaña/OBS tendrá su propia conexión
+    activityTimeout: 30000,
+    pongTimeout: 10000,
 });
 
 // Estado conexión visual
 function updateConnectionStatus(connected) {
     document.getElementById('connectionStatus').classList.toggle('connected', connected);
 }
-window.Echo.connector.pusher.connection.bind('connected', () => updateConnectionStatus(true));
-window.Echo.connector.pusher.connection.bind('disconnected', () => updateConnectionStatus(false));
+let pollInterval = null;
+function startPolling() {
+    if (!pollInterval) {
+        pollInterval = setInterval(() => {
+            fetchOverlayState();
+        }, 2000); // 🔥 CAMBIO: Reducido de 4s a 2s para más responsividad en OBS
+        console.log('[Overlay] Polling de respaldo iniciado (cada 2s)');
+    }
+}
+function stopPolling() {
+    if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+        console.log('[Overlay] Polling de respaldo detenido');
+    }
+}
+window.Echo.connector.pusher.connection.bind('connected', () => {
+    updateConnectionStatus(true);
+    stopPolling();
+});
+window.Echo.connector.pusher.connection.bind('disconnected', () => {
+    updateConnectionStatus(false);
+    startPolling();
+});
+
+// 🔥 CAMBIO: Arranque inmediato del polling para OBS
+// Iniciamos polling desde el principio - OBS siempre dependerá de esto
+startPolling();
+
+// 🔥 NUNCA detener el polling, incluso si Pusher conecta
+// Esto asegura que OBS funcione sin depender de Pusher
+const originalStopPolling = stopPolling;
+stopPolling = function() {
+    console.log('[Overlay] ⚠️ Intento de detener polling bloqueado - OBS necesita polling activo');
+    // No hacer nada - mantener polling siempre activo
+};
+
+// Arranque defensivo: asegurar polling siempre activo
+setTimeout(() => {
+    if (!pollInterval) {
+        console.log('[Overlay] Reiniciando polling por seguridad');
+        stopPolling = originalStopPolling; // Restaurar temporalmente
+        startPolling();
+        stopPolling = function() {}; // Bloquear de nuevo
+    }
+}, 5000);
 
 // =========== PANEL LOGIC =============
 let pendingSpecialBanner = null; // <-- Banner especial pendiente
@@ -449,28 +499,58 @@ const options = ['A', 'B', 'C', 'D'];
 let isFetching = false;
 let lastFetch = 0;
 const FETCH_COOLDOWN = 2000; // 2 segundos mínimo entre llamadas
+let lastPreguntaId = null; // Para detectar cambios
 
-async function fetchOverlayState() {
+async function fetchOverlayState(force = false) {
     const now = Date.now();
-    
+
     // 🔥 Evitar llamadas duplicadas
-    if (isFetching || (now - lastFetch) < FETCH_COOLDOWN) {
+    if (isFetching || (!force && (now - lastFetch) < FETCH_COOLDOWN)) {
         console.log('[DEBUG] fetchOverlayState: cooldown activo, skip');
         return;
     }
-    
+
     isFetching = true;
     lastFetch = now;
-    
+
+    console.log('[Overlay] 🔄 Fetching overlay state...', force ? '(FORCED)' : '');
+
     try {
         // 1. Pregunta activa
         let pregunta = null;
         const resP = await fetch('/overlay/api/pregunta');
-        if (resP.ok) pregunta = await resP.json();
+        if (resP.ok) {
+            pregunta = await resP.json();
+            console.log('[Overlay] 📥 Pregunta recibida:', pregunta);
+        } else {
+            console.warn('[Overlay] ⚠️ Error fetching pregunta:', resP.status);
+        }
+
+        // 🔥 NUEVO: Detectar si hay un spin pendiente
+        if (pregunta && pregunta.pending_spin === true) {
+            console.log('[Overlay] 🎲 PENDING_SPIN detectado! Girando ruleta automáticamente...');
+            // Llamar a la función que gira la ruleta (definida más abajo)
+            if (window.girarRuletaRemoto && typeof window.girarRuletaRemoto === 'function') {
+                window.girarRuletaRemoto();
+            }
+        }
 
         if (pregunta && pregunta.pregunta) {
+            // 🔥 Detectar si es una pregunta nueva (cambió el ID o timestamp)
+            const preguntaId = pregunta.pregunta_id || pregunta.timestamp;
+            const esNueva = (preguntaId && preguntaId !== lastPreguntaId);
+
+            if (esNueva) {
+                console.log('[Overlay] 🆕 NUEVA pregunta detectada por polling:', pregunta.pregunta);
+                lastPreguntaId = preguntaId;
+            } else {
+                console.log('[Overlay] ✅ Pregunta existente:', pregunta.pregunta);
+            }
+
             showQuestion(pregunta);
         } else {
+            console.log('[Overlay] ⭕ No hay pregunta activa, resetting overlay');
+            lastPreguntaId = null;
             resetOverlay();
         }
 
@@ -556,10 +636,26 @@ function showQuestion(data) {
     });
 
     window.lastQuestionData = data;
-
     console.log('[DEBUG] showQuestion data:', data);
+    console.log('[DEBUG] categoria_nombre:', data.categoria_nombre);
     console.log('[DEBUG] special_indicator:', data.special_indicator);
 
+    // ✅ ACTUALIZAR VALOR DE CATEGORÍA PERO MANTENER OCULTA
+    const categoriaBar = document.getElementById('categoriaBar');
+    const categoriaValue = document.getElementById('categoriaValue');
+    
+    if (data.categoria_nombre) {
+        if (categoriaValue) {
+            categoriaValue.textContent = data.categoria_nombre.toUpperCase();
+        }
+        // ❌ NO mostrar todavía, esperar los 10 segundos
+        if (categoriaBar) {
+            categoriaBar.style.display = 'none';
+        }
+        console.log('[DEBUG] Categoría actualizada (oculta):', data.categoria_nombre);
+    }
+
+    // --- BANNER ESPECIAL ---
     const banner = document.getElementById('indicator-banner');
     let indicator = data.special_indicator;
 
@@ -592,13 +688,8 @@ function showQuestion(data) {
     correctLabel = data.label_correcto || data.opcion_correcta || null;
     ultimaSeleccionPanel = null;
 
-    // ✅ Ocultar el guest-points-bar durante la pantalla de categoría
-    const guestPointsBar = document.getElementById('guestPointsBar');
-    if (guestPointsBar) guestPointsBar.style.display = 'none';
-
     // ✅ PRIMERO: Mostrar solo la categoría en el question-bar
-    const categoryValue = document.getElementById('categoryValue');
-    const categoria = categoryValue ? categoryValue.textContent : 'CATEGORÍA';
+    const categoria = data.categoria_nombre ? data.categoria_nombre.toUpperCase() : 'CATEGORÍA';
     questionBar.textContent = categoria;
 
     // Ocultar todas las opciones inicialmente
@@ -611,27 +702,26 @@ function showQuestion(data) {
     // Mostrar el overlay con animación
     const ruleta = document.getElementById('ruleta-container');
     const overlay = document.querySelector('.overlay-content');
-    
     toggleAnim(ruleta, 'show-down', 'hide-up', false, () => {
         toggleAnim(overlay, 'show-up', 'hide-down', true);
     });
 
-    // ✅ DESPUÉS DE 10 SEGUNDOS: Mostrar pregunta, opciones Y guest-points-bar
+    // ✅ DESPUÉS DE 10 SEGUNDOS: Mostrar pregunta, opciones Y categoriaBar
     setTimeout(() => {
         questionBar.textContent = data.pregunta || 'Pregunta sin texto';
-        
-        // ✅ Mostrar el guest-points-bar
-        if (guestPointsBar) guestPointsBar.style.display = '';
-        
+
+        // ✅ MOSTRAR la barra de categoría ahora
+        if (categoriaBar) {
+            categoriaBar.style.display = 'flex';
+        }
+
         options.forEach(opt => {
             const optEl = document.getElementById('op' + opt);
             const optData = currentOptions.find(o => o.label === opt);
             if (optData) {
                 optEl.querySelector('.opt-text').textContent = optData.texto;
-               // optEl.querySelector('.vote-count').textContent = '0';
                 optEl.style.display = 'flex';
             } else {
-                // ✅ Si no hay optData, asegurar que esté oculta
                 optEl.style.display = 'none';
             }
         });
@@ -723,16 +813,33 @@ function revealAnswer(data) {
     }
 }
 
-window.Echo.channel('overlay-channel')
+window.Echo.channel('cuanto-sabe-overlay')
     .listen('.girar-ruleta', () => {
+        console.log('🎲 [Echo] Evento girar-ruleta recibido por Pusher');
         window.girarRuletaRemoto && window.girarRuletaRemoto();
     })
     .listen('.nueva-pregunta', e => {
-        if (!e.data || !e.data.pregunta) {
-            fetchOverlayState(); // 🚨 Si el evento viene vacío, refrescá del backend
+        console.log('📡 [Echo] Evento nueva-pregunta recibido:', e);
+
+        // 🔥 El dato puede venir en e.data o directamente en e
+        const preguntaData = e.data || e;
+
+        if (!preguntaData || !preguntaData.pregunta) {
+            console.warn('⚠️ [Echo] Evento nueva-pregunta vacío, fetching del backend');
+            fetchOverlayState(true);
         } else {
-            showQuestion(e.data || e);
+            console.log('✅ [Echo] Mostrando pregunta desde evento Pusher');
+            showQuestion(preguntaData);
         }
+    })
+    .listen('.revelar-respuesta', e => {
+        console.log('📡 [Echo] Evento revelar-respuesta recibido');
+        revealAnswer(e.data || e);
+    })
+    .listen('.overlay-reset', () => {
+        console.log('📡 [Echo] Evento overlay-reset recibido');
+        resetOverlay();
+        fetchOverlayState(true);
     })
 .listen('.GameBonusUpdated', (event) => {
         console.log('[BONUS] Evento recibido:', event);
@@ -754,15 +861,9 @@ window.Echo.channel('overlay-channel')
         }
     })
     .listen('.opcion-seleccionada', e => {
+        console.log('📡 [Echo] Evento opcion-seleccionada recibido');
         ultimaSeleccionPanel = e.opcion;
         showSelectedOption(e.opcion);
-    })
-    .listen('.revelar-respuesta', e => {
-        revealAnswer(e.data || e);
-    })
-    .listen('.overlay-reset', () => {
-        resetOverlay();
-        fetchOverlayState(); // 🚨 Tras un reset, asegurate que la UI quede sincronizada
     })
     .listen('.tendencia-actualizada', e => {
         ['A','B','C','D'].forEach(l => {
@@ -1073,11 +1174,120 @@ let currentSpinSpeed = 0;
 let minSpeed = 0.011;
 let maxSpeed = 0.29;
 let decelStep = 0.989;
+let finalizationTimer = null;
+let finalized = false;
+
+function weightPickSlotIdx() {
+    let r = Math.random();
+    let acc = 0;
+    for (let i = 0; i < slots.length; i++) {
+        acc += slots[i].size;
+        if (r <= acc) return i;
+    }
+    return slots.length - 1;
+}
+
+function scheduleForcedFinalize(delayMs = 2500) {
+    if (finalizationTimer) { clearTimeout(finalizationTimer); }
+    finalizationTimer = setTimeout(() => {
+        if (finalized) return;
+        console.warn('[Ruleta] Forzando finalización (página en background o rAF pausado)');
+        const idx = weightPickSlotIdx();
+        // Ejecutar la misma lógica de finalización sin animación
+        (function completeSelection(selectedIdx){
+            const selectedSlot = slots[selectedIdx];
+            const selectedCategory = selectedSlot?.label;
+            const slotType = selectedSlot?.type || '';
+            const isSpecial = slotType === 'soloyo' || slotType === 'respondeelchat' || slotType === 'preguntadeoro';
+
+            console.log('== [Forced] Ruleta finalizó. Slot seleccionado:', selectedSlot);
+            console.log('== [Forced] Es segundo giro?', isSecondSpin);
+
+            if (isSecondSpin && isSpecial) {
+                console.warn('⚠️ [Forced] SEGUNDO GIRO: Especial de nuevo, relanzando...');
+                setTimeout(() => {
+                    startSpin();
+                    setTimeout(() => {
+                        stopRequested = true;
+                        scheduleForcedFinalize(2000);
+                    }, 2000);
+                }, 500);
+                return;
+            }
+
+            if (lastSpecialSlot !== null) {
+                let payload = { categoria: selectedCategory, special_slot: lastSpecialSlot };
+                console.log('🚀 [Forced] Enviando payload (doble giro):', payload);
+                pendingSpecialBanner = payload.special_slot;
+                fetch('/game-session/lanzar-pregunta-finalizar', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                }).then(res => {
+                    console.log('📡 [Forced] Respuesta:', res.status, res.statusText);
+                    if (!res.ok) {
+                        console.error('❌ [Forced] Error lanzando pregunta (doble giro):', res.status);
+                        return res.text().then(text => console.error('Response body:', text));
+                    } else {
+                        console.log('✅ [Forced] Pregunta lanzada, actualizando overlay...');
+                        fetchOverlayState(true);
+                    }
+                }).catch(err => {
+                    console.error('❌ [Forced] Fetch error (doble giro):', err);
+                    console.error('Error details:', err.message, err.stack);
+                });
+                lastSpecialSlot = null;
+                isSecondSpin = false;
+            } else if (isSpecial) {
+                lastSpecialSlot = selectedCategory;
+                isSecondSpin = true;
+                console.log('🎯 [Forced] Especial detectado, segundo giro activado');
+            } else {
+                let payload = { categoria: selectedCategory };
+                if ((selectedCategory || '').toLowerCase() === 'random') {
+                    pendingSpecialBanner = 'random';
+                    payload.special_slot = 'random';
+                }
+                console.log('🚀 [Forced] Enviando payload (giro normal):', payload);
+                fetch('/game-session/lanzar-pregunta-finalizar', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                }).then(res => {
+                    console.log('📡 [Forced] Respuesta:', res.status, res.statusText);
+                    if (!res.ok) {
+                        console.error('❌ [Forced] Error lanzando pregunta:', res.status);
+                        return res.text().then(text => console.error('Response body:', text));
+                    } else {
+                        console.log('✅ [Forced] Pregunta lanzada, actualizando overlay...');
+                        fetchOverlayState(true);
+                    }
+                }).catch(err => {
+                    console.error('❌ [Forced] Fetch error:', err);
+                    console.error('Error details:', err.message, err.stack);
+                });
+                lastSpecialSlot = null;
+                isSecondSpin = false;
+            }
+        })(idx);
+        finalized = true;
+        spinning = false;
+        stopRequested = false;
+    }, delayMs);
+}
 
 function startSpin() {
     if (spinning) return;
     spinning = true;
     stopRequested = false;
+    finalized = false;
+    if (finalizationTimer) { clearTimeout(finalizationTimer); finalizationTimer = null; }
     currentSpinSpeed = maxSpeed * (0.87 + Math.random()*0.19);
     selectedSlotIdx = null;
 
@@ -1105,12 +1315,13 @@ function startSpin() {
 }
 
 let lastSpecialSlot = null;
+let isSecondSpin = false; // ✅ NUEVO: Flag para detectar segundo giro
+
 function finalizeSpin() {
     currentAngle = currentAngle % (2 * Math.PI);
     selectedSlotIdx = getSlotAtAngle(currentAngle);
     let selectedSlot = slots[selectedSlotIdx];
     let selectedCategory = selectedSlot?.label;
-    updateCategory(selectedCategory);
     let slotType = selectedSlot?.type || '';
     let isSpecial = slotType === 'soloyo' || slotType === 'respondeelchat' || slotType === 'preguntadeoro';
 
@@ -1127,40 +1338,86 @@ function finalizeSpin() {
             spinning = false;
             stopRequested = false;
 
-            // Log para depuración:
             console.log('== Ruleta finalizó. Slot seleccionado:', selectedSlot);
+            console.log('== Es segundo giro?', isSecondSpin);
+
+            // ✅ VALIDACIÓN: Si es segundo giro y cayó en especial, girar de nuevo automáticamente
+            if (isSecondSpin && isSpecial) {
+                console.warn('⚠️ SEGUNDO GIRO: Cayó en especial de nuevo, relanzando...');
+                setTimeout(() => {
+                    startSpin();
+                    setTimeout(() => {
+                        stopRequested = true;
+                        scheduleForcedFinalize(2000);
+                    }, 2000); // Gira 2 segundos y para
+                }, 500);
+                return;
+            }
 
             // LOGICA DE DOBLE GIRO
             if (lastSpecialSlot !== null) {
                 // SEGUNDO GIRO: mandar pregunta usando el especial guardado
                 let payload = { categoria: selectedCategory, special_slot: lastSpecialSlot };
-                console.log('Enviando payload (doble giro):', payload);
-                pendingSpecialBanner = payload.special_slot; // GUARDA EL INDICADOR TEMPORAL
-                fetch('/overlay/lanzar-pregunta', {
+                console.log('🚀 [Ruleta] Enviando payload (doble giro):', payload);
+                pendingSpecialBanner = payload.special_slot;
+                fetch('/game-session/lanzar-pregunta-finalizar', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(payload)
-                });
+        }).then(res => {
+            console.log('📡 [Ruleta] Respuesta recibida (doble giro):', res.status, res.statusText);
+            if (!res.ok) {
+                console.error('❌ [Ruleta] Error lanzando pregunta (doble giro):', res.status);
+                return res.text().then(text => console.error('Response body:', text));
+            } else {
+                console.log('✅ [Ruleta] Pregunta lanzada correctamente, actualizando overlay...');
+                fetchOverlayState(true);
+            }
+        }).catch(err => {
+            console.error('❌ [Ruleta] Fetch error (doble giro):', err);
+            console.error('Error details:', err.message, err.stack);
+        });
                 lastSpecialSlot = null;
+                isSecondSpin = false; // ✅ Resetear flag
             } else if (isSpecial) {
                 // PRIMER GIRO ESPECIAL: solo guardá el texto, no lances nada
-                lastSpecialSlot = selectedCategory; // <-- 100% seguro el label correcto
+                lastSpecialSlot = selectedCategory;
+                isSecondSpin = true; // ✅ Activar flag para el próximo giro
+                console.log('🎯 Categoría especial detectada, segundo giro activado');
             } else {
                 // GIRO NORMAL: pregunta directa
                 let payload = { categoria: selectedCategory };
-                console.log('Enviando payload (giro normal):', payload);
-                fetch('/overlay/lanzar-pregunta', {
+                // Si el slot es RANDOM, indicarlo en el banner y payload
+                if ((selectedCategory || '').toLowerCase() === 'random') {
+                    pendingSpecialBanner = 'random';
+                    payload.special_slot = 'random';
+                }
+                console.log('🚀 [Ruleta] Enviando payload (giro normal):', payload);
+                fetch('/game-session/lanzar-pregunta-finalizar', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(payload)
-                });
+        }).then(res => {
+            console.log('📡 [Ruleta] Respuesta recibida (giro normal):', res.status, res.statusText);
+            if (!res.ok) {
+                console.error('❌ [Ruleta] Error lanzando pregunta:', res.status);
+                return res.text().then(text => console.error('Response body:', text));
+            } else {
+                console.log('✅ [Ruleta] Pregunta lanzada correctamente, actualizando overlay...');
+                fetchOverlayState(true);
+            }
+        }).catch(err => {
+            console.error('❌ [Ruleta] Fetch error (giro normal):', err);
+            console.error('Error details:', err.message, err.stack);
+        });
                 lastSpecialSlot = null;
+                isSecondSpin = false; // ✅ Asegurar que está en false
             }
         }
     }
@@ -1173,12 +1430,18 @@ document.getElementById('spin-btn').onclick = function() {
         startSpin();
     } else if (!stopRequested) {
         stopRequested = true;
+        scheduleForcedFinalize(2500);
     }
 };
 
 drawRuleta(0);
 
-window.addEventListener('DOMContentLoaded', fetchOverlayState);
+// 🔥 CAMBIO: Cargar estado inmediatamente + backup con DOMContentLoaded
+fetchOverlayState(true); // Carga inmediata forzada
+window.addEventListener('DOMContentLoaded', () => {
+    console.log('[Overlay] DOMContentLoaded ejecutado');
+    fetchOverlayState(true);
+});
 
 
 window.girarRuletaRemoto = function() {
@@ -1187,9 +1450,9 @@ window.girarRuletaRemoto = function() {
         startSpin();
     } else if (!stopRequested) {
         stopRequested = true;
+        scheduleForcedFinalize(2500);
     }
 };
     </script>
 </body>
 </html>
-

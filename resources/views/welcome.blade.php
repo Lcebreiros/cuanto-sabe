@@ -322,6 +322,19 @@
             </div>
         </div>
     </div>
+    <div style="
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    padding: 5px;
+    font-size: 0.9rem;
+    color: #00f0ff80;
+    background: transparent;
+">
+    © {{ date('Y') }} Cuanto Sabe. Todos los derechos reservados. Desarrollado por Leandro Cebreiros.
+</div>
 
     <script>
         const welcomeCard = document.getElementById('welcomeCard');

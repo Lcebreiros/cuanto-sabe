@@ -26,7 +26,7 @@ public function __construct(GameSession $session)
 
     public function broadcastOn()
     {
-        return new Channel('overlay-channel');
+        return new Channel('cuanto-sabe-overlay');
     }
 
     // ✅ IMPORTANTE: Define el nombre del evento

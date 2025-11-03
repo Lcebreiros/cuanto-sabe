@@ -22,7 +22,7 @@ class TendenciaActualizada implements ShouldBroadcast
     public function broadcastOn()
     {
         return [
-            new Channel('overlay-channel'),
+            new Channel('cuanto-sabe-overlay'),
         ];
     }
 
