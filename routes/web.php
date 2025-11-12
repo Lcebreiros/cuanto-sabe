@@ -92,6 +92,7 @@ Route::post('/overlay/lanzar-pregunta', [GameSessionController::class, 'lanzarPr
     ->name('overlay.lanzar-pregunta');
 
 Route::post('/game-session/girar-ruleta', [GameSessionController::class, 'girarRuleta'])->name('game-session.girar-ruleta');
+Route::post('/game-session/limpiar-spin-pendiente', [GameSessionController::class, 'limpiarSpinPendiente'])->name('game-session.limpiar-spin-pendiente');
 Route::post('/game-session/lanzar-pregunta-finalizar', [GameSessionController::class, 'lanzarPreguntaAlFinalizar'])->name('game-session.lanzar-pregunta-finalizar');
 
 Route::post('/game-session/sync-question', [GameSessionController::class, 'syncQuestion'])->name('game-session.sync-question');

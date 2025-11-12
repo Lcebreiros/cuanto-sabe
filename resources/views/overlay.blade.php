@@ -500,9 +500,13 @@ let isFetching = false;
 let lastFetch = 0;
 const FETCH_COOLDOWN = 2000; // 2 segundos mínimo entre llamadas
 let lastPreguntaId = null; // Para detectar cambios
+let isHandlingPendingSpin = false; // 🔥 NUEVO: Evitar múltiples giros
 
 async function fetchOverlayState(force = false) {
     const now = Date.now();
+
+    // 🔥 DEBUG: Actualizar indicador de polling
+    document.getElementById('dbgPolling').textContent = new Date().toLocaleTimeString();
 
     // 🔥 Evitar llamadas duplicadas
     if (isFetching || (!force && (now - lastFetch) < FETCH_COOLDOWN)) {
@@ -527,11 +531,44 @@ async function fetchOverlayState(force = false) {
         }
 
         // 🔥 NUEVO: Detectar si hay un spin pendiente
-        if (pregunta && pregunta.pending_spin === true) {
+        console.log('[Overlay] 🔍 Verificando pending_spin:', pregunta ? pregunta.pending_spin : 'pregunta es null');
+        if (pregunta && pregunta.pending_spin === true && !isHandlingPendingSpin && !spinning) {
             console.log('[Overlay] 🎲 PENDING_SPIN detectado! Girando ruleta automáticamente...');
+            isHandlingPendingSpin = true; // Bloquear múltiples ejecuciones
+
+            // 🔥 INDICADOR VISUAL: Mostrar en questionBar
+            questionBar.textContent = '🎲 SPIN DETECTADO - Iniciando ruleta...';
+            questionBar.style.backgroundColor = '#ff6b00';
+            questionBar.style.color = '#fff';
+
+            // ✅ Limpiar el flag inmediatamente para evitar loops
+            fetch('/game-session/limpiar-spin-pendiente', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json'
+                }
+            }).then(() => {
+                console.log('[Overlay] ✅ Flag pending_spin limpiado');
+                // 🔥 INDICADOR VISUAL: Mostrar confirmación
+                questionBar.textContent = '✅ Flag limpiado - Girando ruleta...';
+            }).catch(err => {
+                console.error('[Overlay] ❌ Error limpiando pending_spin:', err);
+                questionBar.textContent = '❌ Error al limpiar flag';
+                questionBar.style.backgroundColor = '#dc3545';
+            });
+
             // Llamar a la función que gira la ruleta (definida más abajo)
             if (window.girarRuletaRemoto && typeof window.girarRuletaRemoto === 'function') {
                 window.girarRuletaRemoto();
+                // Resetear flag después de 15 segundos (tiempo máximo de giro)
+                setTimeout(() => {
+                    isHandlingPendingSpin = false;
+                    console.log('[Overlay] 🔄 Flag isHandlingPendingSpin reseteado');
+                }, 15000);
+            } else {
+                console.error('[Overlay] ❌ window.girarRuletaRemoto no está disponible');
+                isHandlingPendingSpin = false;
             }
         }
 
@@ -604,6 +641,9 @@ function resetOverlay() {
         optEl && optEl.classList.remove('tendencia');
     });
     questionBar.textContent = 'Esperando pregunta...';
+    // 🔥 Resetear estilos de debug
+    questionBar.style.backgroundColor = '';
+    questionBar.style.color = '';
     const banner = document.getElementById('indicator-banner');
     banner.textContent = '';
     banner.style.display = 'none';
@@ -612,6 +652,7 @@ function resetOverlay() {
     currentOptions = [];
     correctLabel = null;
     ultimaSeleccionPanel = null;
+    isHandlingPendingSpin = false; // 🔥 Resetear flag de pending spin
     options.forEach(opt => {
         const optEl = document.getElementById('op' + opt);
         optEl.classList.remove('selected', 'correct-flash', 'correct-final', 'incorrect-flash', 'incorrect-final');
@@ -691,6 +732,9 @@ function showQuestion(data) {
     // ✅ PRIMERO: Mostrar solo la categoría en el question-bar
     const categoria = data.categoria_nombre ? data.categoria_nombre.toUpperCase() : 'CATEGORÍA';
     questionBar.textContent = categoria;
+    // 🔥 Resetear estilos de debug
+    questionBar.style.backgroundColor = '';
+    questionBar.style.color = '';
 
     // Ocultar todas las opciones inicialmente
     options.forEach(opt => {
@@ -1291,6 +1335,9 @@ function startSpin() {
     currentSpinSpeed = maxSpeed * (0.87 + Math.random()*0.19);
     selectedSlotIdx = null;
 
+    // 🔥 DEBUG: Actualizar indicador
+    document.getElementById('dbgSpinning').textContent = 'SÍ';
+
     smoothFrenando = false;
     targetAngle = null;
 
@@ -1337,6 +1384,9 @@ function finalizeSpin() {
             drawRuleta(currentAngle, selectedSlotIdx, 1);
             spinning = false;
             stopRequested = false;
+
+            // 🔥 DEBUG: Actualizar indicador
+            document.getElementById('dbgSpinning').textContent = 'NO';
 
             console.log('== Ruleta finalizó. Slot seleccionado:', selectedSlot);
             console.log('== Es segundo giro?', isSecondSpin);
