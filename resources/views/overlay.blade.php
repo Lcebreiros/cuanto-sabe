@@ -876,9 +876,10 @@ function easeOutBack(x) {
 
 // Variable global para controlar si el SVG ya fue inicializado
 let svgInitialized = false;
+let wheelDrawn = false; // Nueva variable para controlar si los slots ya se dibujaron
 
 function drawRuleta(angleBase = 0, selectedIdx = null, highlightT = 0) {
-    // ⚡ OPTIMIZACIÓN: Solo inicializar SVG una vez, luego solo rotar
+    // ⚡ OPTIMIZACIÓN: Solo inicializar SVG una vez
     if (!svgInitialized) {
         svg.innerHTML = `
           <defs>
@@ -921,17 +922,22 @@ function drawRuleta(angleBase = 0, selectedIdx = null, highlightT = 0) {
         svgInitialized = true;
     }
 
-    // Durante el spin, solo rotar el SVG completo
-    if (selectedIdx === null && highlightT === 0) {
+    // Durante el spin (pero NO la primera vez), solo rotar el SVG completo
+    if (wheelDrawn && selectedIdx === null && highlightT === 0) {
         const degrees = (angleBase * 180 / Math.PI);
         svg.style.transform = `rotate(${degrees}deg)`;
         return;
     }
 
-    // Solo redibujar cuando se necesite highlighting (al finalizar)
+    // Dibujar o redibujar cuando sea necesario
     const wheel = document.getElementById('ruleta-wheel');
     if (!wheel) return;
     wheel.innerHTML = '';
+
+    // Marcar que ya se dibujó al menos una vez
+    if (!wheelDrawn && selectedIdx === null && highlightT === 0) {
+        wheelDrawn = true;
+    }
 
     // Fondo central
     let borderCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -1150,22 +1156,21 @@ function finalizeSpin() {
 
     // Resetear el SVG transform antes de highlighting
     svg.style.transform = '';
-    svgInitialized = false;
+    wheelDrawn = false; // Permitir que se redibuje para el highlight
 
     let highlightFrames = 32;
     let f = 0;
     function highlightAnim() {
         let t = Math.min(f / (highlightFrames-1), 1);
-        svgInitialized = false; // Forzar redibujado durante highlight
         drawRuleta(currentAngle, selectedSlotIdx, t);
         f++;
         if(f < highlightFrames) {
             requestAnimationFrame(highlightAnim);
         } else {
-            svgInitialized = false; // Forzar redibujado final
             drawRuleta(currentAngle, selectedSlotIdx, 1);
             spinning = false;
             stopRequested = false;
+            wheelDrawn = true; // Marcar como dibujado después del highlight final
 
             console.log('== Ruleta finalizó. Slot seleccionado:', selectedSlot);
             console.log('== Es segundo giro?', isSecondSpin);
@@ -1234,7 +1239,8 @@ document.getElementById('spin-btn').onclick = function() {
 
 // Inicializar la ruleta
 svgInitialized = false;
-svg.style.transform = 'rotate(0deg)';
+wheelDrawn = false;
+svg.style.transform = '';
 drawRuleta(0);
 
 window.addEventListener('DOMContentLoaded', fetchOverlayState);
