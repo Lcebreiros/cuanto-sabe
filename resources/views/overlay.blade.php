@@ -48,6 +48,7 @@
         box-shadow: 0 0 14px #19faffaa, 0 0 1px #fff8;
         font-family: 'Orbitron', Arial, sans-serif; font-weight: 600; position: relative; border: none;
         min-height: 46px; transition: background 0.12s, box-shadow 0.14s, color 0.15s, transform 0.16s; letter-spacing: 1px;
+        will-change: transform;
     }
     .option-box .opt-label {
         font-size: 1.62rem; color: #36ffd0; margin-right: 19px; font-weight: 900; text-shadow: 0 0 8px #1affd2b5;
@@ -72,6 +73,8 @@
     #ruleta-svg {
         width: 440px; height: 440px; display: block;
         filter: drop-shadow(0 0 18px #0e1528ee);
+        will-change: transform;
+        transform-origin: center center;
     }
     #flecha-roja {
         position: absolute; background: transparent;
@@ -871,44 +874,64 @@ function easeOutBack(x) {
     return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
 }
 
+// Variable global para controlar si el SVG ya fue inicializado
+let svgInitialized = false;
+
 function drawRuleta(angleBase = 0, selectedIdx = null, highlightT = 0) {
-    svg.innerHTML = `
-      <defs>
-        <radialGradient id="bgGradient" cx="50%" cy="50%" r="63%">
-          <stop offset="0%" stop-color="#232946"/>
-          <stop offset="100%" stop-color="#111b2b"/>
-        </radialGradient>
-        <linearGradient id="slotReflex" x1="20%" y1="10%" x2="90%" y2="80%">
-          <stop offset="0%" stop-color="#fffde7" stop-opacity="0.32"/>
-          <stop offset="0.28" stop-color="#ffe47a" stop-opacity="0.15"/>
-          <stop offset="0.66" stop-color="#fffde7" stop-opacity="0.09"/>
-          <stop offset="1" stop-color="#ffe47a" stop-opacity="0.01"/>
-        </linearGradient>
-        <filter id="neonBorder" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="4" result="glow"/>
-          <feMerge>
-            <feMergeNode in="glow"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-        <filter id="slotRelief" x="-10%" y="-10%" width="120%" height="120%">
-          <feDropShadow dx="0" dy="2" stdDeviation="1.3" flood-color="#151c2b" flood-opacity="0.22"/>
-        </filter>
-        <filter id="slotGlow" x="-10%" y="-10%" width="120%" height="120%">
-          <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="${borderShadow}" flood-opacity="0.31"/>
-        </filter>
-        <filter id="goldGlow" x="-25%" y="-25%" width="150%" height="150%">
-          <feGaussianBlur stdDeviation="6" result="glow"/>
-          <feMerge>
-            <feMergeNode in="glow"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-        <filter id="slotShadow" x="-16%" y="-16%" width="120%" height="120%">
-          <feDropShadow dx="0" dy="0" stdDeviation="2.4" flood-color="${slotShadow}" flood-opacity="0.85"/>
-        </filter>
-      </defs>
-    `;
+    // ⚡ OPTIMIZACIÓN: Solo inicializar SVG una vez, luego solo rotar
+    if (!svgInitialized) {
+        svg.innerHTML = `
+          <defs>
+            <radialGradient id="bgGradient" cx="50%" cy="50%" r="63%">
+              <stop offset="0%" stop-color="#232946"/>
+              <stop offset="100%" stop-color="#111b2b"/>
+            </radialGradient>
+            <linearGradient id="slotReflex" x1="20%" y1="10%" x2="90%" y2="80%">
+              <stop offset="0%" stop-color="#fffde7" stop-opacity="0.32"/>
+              <stop offset="0.28" stop-color="#ffe47a" stop-opacity="0.15"/>
+              <stop offset="0.66" stop-color="#fffde7" stop-opacity="0.09"/>
+              <stop offset="1" stop-color="#ffe47a" stop-opacity="0.01"/>
+            </linearGradient>
+            <filter id="neonBorder" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="glow"/>
+              <feMerge>
+                <feMergeNode in="glow"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <filter id="slotRelief" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="2" stdDeviation="1" flood-color="#151c2b" flood-opacity="0.22"/>
+            </filter>
+            <filter id="slotGlow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="${borderShadow}" flood-opacity="0.31"/>
+            </filter>
+            <filter id="goldGlow" x="-25%" y="-25%" width="150%" height="150%">
+              <feGaussianBlur stdDeviation="4" result="glow"/>
+              <feMerge>
+                <feMergeNode in="glow"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <filter id="slotShadow" x="-16%" y="-16%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="${slotShadow}" flood-opacity="0.85"/>
+            </filter>
+          </defs>
+          <g id="ruleta-wheel"></g>
+        `;
+        svgInitialized = true;
+    }
+
+    // Durante el spin, solo rotar el SVG completo
+    if (selectedIdx === null && highlightT === 0) {
+        const degrees = (angleBase * 180 / Math.PI);
+        svg.style.transform = `rotate(${degrees}deg)`;
+        return;
+    }
+
+    // Solo redibujar cuando se necesite highlighting (al finalizar)
+    const wheel = document.getElementById('ruleta-wheel');
+    if (!wheel) return;
+    wheel.innerHTML = '';
 
     // Fondo central
     let borderCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -919,7 +942,7 @@ function drawRuleta(angleBase = 0, selectedIdx = null, highlightT = 0) {
     borderCircle.setAttribute("stroke", borderNeon);
     borderCircle.setAttribute("stroke-width", "2.1");
     borderCircle.setAttribute("filter", "url(#neonBorder)");
-    svg.appendChild(borderCircle);
+    wheel.appendChild(borderCircle);
 
     // Marcos entre slots
     let a0 = angleBase;
@@ -943,7 +966,7 @@ function drawRuleta(angleBase = 0, selectedIdx = null, highlightT = 0) {
         borderPath.setAttribute("stroke", borderNeon);
         borderPath.setAttribute("stroke-width", "2.2");
         borderPath.setAttribute("filter", "url(#slotGlow)");
-        svg.appendChild(borderPath);
+        wheel.appendChild(borderPath);
 
         let innerBorderPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
         innerBorderPath.setAttribute("d", pathData);
@@ -951,7 +974,7 @@ function drawRuleta(angleBase = 0, selectedIdx = null, highlightT = 0) {
         innerBorderPath.setAttribute("stroke", innerDarkStroke);
         innerBorderPath.setAttribute("stroke-width", "0.9");
         innerBorderPath.setAttribute("opacity", "0.72");
-        svg.appendChild(innerBorderPath);
+        wheel.appendChild(innerBorderPath);
 
         a0 += ang;
     });
@@ -1005,7 +1028,7 @@ function drawRuleta(angleBase = 0, selectedIdx = null, highlightT = 0) {
         slotPath.setAttribute("fill", fillColor);
         slotPath.setAttribute("stroke", "none");
         slotPath.setAttribute("filter", filter);
-        svg.appendChild(slotPath);
+        wheel.appendChild(slotPath);
 
         // Reflejo slot seleccionado
         if(isWinner){
@@ -1013,7 +1036,7 @@ function drawRuleta(angleBase = 0, selectedIdx = null, highlightT = 0) {
             reflexPath.setAttribute("d", pathDataWinner);
             reflexPath.setAttribute("fill", "url(#slotReflex)");
             reflexPath.setAttribute("opacity", "0.55");
-            svg.appendChild(reflexPath);
+            wheel.appendChild(reflexPath);
         }
 
         slotDataList.push({s, idx, midAngle, slotR2, isWinner, extra});
@@ -1062,7 +1085,7 @@ function drawRuleta(angleBase = 0, selectedIdx = null, highlightT = 0) {
             textElem.setAttribute("style", `filter: drop-shadow(0 0 3px ${isWinner ? s.textColor : '#fff'});`);
             textElem.setAttribute("transform", `rotate(${rotate} ${x} ${y})`);
             textElem.textContent = ch;
-            svg.appendChild(textElem);
+            wheel.appendChild(textElem);
         });
     });
 }
@@ -1125,15 +1148,21 @@ function finalizeSpin() {
     let slotType = selectedSlot?.type || '';
     let isSpecial = slotType === 'soloyo' || slotType === 'respondeelchat' || slotType === 'preguntadeoro';
 
+    // Resetear el SVG transform antes de highlighting
+    svg.style.transform = '';
+    svgInitialized = false;
+
     let highlightFrames = 32;
     let f = 0;
     function highlightAnim() {
         let t = Math.min(f / (highlightFrames-1), 1);
+        svgInitialized = false; // Forzar redibujado durante highlight
         drawRuleta(currentAngle, selectedSlotIdx, t);
         f++;
         if(f < highlightFrames) {
             requestAnimationFrame(highlightAnim);
         } else {
+            svgInitialized = false; // Forzar redibujado final
             drawRuleta(currentAngle, selectedSlotIdx, 1);
             spinning = false;
             stopRequested = false;
@@ -1203,6 +1232,9 @@ document.getElementById('spin-btn').onclick = function() {
     }
 };
 
+// Inicializar la ruleta
+svgInitialized = false;
+svg.style.transform = 'rotate(0deg)';
 drawRuleta(0);
 
 window.addEventListener('DOMContentLoaded', fetchOverlayState);
