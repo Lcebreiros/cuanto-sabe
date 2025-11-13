@@ -55,7 +55,7 @@
     </div>
 
     <div class="question-box bg-gradient-to-r from-[#001a35ee] to-[#072954ea] border-4 border-[#01e3fd66] rounded-2xl shadow-[0_4px_32px_#020d2455] mb-7 px-7 py-6 flex items-center justify-center">
-      <h2 class="question-title text-2xl md:text-3xl font-extrabold text-white text-center tracking-wide neon-glow m-0 p-0 leading-tight">
+      <h2 class="question-title text-2xl md:text-3xl font-extrabold text-white text-center tracking-wide m-0 p-0 leading-tight">
         {{ $pregunta['pregunta'] ?? '' }}
       </h2>
     </div>
