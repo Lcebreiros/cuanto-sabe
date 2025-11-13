@@ -28,7 +28,7 @@ body {
 .final-scores-container {
     width: 100%;
     max-width: 1400px;
-    height: 100vh;
+    height: calc(100vh - 40px);
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
@@ -89,21 +89,23 @@ body {
 .guest-score-display {
     background: linear-gradient(90deg, #ffe47a 0%, #e6be2f 100%);
     border-radius: 10px;
-    padding: 12px 15px;
+    padding: 10px 15px;
     text-align: center;
     box-shadow: 0 0 20px #ffe47a99, inset 0 0 20px rgba(255, 228, 122, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.score-label {
-    font-size: 0.8rem;
+.score-text {
+    font-size: 0.85rem;
     font-weight: 700;
     color: #333;
     margin: 0;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
 }
 
 .score-value {
@@ -113,6 +115,14 @@ body {
     margin: 0;
     text-shadow: 0 0 10px rgba(255, 228, 122, 0.8);
     letter-spacing: -1px;
+}
+
+.score-unit {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+    letter-spacing: 0.5px;
 }
 
 /* === PANEL DERECHO: TOP 3 === */
@@ -423,9 +433,9 @@ body {
             </div>
 
             <div class="guest-score-display">
-                <div class="score-label">Puntuación</div>
-                <div class="score-value">{{ $guestScore }}</div>
-                <div class="score-label">pts</div>
+                <span class="score-text">Puntuación Final =</span>
+                <span class="score-value">{{ $guestScore }}</span>
+                <span class="score-unit">puntos</span>
             </div>
 
             <!-- MAPPING DE PREGUNTAS -->
