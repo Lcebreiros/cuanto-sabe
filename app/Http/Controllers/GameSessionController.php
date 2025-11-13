@@ -139,10 +139,23 @@ public function revealAnswer(Request $request)
 
             // Guardar respuesta del invitado en guest_answers
             $isCorrect = (strtoupper($selectedOption) === strtoupper($data['label_correcto']));
+
+            // Buscar el texto de la opción seleccionada
+            $selectedOptionText = null;
+            if (isset($data['opciones'])) {
+                foreach ($data['opciones'] as $opcion) {
+                    if (strtoupper($opcion['label']) === strtoupper($selectedOption)) {
+                        $selectedOptionText = $opcion['texto'];
+                        break;
+                    }
+                }
+            }
+
             \App\Models\GuestAnswer::create([
                 'game_session_id' => $session->id,
                 'question_id' => $data['pregunta_id'],
                 'selected_option' => strtoupper($selectedOption),
+                'selected_option_text' => $selectedOptionText,
                 'correct_option' => strtoupper($data['label_correcto']),
                 'is_correct' => $isCorrect,
                 'points_awarded' => (int)$delta,
@@ -469,6 +482,7 @@ public function finalScores()
                 'question_text' => $question->texto,
                 'all_options' => $allOptions,
                 'selected_option' => $answer->selected_option,
+                'selected_option_text' => $answer->selected_option_text,
                 'correct_option' => $answer->correct_option,
                 'is_correct' => $answer->is_correct,
                 'correct_text' => $question->opcion_correcta, // Siempre sabemos cuál es la correcta

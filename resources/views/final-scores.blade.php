@@ -323,7 +323,7 @@ body {
 .questions-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
@@ -347,12 +347,12 @@ body {
 
 .question-item {
     display: flex;
-    gap: 10px;
-    padding: 8px 12px;
-    border-radius: 8px;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 6px;
     background: rgba(0, 240, 255, 0.05);
-    border-left: 3px solid;
-    font-size: 0.75rem;
+    border-left: 2px solid;
+    font-size: 0.7rem;
 }
 
 .question-item.correct {
@@ -366,21 +366,22 @@ body {
 .q-number {
     font-weight: 700;
     color: #36d1ff;
-    min-width: 25px;
-    font-size: 0.7rem;
+    min-width: 20px;
+    font-size: 0.65rem;
+    flex-shrink: 0;
 }
 
 .q-content {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
 }
 
 .q-text {
     color: #fff;
-    font-size: 0.75rem;
-    line-height: 1.3;
+    font-size: 0.7rem;
+    line-height: 1.2;
     opacity: 0.9;
 }
 
@@ -410,35 +411,41 @@ body {
 
 .q-options {
     display: flex;
-    flex-direction: column;
-    gap: 3px;
+    flex-wrap: wrap;
+    gap: 4px;
     margin-top: 4px;
 }
 
 .option-line {
-    font-size: 0.7rem;
-    line-height: 1.2;
-    padding: 2px 6px;
-    border-radius: 4px;
+    font-size: 0.65rem;
+    line-height: 1.1;
+    padding: 2px 5px;
+    border-radius: 3px;
+    display: inline-block;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .opt-neutral {
     color: #999;
-    opacity: 0.6;
+    opacity: 0.5;
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .opt-correct {
     color: #13ff79;
     font-weight: 700;
-    background: rgba(19, 255, 121, 0.1);
-    text-shadow: 0 0 8px #13ff79;
+    background: rgba(19, 255, 121, 0.15);
+    text-shadow: 0 0 6px #13ff79;
 }
 
 .opt-incorrect {
     color: #ff3f34;
     font-weight: 700;
-    background: rgba(255, 63, 52, 0.1);
-    text-shadow: 0 0 8px #ff3f34;
+    background: rgba(255, 63, 52, 0.15);
+    text-shadow: 0 0 6px #ff3f34;
     text-decoration: line-through;
 }
 
@@ -484,15 +491,17 @@ body {
                             @foreach($answer['all_options'] as $option)
                                 @php
                                     $isCorrect = ($option === $answer['correct_text']);
-                                    $isSelected = false;
+                                    $isWrong = (!$answer['is_correct'] && $option === $answer['selected_option_text']);
 
-                                    // Si respondió mal, necesitamos marcar cuál eligió
-                                    // Como no sabemos exactamente la correspondencia letra-texto,
-                                    // solo marcamos la correcta en verde
+                                    if ($isWrong) {
+                                        $class = 'opt-incorrect';
+                                    } elseif ($isCorrect) {
+                                        $class = 'opt-correct';
+                                    } else {
+                                        $class = 'opt-neutral';
+                                    }
                                 @endphp
-                                <div class="option-line {{ $isCorrect ? 'opt-correct' : 'opt-neutral' }}">
-                                    {{ $option }}
-                                </div>
+                                <span class="option-line {{ $class }}">{{ $option }}</span>
                             @endforeach
                         </div>
                     </div>

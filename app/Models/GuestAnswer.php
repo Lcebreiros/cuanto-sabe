@@ -10,6 +10,7 @@ class GuestAnswer extends Model
         'game_session_id',
         'question_id',
         'selected_option',
+        'selected_option_text',
         'correct_option',
         'is_correct',
         'points_awarded',
