@@ -126,6 +126,12 @@ public function revealAnswer(Request $request)
         $selectedOption = session('selected_guest_option', null);
 
         if ($selectedOption && isset($data['label_correcto'], $data['pregunta_id'])) {
+            \Log::info('========================================');
+            \Log::info('💾 GUARDAR RESPUESTA INVITADO');
+            \Log::info('Selected Option: ' . $selectedOption);
+            \Log::info('Data completo:', $data);
+            \Log::info('========================================');
+
             // Calcular puntaje invitado
             $delta = $gamePoints->calcularPuntajeInvitado(
                 $session->id,
@@ -149,6 +155,7 @@ public function revealAnswer(Request $request)
                 ]);
 
                 foreach ($data['opciones'] as $opcion) {
+                    \Log::info('Comparando: ' . strtoupper($opcion['label']) . ' === ' . strtoupper($selectedOption));
                     if (strtoupper($opcion['label']) === strtoupper($selectedOption)) {
                         $selectedOptionText = $opcion['texto'];
                         \Log::info('✅ Texto encontrado', ['texto' => $selectedOptionText]);
@@ -160,7 +167,7 @@ public function revealAnswer(Request $request)
                     \Log::warning('⚠️ No se encontró el texto de la opción seleccionada');
                 }
             } else {
-                \Log::warning('⚠️ $data[opciones] no existe');
+                \Log::warning('⚠️ $data[opciones] no existe - Keys disponibles: ' . implode(', ', array_keys($data)));
             }
 
             \App\Models\GuestAnswer::create([
