@@ -409,7 +409,7 @@
         </svg>
         <svg id="ruleta-svg" width="440" height="440"></svg>
         <button id="spin-btn" title="Girar">
-            <img src="{{ asset('images/ruleta.png') }}"
+            <img src="{{ asset('public/images/ruleta.png') }}"
                 alt="Logo Ruleta"
                 onerror="this.onerror=null;this.src='https://upload.wikimedia.org/wikipedia/commons/9/9a/Circle-icons-profile.svg'">
         </button>

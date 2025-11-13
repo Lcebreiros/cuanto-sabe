@@ -389,7 +389,7 @@
     <!-- Contenido principal -->
     <div class="main-container">
         <div class="dashboard-card">
-            <img src="/images/logo.png" alt="Logo Cuanto Sabe" class="logo" />
+            <img src="/public/images/logo.png" alt="Logo Cuanto Sabe" class="logo" />
 
             @if($participant)
                 <h1 class="title">¡Hola, {{ $participant->username }}!</h1>
@@ -402,7 +402,7 @@
             <div class="actions-grid">
                 <a href="{{ route('about-us') }}" class="action-btn">
                     <span>Conocé</span>
-                    <img src="/images/logo.png" alt="Logo" class="btn-icon">
+                    <img src="/public/images/logo.png" alt="Logo" class="btn-icon">
                 </a>
                 <a href="#" class="action-btn">Repeticiones</a>
                 <a href="{{ route('demo') }}" class="action-btn double-column">Jugar demo</a>

@@ -1,6 +1,6 @@
 <div class="control-panel">
     <div class="panel-container">
-        <img src="/images/logo.png" alt="Logo Cuanto Sabe" class="panel-logo" />
+        <img src="/public/images/logo.png" alt="Logo Cuanto Sabe" class="panel-logo" />
         <h2 class="panel-title">Centro de Control</h2>
 
         <div class="panel-grid">

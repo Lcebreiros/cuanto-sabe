@@ -302,7 +302,7 @@
     <!-- Contenido principal -->
     <div class="main-container">
         <div class="welcome-card" id="welcomeCard">
-            <img src="{{ asset('images/logo.png') }}" alt="Logo Cuanto Sabe" class="logo">
+            <img src="{{ asset('public/images/logo.png') }}" alt="Logo Cuanto Sabe" class="logo">
             
             <a href="{{ route('guest-dashboard') }}" class="enter-btn" id="enterBtn">
                 Entrar
