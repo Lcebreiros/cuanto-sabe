@@ -417,7 +417,7 @@ body {
                                     ✓ {{ $participant->correct_answers }} · ✗ {{ $participant->incorrect_answers }}
                                 </div>
                             </div>
-                            <div class="participant-score">{{ $participant->total_points }}</div>
+                            <div class="participant-score">{{ $participant->puntaje }}</div>
                         </div>
                     @endforeach
                 @else
