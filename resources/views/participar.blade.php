@@ -41,38 +41,37 @@
 
 
 @section('content')
-<div id="pantalla" class="flex flex-col items-center px-3 py-4">
-  
-  <!-- Contenedor pregunta -->
-  <div id="main-question-box" class="w-full max-w-2xl" style="{{ (!isset($pregunta['pregunta']) || !$pregunta['pregunta']) ? 'display:none;' : '' }}">
-    <div class="question-box bg-gradient-to-r from-[#001a35ee] to-[#072954ea] border-4 border-[#01e3fd66] rounded-2xl shadow-[0_4px_32px_#020d2455] mb-7 px-7 py-6 flex items-center justify-center">
-      <h2 class="question-title text-2xl md:text-3xl font-extrabold text-[#00f0ff] text-center tracking-wide neon-glow m-0 p-0 leading-tight">
-        {{ $pregunta['pregunta'] ?? '' }}
-      </h2>
-    </div>
-    <form id="participar-form" method="POST" class="space-y-0" autocomplete="off" style="{{ isset($sinPregunta) && $sinPregunta ? 'display:none;' : '' }}">
-      @csrf
-      <input type="hidden" name="question_id" value="{{ $pregunta['pregunta_id'] ?? '' }}">
-<div class="options-grid grid grid-cols-2 grid-rows-2 gap-6 w-full max-w-[520px] mx-auto" style="max-height:70vh;">
-  @if(isset($pregunta['opciones']))
-    @foreach($pregunta['opciones'] as $op)
-      <button
-        type="button"
-        data-label="{{ $op['label'] }}"
-        class="option-card group flex flex-col items-center justify-center h-[92px] md:h-[110px] w-full bg-[#051e38fa] border-[3px] border-[#00f0ff44] text-[#d7f6ff] font-bold text-xl md:text-2xl rounded-2xl transition-all duration-200 ease-out shadow-lg hover:bg-[#00f0ff] hover:text-[#002640] hover:scale-105 focus:ring-4 focus:ring-[#00f0ff77] select-none outline-none tracking-wide neon-glow-btn"
-      >
-        <span class="block text-3xl md:text-4xl font-black mb-2 group-hover:text-[#ff1fff] transition">{{ $op['label'] }}</span>
-        <span class="block text-center w-full font-bold text-lg md:text-2xl">{{ $op['texto'] }}</span>
-        <span class="selected-animation absolute inset-0 opacity-0 pointer-events-none"></span>
-      </button>
-    @endforeach
-  @endif
-</div>
+<div id="pantalla" class="participar-container">
 
-    </form>
-    <div id="respuesta-msg" class="text-center mt-8 text-[#19ff8c] font-extrabold text-lg drop-shadow-neon" style="display:none;">
+  <!-- Contenedor pregunta -->
+  <div id="main-question-box" class="participar-overlay-content" style="{{ (!isset($pregunta['pregunta']) || !$pregunta['pregunta']) ? 'display:none;' : '' }}">
+    <div id="respuesta-msg" class="respuesta-msg-top" style="display:none;">
       <!-- Se muestra solo desde JS -->
     </div>
+
+    <div class="question-bar">
+      {{ $pregunta['pregunta'] ?? '' }}
+    </div>
+
+    <form id="participar-form" method="POST" autocomplete="off" style="{{ isset($sinPregunta) && $sinPregunta ? 'display:none;' : '' }}">
+      @csrf
+      <input type="hidden" name="question_id" value="{{ $pregunta['pregunta_id'] ?? '' }}">
+
+      <div class="answers-row">
+        @if(isset($pregunta['opciones']))
+          @foreach($pregunta['opciones'] as $op)
+            <button
+              type="button"
+              data-label="{{ $op['label'] }}"
+              class="option-box"
+            >
+              <span class="opt-label">{{ $op['label'] }}</span>
+              <span class="opt-text">{{ $op['texto'] }}</span>
+            </button>
+          @endforeach
+        @endif
+      </div>
+    </form>
   </div>
 
   <!-- MENSAJE SIEMPRE EN EL DOM -->
@@ -243,172 +242,254 @@ html, body {
 }
 body::before { display: none !important; }
 
-.neon-glow { text-shadow: 0 0 16px #00e8fc, 0 0 6px #fff3; }
-.drop-shadow-neon { text-shadow: 0 0 12px #19ff8cbb, 0 0 3px #fff3; }
-.neon-glow-btn { text-shadow: 0 0 6px #00e8fc99; letter-spacing: .03em; }
-
-.question-box {
-  border-radius: 1.7rem;
-  margin-bottom: 2.5rem;
-  box-shadow: 0 2px 22px #012b4955, 0 0 2px #00f0ff22;
-  background: linear-gradient(120deg, rgba(4,38,78,0.81) 77%, rgba(0,52,94,0.81) 100%);
-  border-width: 4px;
-  border-color: #00f0ff66;
-  backdrop-filter: blur(2px);
-}
-
-/* SIEMPRE GRILLA 2x2 (desktop y mobile) */
-.options-grid {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;   /* 2 columnas iguales */
-  grid-template-rows: 1fr 1fr;      /* 2 filas iguales */
-  gap: 1.3rem;
-  max-width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* OPCIONES: sin ancho fijo, ocupan el 100% de la celda de grid */
-.option-card {
-  min-height: 90px;
-  height: 100%;
-  width: 100%;  /* Esto es clave: que ocupe el 100% de su celda */
-  border-radius: 1.1rem !important;
+/* === ESTILOS OVERLAY PARTICIPAR === */
+.participar-container {
+  position: fixed;
+  width: 100vw;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background-color: rgba(5, 30, 56, 0.64) !important;
-  border: 3px solid #00f0ff44;
-  box-shadow: 0 3px 15px #012b497a, 0 0 2px #00f0ff22;
-  color: #d7f6ff;
-  font-family: 'Orbitron', Arial, sans-serif;
-  transition: all .19s cubic-bezier(.44,0,.61,1.15);
-  opacity: 1;
-  backdrop-filter: blur(2px);
-  padding: 1.1rem 0.4rem !important;
-  text-align: center;
-}
-
-.option-card span {
-  display: block;
-  width: 100%;
-  padding-top: 0.15em;
-  padding-bottom: 0.15em;
-  line-height: 1.2;
-}
-.option-card:hover, .option-card:focus, .option-card.selected {
-  background: #00f0ff !important;
-  color: #002640 !important;
-  border-color: #00f0ff !important;
-  box-shadow: 0 0 30px #00e8fcaa, 0 0 16px #00f0ff;
-  z-index: 2;
-  opacity: 1 !important;
-}
-.option-card.selected .selected-animation { opacity: 1; }
-.option-card .selected-animation {
-  background: radial-gradient(circle, #00e8fc60 40%, transparent 80%);
-  transition: opacity 0.23s;
-  z-index: 1;
-  border-radius: 1.2em;
-}
-.option-card.disabled {
+  justify-content: flex-end;
   pointer-events: none;
-  opacity: 0.60;
-  filter: grayscale(0.85);
-  transition: opacity 0.2s ease;
 }
-.option-card.correct {
-  background: #19ff8c !important;
-  color: #000 !important;
-}
-.option-card.incorrect {
-  background: #ff4444 !important;
-  color: #fff !important;
-  animation: blink 0.8s steps(2, start) 2;
-}
-@keyframes blink { to { opacity: 0.5; } }
 
-.question-title {
-  font-size: 2rem;
-  font-weight: bold;
+/* Desktop: ocupa todo el ancho y centrado verticalmente */
+@media (min-width: 641px) {
+  .participar-container {
+    height: 100vh;
+    bottom: 0;
+    left: 0;
+    justify-content: center;
+    padding: 20px;
+  }
+}
+
+/* Mobile: ocupa mitad inferior */
+@media (max-width: 640px) {
+  .participar-container {
+    height: 50vh;
+    bottom: 0;
+    left: 0;
+    padding: 15px;
+  }
+}
+
+.participar-overlay-content {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.question-bar {
+  width: 100%;
+  max-width: 1200px;
+  min-height: 52px;
+  margin: 0 auto 2vh auto;
+  background: linear-gradient(90deg, #111b2b 80%, #004563 100%);
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.74rem;
+  font-weight: 700;
   text-align: center;
-  margin-bottom: 0;
-  padding: 0;
+  color: #fff;
+  text-shadow: 0 0 10px #00f0ff;
+  box-shadow: 0 0 15px #19faffb9, 0 0 1px #fff6;
+  border: none;
+  letter-spacing: 1.2px;
+  font-family: 'Orbitron', Arial, sans-serif;
+  padding: 12px 20px;
+}
+
+.answers-row {
+  width: 100%;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 28px;
+  margin-bottom: 1.3vh;
+}
+
+.option-box {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: 1.32rem;
+  background: linear-gradient(90deg, #0b1530 75%, #12375c 100%);
+  color: #fff;
+  padding: 16px 28px;
+  border-radius: 23px;
+  box-shadow: 0 0 14px #19faffaa, 0 0 1px #fff8;
+  font-family: 'Orbitron', Arial, sans-serif;
+  font-weight: 600;
+  position: relative;
+  border: none;
+  min-height: 46px;
+  transition: background 0.12s, box-shadow 0.14s, color 0.15s, transform 0.16s;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.option-box .opt-label {
+  font-size: 1.62rem;
+  color: #36ffd0;
+  margin-right: 19px;
+  font-weight: 900;
+  text-shadow: 0 0 8px #1affd2b5;
+}
+
+.option-box .opt-text {
+  flex: 1;
+  font-size: 1.04em;
+}
+
+.option-box.selected,
+.option-box:hover {
+  background: linear-gradient(90deg, #ffe47a 80%, #e6be2f 100%);
+  color: #333;
+  transform: scale(1.07);
+  box-shadow: 0 0 22px #ffe47a99, 0 0 5px #e6be2f77;
+  z-index: 1;
+}
+
+@keyframes flash-green {
+  0%, 100% { background: linear-gradient(90deg, #0b1530 75%, #12375c 100%); color: #fff; }
+  25%, 75% { background: linear-gradient(90deg, #13ff79 70%, #07ce5e 110%); color: #fff; }
+  50% { background: linear-gradient(90deg, #0b1530 75%, #12375c 100%); color: #fff; }
+}
+
+.option-box.correct-flash {
+  animation: flash-green 0.65s 2;
+}
+
+.option-box.correct-final {
+  background: linear-gradient(90deg, #13ff79 80%, #07ce5e 100%);
+  color: #003e18;
+  box-shadow: 0 0 33px #15ff99c9, 0 0 5px #07ce5e99;
+}
+
+@keyframes flash-red {
+  0%, 100% { background: linear-gradient(90deg, #0b1530 75%, #12375c 100%); color: #fff; }
+  25%, 75% { background: linear-gradient(90deg, #ff3f34 80%, #d00015 100%); color: #fff; }
+  50% { background: linear-gradient(90deg, #0b1530 75%, #12375c 100%); color: #fff; }
+}
+
+.option-box.incorrect-flash {
+  animation: flash-red 0.65s 2;
+}
+
+.option-box.incorrect-final {
+  background: linear-gradient(90deg, #ff3f34 80%, #d00015 100%);
+  color: #fff;
+  box-shadow: 0 0 26px #ff4a4a99;
+}
+
+/* Mensaje de respuesta profesional */
+.respuesta-msg-top {
+  text-align: center;
+  margin-bottom: 15px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: 'Orbitron', Arial, sans-serif;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+}
+
+.respuesta-msg-top.success {
+  background: rgba(19, 255, 121, 0.15);
+  border: 2px solid #13ff79;
+  color: #13ff79;
+  text-shadow: 0 0 8px rgba(19, 255, 121, 0.5);
+}
+
+.respuesta-msg-top.error {
+  background: rgba(255, 63, 52, 0.15);
+  border: 2px solid #ff3f34;
+  color: #ff3f34;
+  text-shadow: 0 0 8px rgba(255, 63, 52, 0.5);
+}
+
+.respuesta-msg-top.warning {
+  background: rgba(255, 228, 122, 0.15);
+  border: 2px solid #ffe47a;
+  color: #ffe47a;
+  text-shadow: 0 0 8px rgba(255, 228, 122, 0.5);
+}
+
+/* Opciones bloqueadas (Solo yo) */
+.option-box.locked {
+  opacity: 0.35 !important;
+  filter: grayscale(1) !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+  background: rgba(11, 21, 48, 0.5) !important;
+  border-color: #555 !important;
+}
+
+.option-box.locked:hover {
+  transform: none !important;
+  box-shadow: 0 0 14px #19faffaa, 0 0 1px #fff8 !important;
 }
 
 /* --- MOBILE Ajustes --- */
 @media (max-width: 640px) {
-  .flex.flex-col.items-center.justify-center.min-h-[80vh].px-3.py-6,
-  .flex.flex-col.items-center.justify-center.min-h-[60vh] {
-    min-height: 97vh !important;
-    padding: 0.5rem !important;
+  .question-bar {
+    font-size: 1.2rem;
+    padding: 10px 15px;
+    min-height: 46px;
   }
-  #main-question-box {
-    max-width: 99vw !important;
-    width: 100vw !important;
-    padding: 0 !important;
+
+  .answers-row {
+    gap: 12px 16px;
   }
-  .question-box {
-    padding: 1rem 0.4rem !important;
-    margin-bottom: 1.5rem !important;
-    border-radius: 1rem !important;
+
+  .option-box {
+    font-size: 1rem;
+    padding: 12px 16px;
+    min-height: 60px;
   }
-  .question-title {
-    font-size: 1.12rem !important;
-    padding: 0 0.12rem !important;
-    word-break: break-word;
+
+  .option-box .opt-label {
+    font-size: 1.3rem;
+    margin-right: 12px;
   }
-  .options-grid {
-    grid-template-columns: 1fr 1fr !important;
-    grid-template-rows: 1fr 1fr !important;
-    gap: 1rem !important;
-    max-width: 98vw !important;
-    max-height: 79vw !important;
-    padding: 0 0.1rem !important;
+
+  .option-box .opt-text {
+    font-size: 0.95em;
   }
-  .option-card {
-    min-height: 75px !important;
-    height: 75px !important;
-    font-size: 1.05rem !important;
-    border-radius: 0.85rem !important;
-    padding: 0.58rem 0.15rem !important;
-  }
-  .option-card span.block.text-3xl,
-  .option-card span.block.text-4xl,
-  .option-card span.block.text-center {
-    font-size: 1.05rem !important;
-  }
-  .option-card span.block.text-lg,
-  .option-card span.block.text-2xl {
-    font-size: 0.93rem !important;
+
+  .respuesta-msg-top {
+    font-size: 0.95rem;
+    padding: 8px 15px;
   }
 }
+
 @media (max-width: 420px) {
-  .question-title {
-    font-size: 0.98rem !important;
-    line-height: 1.3 !important;
+  .question-bar {
+    font-size: 1rem;
+    padding: 8px 12px;
+    min-height: 40px;
   }
-  .option-card {
-    min-height: 54px !important;
-    height: 54px !important;
-    font-size: 0.93rem !important;
-    border-radius: 0.65rem !important;
-    padding: 0.43rem 0.05rem !important;
+
+  .option-box {
+    font-size: 0.9rem;
+    padding: 10px 12px;
+    min-height: 54px;
   }
-  .option-card span {
-    padding-top: 0.13em;
-    padding-bottom: 0.13em;
+
+  .option-box .opt-label {
+    font-size: 1.1rem;
+    margin-right: 10px;
   }
-  .option-card span.block.text-3xl,
-  .option-card span.block.text-4xl,
-  .option-card span.block.text-center {
-    font-size: 0.93rem !important;
-  }
-  .option-card span.block.text-lg,
-  .option-card span.block.text-2xl {
-    font-size: 0.80rem !important;
+
+  .option-box .opt-text {
+    font-size: 0.85em;
   }
 }
 
@@ -683,36 +764,6 @@ body::before { display: none !important; }
     text-align: center;
   }
 }
-/* Opciones bloqueadas (Ahora yo) */
-.option-card.locked {
-  opacity: 0.35 !important;
-  filter: grayscale(1) !important;
-  pointer-events: none !important;
-  cursor: not-allowed !important;
-  background-color: rgba(5, 30, 56, 0.3) !important;
-  border-color: #555 !important;
-}
-
-.option-card.locked:hover {
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-/* Mensaje de "Solo invitado" más sutil */
-#respuesta-msg {
-  text-align: center;
-  margin-top: 0;
-  margin-bottom: 15px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: rgba(255, 228, 122, 0.1);
-  border: 1px dashed #ffe47a;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #ffe47a;
-  text-shadow: 0 0 8px rgba(255, 228, 122, 0.5);
-  letter-spacing: 0.5px;
-}
   </style>
 
 
@@ -743,55 +794,60 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ===== FUNCIONES DE UI =====
   function limpiarSeleccionUI() {
-    document.querySelectorAll('.option-card').forEach(btn => {
-      btn.classList.remove('selected', 'disabled', 'correct', 'incorrect', 'blinking');
-      btn.style.opacity = '1';
-      btn.style.filter = 'none';
+    document.querySelectorAll('.option-box').forEach(btn => {
+      btn.classList.remove('selected', 'correct-flash', 'correct-final', 'incorrect-flash', 'incorrect-final', 'locked');
     });
-    if (msg) { msg.style.display = 'none'; }
+    if (msg) {
+      msg.style.display = 'none';
+      msg.className = 'respuesta-msg-top';
+    }
   }
 
   function marcarSeleccionUI(label) {
-    document.querySelectorAll('.option-card').forEach(btn => {
+    document.querySelectorAll('.option-box').forEach(btn => {
       if (btn.getAttribute('data-label') === label) {
         btn.classList.add('selected');
-        btn.classList.remove('disabled');
-        btn.style.opacity = '1';
-        btn.style.filter = 'none';
       } else {
         btn.classList.remove('selected');
-        btn.classList.add('disabled');
-        btn.style.opacity = '0.6';
-        btn.style.filter = 'grayscale(0.85)';
       }
     });
     if (msg) {
       msg.style.display = 'block';
-      msg.innerHTML = '¡Respuesta enviada! Esperá la siguiente pregunta...';
-      msg.style.color = '#19ff8c';
+      msg.className = 'respuesta-msg-top success';
+      msg.innerHTML = 'Respuesta enviada. Esperando resultado...';
     }
   }
 
   function marcarCorrecta(label) {
-    document.querySelectorAll('.option-card').forEach(btn => {
-      if (btn.getAttribute('data-label') === label) {
-        btn.classList.add('correct');
-        btn.classList.remove('incorrect', 'disabled');
-        btn.style.opacity = '1';
-        btn.style.filter = 'none';
-      } else {
-        btn.classList.remove('correct');
-      }
-    });
+    const btn = document.querySelector(`.option-box[data-label="${label}"]`);
+    if (btn) {
+      btn.classList.add('correct-flash');
+      setTimeout(() => {
+        btn.classList.remove('correct-flash');
+        btn.classList.add('correct-final');
+      }, 1300);
+    }
+    if (msg) {
+      msg.style.display = 'block';
+      msg.className = 'respuesta-msg-top success';
+      msg.innerHTML = 'RESPUESTA CORRECTA';
+    }
   }
 
   function marcarIncorrecta(label) {
-    document.querySelectorAll('.option-card').forEach(btn => {
-      if (btn.getAttribute('data-label') === label) {
-        btn.classList.add('incorrect', 'blinking');
-        btn.classList.remove('correct');
-      }
-    });
+    const btn = document.querySelector(`.option-box[data-label="${label}"]`);
+    if (btn) {
+      btn.classList.add('incorrect-flash');
+      setTimeout(() => {
+        btn.classList.remove('incorrect-flash');
+        btn.classList.add('incorrect-final');
+      }, 1300);
+    }
+    if (msg) {
+      msg.style.display = 'block';
+      msg.className = 'respuesta-msg-top error';
+      msg.innerHTML = 'RESPUESTA INCORRECTA';
+    }
   }
 
   // ===== MANEJO DE RESPUESTAS =====
@@ -819,11 +875,6 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(data => {
         enviado = true;
         yaRespondio = selectedLabel;
-        if (msg) {
-            msg.style.display = 'block';
-            msg.innerHTML = '¡Respuesta enviada! Esperá la siguiente pregunta...';
-            msg.style.color = '#19ff8c';
-        }
         console.log('[RESPUESTA] Enviada correctamente:', selectedLabel);
     })
     .catch(err => {
@@ -831,8 +882,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('[ERROR] Al enviar respuesta:', err);
         if (msg) {
             msg.style.display = 'block';
-            msg.style.color = '#ff4444';
-            msg.innerHTML = 'Hubo un error al enviar la respuesta.';
+            msg.className = 'respuesta-msg-top error';
+            msg.innerHTML = 'Error al enviar la respuesta';
         }
         limpiarSeleccionUI();
     });
@@ -841,7 +892,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // ===== RENDERIZADO DE PREGUNTAS =====
 function renderPregunta(data) {
     console.log('[PREGUNTA] Renderizando:', data);
-    
+
     const mainBox = document.getElementById('main-question-box');
     if (mainBox) mainBox.style.display = 'block';
 
@@ -850,71 +901,61 @@ function renderPregunta(data) {
     }
 
     // ✅ DETECTAR SI ES "AHORA YO" (Solo invitado)
-    const isAhoraYo = data.disable_public_answers === true 
+    const isAhoraYo = data.disable_public_answers === true
         || (data.special_indicator && data.special_indicator.toLowerCase().includes('solo yo'))
         || (data.special_indicator && data.special_indicator.toLowerCase().includes('ahora yo'));
 
-    const optionsGrid = form ? form.querySelector('.options-grid') : null;
-    
+    const answersRow = form ? form.querySelector('.answers-row') : null;
+
     // ✅ RENDERIZAR OPCIONES (SIEMPRE, pero deshabilitadas si es Ahora Yo)
-    if (optionsGrid) {
-      optionsGrid.innerHTML = '';
+    if (answersRow) {
+      answersRow.innerHTML = '';
       (data.opciones || []).forEach(op => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.setAttribute('data-label', op.label);
-        
-        // ✅ Agregar clase 'locked' si es Ahora Yo
-        let classes = "option-card group relative flex flex-col items-center justify-center min-h-[108px] md:min-h-[138px] h-full bg-[#051e38fa] border-[3px] border-[#00f0ff44] text-[#d7f6ff] font-bold text-xl md:text-2xl rounded-2xl transition-all duration-200 ease-out shadow-lg select-none outline-none tracking-wide neon-glow-btn";
-        
+        btn.className = 'option-box';
+
         if (isAhoraYo) {
-            classes += " locked"; // ✅ Clase especial para deshabilitar
+            btn.classList.add('locked');
             btn.disabled = true;
-        } else {
-            classes += " hover:bg-[#00f0ff] hover:text-[#002640] hover:scale-105 focus:ring-4 focus:ring-[#00f0ff77]";
         }
-        
-        btn.className = classes;
+
         btn.innerHTML = `
-            <span class="block text-3xl md:text-4xl font-black mb-2 group-hover:text-[#ff1fff] transition">${op.label}</span>
-            <span class="block text-center w-full font-bold text-lg md:text-2xl">${op.texto}</span>
-            <span class="selected-animation absolute inset-0 opacity-0 pointer-events-none"></span>
+            <span class="opt-label">${op.label}</span>
+            <span class="opt-text">${op.texto}</span>
         `;
-        
+
         if (!isAhoraYo) {
             btn.addEventListener('click', handleOptionClick);
         }
-        
-        optionsGrid.appendChild(btn);
+
+        answersRow.appendChild(btn);
       });
     }
 
-    const questionTitle = document.querySelector('.question-title');
-    if (questionTitle) questionTitle.textContent = data.pregunta || '';
+    const questionBar = document.querySelector('.question-bar');
+    if (questionBar) questionBar.textContent = data.pregunta || '';
 
     enviado = false;
     yaRespondio = null;
     lastQuestionId = data.pregunta_id;
     limpiarSeleccionUI();
-    
+
     // ✅ MOSTRAR MENSAJE SUTIL ARRIBA DE LAS OPCIONES
     if (isAhoraYo) {
         if (msg) {
             msg.style.display = 'block';
-            msg.innerHTML =  'Solo el invitado puede responder';
-            msg.style.color = '#ffe47a';
-            msg.style.fontSize = '1.1rem';
-            msg.style.fontWeight = '700';
-            msg.style.marginTop = '0';
-            msg.style.marginBottom = '15px';
+            msg.className = 'respuesta-msg-top warning';
+            msg.innerHTML = 'Solo el invitado puede responder';
         }
         console.log('[AHORA YO] Opciones deshabilitadas para el público');
     } else {
         if (msg) msg.style.display = 'none';
     }
-    
+
     if (form) form.style.display = 'block';
-    
+
     const msgNoQuestion = document.getElementById('msg-no-question');
     if (msgNoQuestion) msgNoQuestion.style.display = 'none';
 }
@@ -922,7 +963,7 @@ function renderPregunta(data) {
   // ===== INICIALIZACIÓN DEL FORMULARIO =====
   limpiarSeleccionUI();
   if (form) {
-    form.querySelectorAll('.option-card').forEach(btn => {
+    form.querySelectorAll('.option-box').forEach(btn => {
       btn.addEventListener('click', handleOptionClick);
     });
     form.addEventListener('submit', function(e) { e.preventDefault(); });
@@ -958,17 +999,12 @@ function renderPregunta(data) {
         }
         
         marcarIncorrecta(respondida);
-        if (msg) {
-          msg.innerHTML = 'Respuesta incorrecta 😢';
-          msg.style.color = '#ff4444';
-          msg.style.display = 'block';
-        }
-        
+
         setTimeout(() => {
           marcarCorrecta(data.label_correcto);
           if (msg) {
-            msg.innerHTML = 'La respuesta correcta era la opción ' + data.label_correcto + '!';
-            msg.style.color = '#19ff8c';
+            msg.className = 'respuesta-msg-top success';
+            msg.innerHTML = 'La respuesta correcta era: ' + data.label_correcto;
           }
         }, 5000);
       })
@@ -979,20 +1015,20 @@ function renderPregunta(data) {
         if (form) {
           form.style.display = 'none';
           form.querySelector('input[name="question_id"]').value = '';
-          const optionsGrid = form.querySelector('.options-grid');
-          if (optionsGrid) optionsGrid.innerHTML = '';
+          const answersRow = form.querySelector('.answers-row');
+          if (answersRow) answersRow.innerHTML = '';
         }
-        
-        const questionTitle = document.querySelector('.question-title');
-        if (questionTitle) questionTitle.textContent = '';
+
+        const questionBar = document.querySelector('.question-bar');
+        if (questionBar) questionBar.textContent = '';
         if (msg) msg.style.display = 'none';
 
         let msgNoQuestion = document.getElementById('msg-no-question');
-        if (!msgNoQuestion && main) {
+        if (!msgNoQuestion && document.getElementById('pantalla')) {
           msgNoQuestion = document.createElement('div');
           msgNoQuestion.id = 'msg-no-question';
           msgNoQuestion.className = 'bg-[#171c2e] rounded-[2.5rem] px-12 py-12 shadow-2xl border-4 border-[#01e3fd4d] text-2xl text-white font-semibold text-center max-w-2xl mx-auto tracking-wide neon-glow';
-          main.appendChild(msgNoQuestion);
+          document.getElementById('pantalla').appendChild(msgNoQuestion);
         }
         if (msgNoQuestion) {
           msgNoQuestion.innerHTML = `
