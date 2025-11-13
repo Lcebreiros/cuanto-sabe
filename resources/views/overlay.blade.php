@@ -1123,6 +1123,13 @@ function startSpin() {
     smoothFrenando = false;
     targetAngle = null;
 
+    // Resetear y dibujar la ruleta antes de empezar el giro
+    wheelDrawn = false;
+    svg.style.transform = '';
+    currentAngle = 0;
+    drawRuleta(0, null, 0); // Dibujar en posición inicial
+    wheelDrawn = true; // Ahora sí, marcar como dibujado para que el loop solo rote
+
     function spinLoop() {
         if (!spinning) return;
         currentAngle += currentSpinSpeed;
@@ -1170,7 +1177,7 @@ function finalizeSpin() {
             drawRuleta(currentAngle, selectedSlotIdx, 1);
             spinning = false;
             stopRequested = false;
-            wheelDrawn = true; // Marcar como dibujado después del highlight final
+            // NO marcar wheelDrawn aquí, se marcará en el próximo startSpin
 
             console.log('== Ruleta finalizó. Slot seleccionado:', selectedSlot);
             console.log('== Es segundo giro?', isSecondSpin);
