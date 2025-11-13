@@ -290,17 +290,9 @@ public function overlayReset(Request $request)
             $session->active_question_id = null;
             $session->pregunta_json = null;
             $session->save();
-            // Invalida todos los caches relacionados al estado del overlay
             Cache::forget("game_session_active");
-            Cache::forget("game_session_active_question");
 
             // broadcast solo si hubo write real
-            broadcast(new \App\Events\OverlayReset());
-        } else {
-            // Aun si no hubo write, limpia caches para evitar datos stales en el overlay
-            Cache::forget("game_session_active");
-            Cache::forget("game_session_active_question");
-            // y avisa al overlay para que se resetee visualmente
             broadcast(new \App\Events\OverlayReset());
         }
     }
@@ -425,19 +417,10 @@ public function lanzarPreguntaCategoria(Request $request)
     $categoriaLower = strtolower($categoria);
     $specialSlot = $request->input('special_slot');
 
-    \Log::info('🎯 [LANZAR PREGUNTA] Solicitud recibida', [
-        'categoria' => $categoria,
-        'special_slot' => $specialSlot,
-        'request_data' => $request->all()
-    ]);
-
     $session = GameSession::where('status', 'active')->latest()->first();
     if (!$session) {
-        \Log::error('❌ [LANZAR PREGUNTA] No hay sesión activa');
         return response()->json(['error' => 'No hay sesión activa'], 400);
     }
-
-    \Log::info('✅ [LANZAR PREGUNTA] Sesión activa encontrada', ['session_id' => $session->id]);
 
     // ✅ Obtener ID de la pregunta anterior para no repetirla
     $preguntaAnteriorId = $session->active_question_id;
@@ -464,15 +447,11 @@ public function lanzarPreguntaCategoria(Request $request)
             'special_indicator' => $specialSlot ?? strtoupper($categoria),
         ];
         $session->active_question_id = null;
-        $session->pregunta_json = json_encode($data); // 🔥 FIX: Guardar data en lugar de null
+        $session->pregunta_json = null;
         $session->save();
-
-        // 🔥 Invalidar caché para que OBS lo vea inmediatamente
-        Cache::forget('game_session_active');
-        Cache::forget('game_session_active_question');
-
+        
         session(['last_overlay_question' => $data]);
-
+        
         broadcast(new NuevaPreguntaOverlay($data));
         return response()->json(['ok' => true]);
     }
@@ -480,7 +459,7 @@ public function lanzarPreguntaCategoria(Request $request)
     elseif ($categoriaLower === 'responde el chat' || $categoriaLower === 'solo yo') {
         // ✅ Diferenciar: "Solo yo" deshabilita público, "Responde el chat" no
         $disablePublic = ($categoriaLower === 'solo yo');
-
+        
         $data = [
             'pregunta' => strtoupper($categoria),
             'opciones' => [],
@@ -493,15 +472,11 @@ public function lanzarPreguntaCategoria(Request $request)
             'disable_public_answers' => $disablePublic,
         ];
         $session->active_question_id = null;
-        $session->pregunta_json = json_encode($data); // 🔥 FIX: Guardar data en lugar de null
+        $session->pregunta_json = null;
         $session->save();
-
-        // 🔥 Invalidar caché para que OBS lo vea inmediatamente
-        Cache::forget('game_session_active');
-        Cache::forget('game_session_active_question');
-
+        
         session(['last_overlay_question' => $data]);
-
+        
         broadcast(new NuevaPreguntaOverlay($data));
         return response()->json(['ok' => true]);
     }
@@ -573,15 +548,11 @@ public function lanzarPreguntaCategoria(Request $request)
     $session->active_question_id = $pregunta->id;
     $session->pregunta_json = json_encode($data);
     $session->save();
-
-    // 🔥 Invalidar caché para que OBS lo vea inmediatamente
-    Cache::forget('game_session_active');
-    Cache::forget('game_session_active_question');
-
+    
     session(['last_overlay_question' => $data]);
-
+    
     \Log::info('🟢 PREGUNTA GUARDADA', [
-        'pregunta_id' => $pregunta->id,
+        'pregunta_id' => $pregunta->id, 
         'label_correcto' => $label_correcto,
         'anterior_id' => $preguntaAnteriorId,
         'categoria' => $categoriaModel->nombre // ✅ AGREGADO al log
@@ -591,217 +562,9 @@ public function lanzarPreguntaCategoria(Request $request)
     return response()->json(['success' => true, 'data' => $data]);
 }
 
-    public function girarRuleta(Request $request) {
-        \Log::info('🎲 [GIRAR RULETA] Solicitud recibida');
-
-        $session = GameSession::where('status', 'active')->latest()->first();
-        if (!$session) {
-            \Log::error('❌ [GIRAR RULETA] No hay sesión activa');
-            return response()->json(['error' => 'No hay sesión activa'], 400);
-        }
-
-        // Activar flag para que el overlay detecte mediante polling que debe girar
-        $session->pending_spin = true;
-        $session->spin_requested_at = now();
-        $session->save();
-
-        // 🔥 Invalidar caché inmediatamente para que OBS lo detecte
-        Cache::forget('game_session_active');
-
-        \Log::info('📤 [GIRAR RULETA] Flag pending_spin activado en sesión');
-
-        // También enviar evento de Pusher (por si acaso funciona)
+    public function girarRuleta() {
         broadcast(new \App\Events\GirarRuleta());
-        \Log::info('✅ [GIRAR RULETA] Evento broadcast enviado + flag activado');
-
-        return response()->json(['ok' => true, 'message' => 'Ruleta girando', 'pending_spin' => true]);
-    }
-
-    public function limpiarSpinPendiente(Request $request) {
-        $session = GameSession::where('status', 'active')->latest()->first();
-        if ($session && $session->pending_spin) {
-            $session->pending_spin = false;
-            $session->save();
-            Cache::forget('game_session_active');
-            \Log::info('✅ [OVERLAY] Flag pending_spin limpiado por overlay');
-        }
         return response()->json(['ok' => true]);
-    }
-
-    public function lanzarPreguntaAlFinalizar(Request $request) {
-        \Log::info('🎯 [FINALIZAR RULETA] Ruleta detenida, categoría seleccionada', $request->all());
-
-        $categoriaNombre = $request->input('categoria');
-        $specialSlot = $request->input('special_slot'); // ✅ AGREGAR
-
-        if (!$categoriaNombre) {
-            \Log::error('❌ [FINALIZAR RULETA] No se recibió categoría');
-            return response()->json(['error' => 'Categoría no especificada'], 400);
-        }
-
-        $session = GameSession::where('status', 'active')->latest()->first();
-        if (!$session) {
-            \Log::error('❌ [FINALIZAR RULETA] No hay sesión activa');
-            return response()->json(['error' => 'No hay sesión activa'], 400);
-        }
-
-        $categoriaLower = strtolower($categoriaNombre);
-        $preguntaAnteriorId = $session->active_question_id;
-
-        // ✅ MANEJAR CASO RANDOM
-        if ($categoriaLower === 'random') {
-            \Log::info('🎲 [FINALIZAR RULETA] Caso RANDOM detectado');
-            $motivo = Motivo::find($session->motivo_id);
-            $categorias = $motivo && $motivo->categorias->count() > 0 ? $motivo->categorias : collect();
-            if ($categorias->isEmpty()) {
-                return response()->json(['error' => 'No hay categorías disponibles para random'], 404);
-            }
-            $categoriaModel = $categorias->random();
-        }
-        // ✅ MANEJAR PREGUNTA DE ORO
-        elseif ($categoriaLower === 'pregunta de oro') {
-            \Log::info('🏆 [FINALIZAR RULETA] Caso PREGUNTA DE ORO detectado');
-            $data = [
-                'pregunta' => strtoupper($categoriaNombre),
-                'opciones' => [],
-                'label_correcto' => null,
-                'pregunta_id' => null,
-                'categoria_id' => null,
-                'categoria_nombre' => 'Pregunta de Oro',
-                'timestamp' => now()->toISOString(),
-                'special_indicator' => $specialSlot ?? strtoupper($categoriaNombre),
-            ];
-            $session->active_question_id = null;
-            $session->pregunta_json = json_encode($data);
-            $session->pending_spin = false;
-            $session->save();
-
-            Cache::forget('game_session_active');
-            Cache::forget('game_session_active_question');
-
-            session(['last_overlay_question' => $data]);
-            broadcast(new NuevaPreguntaOverlay($data));
-
-            \Log::info('✅ [FINALIZAR RULETA] Pregunta de Oro lanzada');
-            return response()->json(['ok' => true, 'categoria' => $categoriaNombre, 'pregunta' => $data]);
-        }
-        // ✅ MANEJAR SOLO YO / RESPONDE EL CHAT
-        elseif ($categoriaLower === 'responde el chat' || $categoriaLower === 'solo yo') {
-            $disablePublic = ($categoriaLower === 'solo yo');
-            \Log::info('👤 [FINALIZAR RULETA] Caso ESPECIAL detectado: ' . $categoriaNombre);
-
-            $data = [
-                'pregunta' => strtoupper($categoriaNombre),
-                'opciones' => [],
-                'label_correcto' => null,
-                'pregunta_id' => null,
-                'categoria_id' => null,
-                'categoria_nombre' => ucwords($categoriaNombre),
-                'timestamp' => now()->toISOString(),
-                'special_indicator' => $specialSlot ?? strtoupper($categoriaNombre),
-                'disable_public_answers' => $disablePublic,
-            ];
-            $session->active_question_id = null;
-            $session->pregunta_json = json_encode($data);
-            $session->pending_spin = false;
-            $session->save();
-
-            Cache::forget('game_session_active');
-            Cache::forget('game_session_active_question');
-
-            session(['last_overlay_question' => $data]);
-            broadcast(new NuevaPreguntaOverlay($data));
-
-            \Log::info('✅ [FINALIZAR RULETA] Especial lanzado: ' . $categoriaNombre);
-            return response()->json(['ok' => true, 'categoria' => $categoriaNombre, 'pregunta' => $data]);
-        }
-        // ✅ CATEGORÍA NORMAL
-        else {
-            \Log::info('📚 [FINALIZAR RULETA] Caso categoría normal: ' . $categoriaNombre);
-            $categoriaModel = \App\Models\Categoria::where('nombre', $categoriaNombre)->first();
-            if (!$categoriaModel) {
-                \Log::error('❌ [FINALIZAR RULETA] Categoría no encontrada: ' . $categoriaNombre);
-                return response()->json(['error' => 'Categoría no encontrada'], 404);
-            }
-        }
-
-        // ✅ BUSCAR PREGUNTA (para Random y categorías normales)
-        $query = Question::where('category_id', $categoriaModel->id);
-        if ($preguntaAnteriorId) {
-            $query->where('id', '!=', $preguntaAnteriorId);
-        }
-        $pregunta = $query->inRandomOrder()->first();
-
-        if (!$pregunta) {
-            $pregunta = Question::where('category_id', $categoriaModel->id)->inRandomOrder()->first();
-        }
-
-        if (!$pregunta) {
-            \Log::error('❌ [FINALIZAR RULETA] No hay preguntas en la categoría: ' . $categoriaModel->nombre);
-            return response()->json(['error' => 'No hay preguntas disponibles'], 404);
-        }
-
-        // Armar opciones
-        $opciones = [
-            ['text' => $pregunta->opcion_correcta],
-            ['text' => $pregunta->opcion_1],
-            ['text' => $pregunta->opcion_2],
-            ['text' => $pregunta->opcion_3],
-        ];
-        shuffle($opciones);
-
-        $data_opciones = [];
-        $label_correcto = null;
-        foreach ($opciones as $i => $op) {
-            $label = chr(65 + $i);
-            $data_opciones[] = [
-                'label' => $label,
-                'texto' => $op['text'],
-            ];
-            if ($label_correcto === null && $op['text'] === $pregunta->opcion_correcta) {
-                $label_correcto = $label;
-            }
-        }
-
-        $data = [
-            'pregunta' => $pregunta->texto,
-            'opciones' => $data_opciones,
-            'label_correcto' => $label_correcto,
-            'pregunta_id' => $pregunta->id,
-            'categoria_id' => $categoriaModel->id,
-            'categoria_nombre' => $categoriaModel->nombre,
-            'timestamp' => now()->toISOString(),
-        ];
-
-        // ✅ AGREGAR special_slot si existe
-        if ($specialSlot) {
-            $data['special_indicator'] = $specialSlot;
-        }
-        // ✅ Si es random, marcar como random
-        if ($categoriaLower === 'random') {
-            $data['special_indicator'] = 'random';
-        }
-
-        // Guardar en BD
-        $session->active_question_id = $pregunta->id;
-        $session->pregunta_json = json_encode($data);
-        $session->pending_spin = false; // ✅ Limpiar flag
-        $session->save();
-
-        Cache::forget('game_session_active');
-        Cache::forget('game_session_active_question');
-
-        session(['last_overlay_question' => $data]);
-
-        \Log::info('✅ [FINALIZAR RULETA] Pregunta guardada y enviada, pending_spin limpiado', [
-            'pregunta_id' => $pregunta->id,
-            'categoria' => $categoriaModel->nombre,
-            'special_slot' => $specialSlot
-        ]);
-
-        broadcast(new NuevaPreguntaOverlay($data));
-
-        return response()->json(['ok' => true, 'categoria' => $categoriaModel->nombre, 'pregunta' => $data]);
     }
 
     public function syncQuestion(Request $request) {
@@ -961,34 +724,20 @@ public function enviarParticipacion(Request $request)
 
 public function apiActiveQuestion()
 {
-    // 🔥 SIN CACHE - OBS necesita la pregunta más reciente siempre
-    $session = GameSession::where('status', 'active')->latest()->first();
+    // 🔥 Aumentar TTL y evitar writes innecesarios
+    $session = Cache::remember("game_session_active_question", 8, function () {
+        $session = GameSession::where('status', 'active')->latest()->first();
+        return $session ? [
+            'pregunta_json' => $session->pregunta_json,
+            'id' => $session->id
+        ] : null;
+    });
 
-    if (!$session) {
-        return response()->json(['pregunta' => null, 'pending_spin' => false]);
+    if (!$session || !$session['pregunta_json']) {
+        return response()->json(['pregunta' => null]);
     }
-
-    $response = [];
-
-    // Incluir pending_spin para que el overlay sepa si debe girar
-    $response['pending_spin'] = (bool) ($session->pending_spin ?? false);
-
-    if (!$session->pregunta_json) {
-        $response['pregunta'] = null;
-        return response()->json($response);
-    }
-
-    $preguntaData = json_decode($session->pregunta_json, true);
-    $response = array_merge($preguntaData, $response);
-
-    // Log para debugging
-    \Log::info('📤 [API] Pregunta solicitada', [
-        'pregunta_id' => $preguntaData['pregunta_id'] ?? null,
-        'pregunta' => substr($preguntaData['pregunta'] ?? '', 0, 50),
-        'pending_spin' => $response['pending_spin']
-    ]);
-
-    return response()->json($response);
+    
+    return response()->json(json_decode($session['pregunta_json'], true));
 }
 
 public function limpiarPreguntaParticipante()
