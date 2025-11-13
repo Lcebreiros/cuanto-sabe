@@ -115,7 +115,7 @@
 </head>
 <body>
     <div class="neon-form-container">
-        <img src="/public/images/logo.png" alt="Logo Cuanto Sabe" class="logo" />
+        <img src="/images/logo.png" alt="Logo Cuanto Sabe" class="logo" />
 
         @if(session('success'))
             <div class="success-message">{{ session('success') }}</div>

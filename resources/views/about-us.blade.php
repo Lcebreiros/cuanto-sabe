@@ -428,7 +428,7 @@
     <section id="hero">
         <div class="section-container">
             <div class="hero-content fade-in">
-                <img src="{{ asset('public/images/logo.png') }}" alt="Logo Cuánto Sabe" class="hero-logo">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo Cuánto Sabe" class="hero-logo">
                 <h1 class="hero-title">¿QUÉ ES CUÁNTO SABE?</h1>
                 <p class="hero-subtitle">El juego interactivo donde el conocimiento es tu mejor arma</p>
                 <p class="hero-description">

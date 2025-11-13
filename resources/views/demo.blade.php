@@ -548,7 +548,7 @@
         <svg id="flecha-roja" viewBox="0 0 90 65"><polygon points="0,0 90,0 45,65" style="fill:rgba(255,60,60,0.93);stroke:#ff4747;stroke-width:7;" /></svg>
         <svg id="ruleta-svg" width="440" height="440"></svg>
         <button id="spin-btn" title="Girar" type="button" aria-label="Girar/Detener">
-          <img src="/public/images/ruleta.png" alt="Logo Ruleta"
+          <img src="/images/ruleta.png" alt="Logo Ruleta"
                onerror="this.onerror=null;this.src='https://upload.wikimedia.org/wikipedia/commons/9/9a/Circle-icons-profile.svg'">
         </button>
       </div>

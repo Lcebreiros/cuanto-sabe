@@ -34,7 +34,7 @@
 <body>
     <div class="w-full max-w-md sm:max-w-lg bg-[rgba(5,5,20,0.85)] rounded-xl p-8 shadow-[0_0_20px_rgba(0,240,255,0.4)] text-white flex flex-col items-center">
         <a href="/" class="mb-8 block">
-            <img src="{{ asset('public/images/logo.png') }}" alt="Logo Cuanto Sabe" class="w-40 drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]" />
+            <img src="{{ asset('images/logo.png') }}" alt="Logo Cuanto Sabe" class="w-40 drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]" />
         </a>
         {{ $slot }}
     </div>

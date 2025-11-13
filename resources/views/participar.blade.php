@@ -85,7 +85,7 @@
   <form id="salir-form" method="POST" action="{{ route('salirDelJuego') }}">
     @csrf
     <button type="button" class="salir-btn" onclick="abrirModalSalir()">
-        <img src="{{ asset('public/images/salir.png') }}" alt="Salir del juego">
+        <img src="{{ asset('images/salir.png') }}" alt="Salir del juego">
     </button>
 </form>
 </div>
@@ -217,7 +217,7 @@
 body {
   background:
     radial-gradient(circle at 52% 44%, #1b0362 0%, #030015 95%) !important,
-    url('/public/images/CS.png') center center no-repeat;
+    url('/images/CS.png') center center no-repeat;
   background-size: auto 80vh, cover;
   color: #00f0ff;
   position: relative;
@@ -237,7 +237,7 @@ html, body {
   /* tus fondos tal cual */
   background:
     radial-gradient(circle at 52% 44%, #1b0362 0%, #030015 95%) 0 0/100vw 100vh no-repeat,
-    url('/public/images/CS.png') center center/auto 80vh no-repeat;
+    url('/images/CS.png') center center/auto 80vh no-repeat;
   background-color: #1b0362;
   color: #00f0ff;
 }
