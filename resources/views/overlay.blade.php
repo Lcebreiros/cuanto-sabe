@@ -562,26 +562,33 @@ async function fetchOverlayState(force = false) {
             const ruleta = document.getElementById('ruleta-container');
             const overlay = document.querySelector('.overlay-content');
 
-            // Ocultar overlay de contenido y mostrar ruleta
-            toggleAnim(overlay, 'show-up', 'hide-down', false, () => {
-                toggleAnim(ruleta, 'show-down', 'hide-up', true, () => {
-                    // 🔥 Esperar 800ms para que la ruleta termine de aparecer
+            // 🔥 Mostrar ruleta inmediatamente (sin animación para evitar problemas)
+            overlay.style.display = 'none';
+            overlay.classList.remove('show-up');
+            overlay.classList.add('hide-down');
+
+            ruleta.style.display = 'flex';
+            ruleta.classList.remove('hide-up');
+            ruleta.classList.add('show-down');
+
+            // 🔥 Esperar 500ms y luego iniciar giro
+            setTimeout(() => {
+                questionBar.textContent = '🎲 Girando ruleta...';
+                console.log('[Overlay] 🎯 Iniciando giro de ruleta...');
+
+                if (window.girarRuletaRemoto && typeof window.girarRuletaRemoto === 'function') {
+                    window.girarRuletaRemoto();
+                    console.log('[Overlay] ✅ girarRuletaRemoto() ejecutado');
+                    // Resetear flag después de 15 segundos
                     setTimeout(() => {
-                        questionBar.textContent = '🎲 Girando ruleta...';
-                        if (window.girarRuletaRemoto && typeof window.girarRuletaRemoto === 'function') {
-                            window.girarRuletaRemoto();
-                            // Resetear flag después de 15 segundos
-                            setTimeout(() => {
-                                isHandlingPendingSpin = false;
-                                console.log('[Overlay] 🔄 Flag isHandlingPendingSpin reseteado');
-                            }, 15000);
-                        } else {
-                            console.error('[Overlay] ❌ window.girarRuletaRemoto no está disponible');
-                            isHandlingPendingSpin = false;
-                        }
-                    }, 800);
-                });
-            });
+                        isHandlingPendingSpin = false;
+                        console.log('[Overlay] 🔄 Flag isHandlingPendingSpin reseteado');
+                    }, 15000);
+                } else {
+                    console.error('[Overlay] ❌ window.girarRuletaRemoto no está disponible');
+                    isHandlingPendingSpin = false;
+                }
+            }, 500);
         }
 
         if (pregunta && pregunta.pregunta) {
@@ -598,8 +605,8 @@ async function fetchOverlayState(force = false) {
 
             showQuestion(pregunta);
         } else {
-            // 🔥 Solo resetear si aún no está reseteado
-            if (!isOverlayReset) {
+            // 🔥 Solo resetear si NO está reseteado Y NO está manejando pending spin
+            if (!isOverlayReset && !isHandlingPendingSpin) {
                 console.log('[Overlay] ⭕ No hay pregunta activa, resetting overlay');
                 lastPreguntaId = null;
                 resetOverlay();
