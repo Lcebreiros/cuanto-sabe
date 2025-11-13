@@ -446,7 +446,6 @@ body {
     font-weight: 700;
     background: rgba(255, 63, 52, 0.15);
     text-shadow: 0 0 6px #ff3f34;
-    text-decoration: line-through;
 }
 
 /* Responsive */

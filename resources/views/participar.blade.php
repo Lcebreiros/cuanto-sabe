@@ -955,47 +955,59 @@ function renderPregunta(data) {
         || (data.special_indicator && data.special_indicator.toLowerCase().includes('solo yo'))
         || (data.special_indicator && data.special_indicator.toLowerCase().includes('ahora yo'));
 
+    const questionTitle = document.querySelector('.question-title');
     const optionsGrid = form ? form.querySelector('.options-grid') : null;
 
-    // ✅ RENDERIZAR OPCIONES (SIEMPRE, pero deshabilitadas si es Ahora Yo)
-    if (optionsGrid) {
-      optionsGrid.innerHTML = '';
-      (data.opciones || []).forEach(op => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.setAttribute('data-label', op.label);
+    // ✅ PRIMERO: Mostrar solo la categoría
+    const categoria = data.categoria_nombre ? data.categoria_nombre.toUpperCase() : 'CATEGORÍA';
+    if (questionTitle) questionTitle.textContent = categoria;
 
-        let classes = "option-card group relative flex flex-col items-center justify-center min-h-[108px] md:min-h-[138px] h-full bg-[#051e38fa] border-[3px] border-[#00f0ff44] text-[#d7f6ff] font-bold text-xl md:text-2xl rounded-2xl transition-all duration-200 ease-out shadow-lg select-none outline-none tracking-wide neon-glow-btn";
-
-        if (isAhoraYo) {
-            classes += " locked";
-            btn.disabled = true;
-        } else {
-            classes += " hover:bg-[#00f0ff] hover:text-[#002640] hover:scale-105 focus:ring-4 focus:ring-[#00f0ff77]";
-        }
-
-        btn.className = classes;
-        btn.innerHTML = `
-            <span class="block text-3xl md:text-4xl font-black mb-2 group-hover:text-[#ff1fff] transition">${op.label}</span>
-            <span class="block text-center w-full font-bold text-lg md:text-2xl">${op.texto}</span>
-            <span class="selected-animation absolute inset-0 opacity-0 pointer-events-none"></span>
-        `;
-
-        if (!isAhoraYo) {
-            btn.addEventListener('click', handleOptionClick);
-        }
-
-        optionsGrid.appendChild(btn);
-      });
-    }
-
-    const questionTitle = document.querySelector('.question-title');
-    if (questionTitle) questionTitle.textContent = data.pregunta || '';
+    // Ocultar opciones inicialmente
+    if (optionsGrid) optionsGrid.style.display = 'none';
 
     enviado = false;
     yaRespondio = null;
     lastQuestionId = data.pregunta_id;
     limpiarSeleccionUI();
+
+    // ✅ DESPUÉS DE 10 SEGUNDOS: Mostrar pregunta y opciones
+    setTimeout(() => {
+        // Mostrar la pregunta real
+        if (questionTitle) questionTitle.textContent = data.pregunta || '';
+
+        // Mostrar y renderizar opciones
+        if (optionsGrid) {
+          optionsGrid.style.display = 'grid';
+          optionsGrid.innerHTML = '';
+          (data.opciones || []).forEach(op => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.setAttribute('data-label', op.label);
+
+            let classes = "option-card group relative flex flex-col items-center justify-center min-h-[108px] md:min-h-[138px] h-full bg-[#051e38fa] border-[3px] border-[#00f0ff44] text-[#d7f6ff] font-bold text-xl md:text-2xl rounded-2xl transition-all duration-200 ease-out shadow-lg select-none outline-none tracking-wide neon-glow-btn";
+
+            if (isAhoraYo) {
+                classes += " locked";
+                btn.disabled = true;
+            } else {
+                classes += " hover:bg-[#00f0ff] hover:text-[#002640] hover:scale-105 focus:ring-4 focus:ring-[#00f0ff77]";
+            }
+
+            btn.className = classes;
+            btn.innerHTML = `
+                <span class="block text-3xl md:text-4xl font-black mb-2 group-hover:text-[#ff1fff] transition">${op.label}</span>
+                <span class="block text-center w-full font-bold text-lg md:text-2xl">${op.texto}</span>
+                <span class="selected-animation absolute inset-0 opacity-0 pointer-events-none"></span>
+            `;
+
+            if (!isAhoraYo) {
+                btn.addEventListener('click', handleOptionClick);
+            }
+
+            optionsGrid.appendChild(btn);
+          });
+        }
+    }, 10000); // 10 segundos
 
     // ✅ MOSTRAR MENSAJE SUTIL ARRIBA DE LAS OPCIONES
     if (isAhoraYo) {
