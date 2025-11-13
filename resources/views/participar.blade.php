@@ -41,32 +41,35 @@
 
 
 @section('content')
-<div id="pantalla" class="participar-container">
+<div id="pantalla" class="flex flex-col items-center justify-end px-3 py-4">
 
   <!-- Contenedor pregunta -->
-  <div id="main-question-box" class="participar-overlay-content" style="{{ (!isset($pregunta['pregunta']) || !$pregunta['pregunta']) ? 'display:none;' : '' }}">
-    <div id="respuesta-msg" class="respuesta-msg-top" style="display:none;">
+  <div id="main-question-box" class="w-full max-w-2xl" style="{{ (!isset($pregunta['pregunta']) || !$pregunta['pregunta']) ? 'display:none;' : '' }}">
+    <div id="respuesta-msg" class="text-center mb-4 font-extrabold text-lg respuesta-msg" style="display:none;">
       <!-- Se muestra solo desde JS -->
     </div>
 
-    <div class="question-bar">
-      {{ $pregunta['pregunta'] ?? '' }}
+    <div class="question-box bg-gradient-to-r from-[#001a35ee] to-[#072954ea] border-4 border-[#01e3fd66] rounded-2xl shadow-[0_4px_32px_#020d2455] mb-7 px-7 py-6 flex items-center justify-center">
+      <h2 class="question-title text-2xl md:text-3xl font-extrabold text-[#00f0ff] text-center tracking-wide neon-glow m-0 p-0 leading-tight">
+        {{ $pregunta['pregunta'] ?? '' }}
+      </h2>
     </div>
 
-    <form id="participar-form" method="POST" autocomplete="off" style="{{ isset($sinPregunta) && $sinPregunta ? 'display:none;' : '' }}">
+    <form id="participar-form" method="POST" class="space-y-0" autocomplete="off" style="{{ isset($sinPregunta) && $sinPregunta ? 'display:none;' : '' }}">
       @csrf
       <input type="hidden" name="question_id" value="{{ $pregunta['pregunta_id'] ?? '' }}">
 
-      <div class="answers-row">
+      <div class="options-grid grid grid-cols-2 grid-rows-2 gap-6 w-full max-w-[520px] mx-auto" style="max-height:70vh;">
         @if(isset($pregunta['opciones']))
           @foreach($pregunta['opciones'] as $op)
             <button
               type="button"
               data-label="{{ $op['label'] }}"
-              class="option-box"
+              class="option-card group flex flex-col items-center justify-center h-[92px] md:h-[110px] w-full bg-[#051e38fa] border-[3px] border-[#00f0ff44] text-[#d7f6ff] font-bold text-xl md:text-2xl rounded-2xl transition-all duration-200 ease-out shadow-lg hover:bg-[#00f0ff] hover:text-[#002640] hover:scale-105 focus:ring-4 focus:ring-[#00f0ff77] select-none outline-none tracking-wide neon-glow-btn"
             >
-              <span class="opt-label">{{ $op['label'] }}</span>
-              <span class="opt-text">{{ $op['texto'] }}</span>
+              <span class="block text-3xl md:text-4xl font-black mb-2 group-hover:text-[#ff1fff] transition">{{ $op['label'] }}</span>
+              <span class="block text-center w-full font-bold text-lg md:text-2xl">{{ $op['texto'] }}</span>
+              <span class="selected-animation absolute inset-0 opacity-0 pointer-events-none"></span>
             </button>
           @endforeach
         @endif
@@ -115,9 +118,16 @@
 
 <style>
 
-.guest-card-wrap { pointer-events: none; } /* no bloquea clics en las opciones */
+.guest-card-wrap {
+  pointer-events: none;
+  width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
 .guest-card {
-  pointer-events: auto; /* por si querés tooltip/selection */
+  pointer-events: auto;
   background: linear-gradient(135deg, rgba(4,38,78,0.82) 0%, rgba(0,52,94,0.82) 100%);
   border: 4px solid #00f0ff66;
   border-radius: 1.6rem;
@@ -125,8 +135,11 @@
   padding: 20px 28px;
   min-width: 280px;
   max-width: min(92vw, 640px);
+  width: 100%;
   text-align: center;
   backdrop-filter: blur(3px);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .guest-chip {
@@ -164,7 +177,12 @@
 
 /* Mobile: ajusta paddings para que no tape nada */
 @media (max-width: 640px) {
-  .guest-card { padding: 14px 16px; border-width: 3px; }
+  .guest-card {
+    padding: 14px 16px;
+    border-width: 3px;
+    max-width: calc(100vw - 20px);
+    min-width: unset;
+  }
 }
 
 .participant-name-top {
@@ -184,7 +202,11 @@
     display: flex;
     align-items: center;
     min-width: 180px;
-    max-width: 80vw;
+    max-width: calc(100vw - 40px);
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .participant-label {
     color: #19ff8c;
@@ -226,270 +248,310 @@ body {
   overflow-x: hidden;
 }
 html, body {
-  height: 100vh !important;          /* ocupar exactamente el alto de la pantalla */
+  height: 100vh !important;
   min-height: 100vh !important;
   width: 100vw !important;
-  overflow: hidden !important;        /* sin scroll en Y ni X */
-  overscroll-behavior: none;          /* evita "rebote" */
+  overflow: hidden !important;
+  overscroll-behavior: none;
   touch-action: manipulation;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 
-  /* tus fondos tal cual */
   background:
     radial-gradient(circle at 52% 44%, #1b0362 0%, #030015 95%) 0 0/100vw 100vh no-repeat,
     url('/images/CS.png') center center/auto 80vh no-repeat;
   background-color: #1b0362;
   color: #00f0ff;
 }
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 body::before { display: none !important; }
 
-/* === ESTILOS OVERLAY PARTICIPAR === */
-.participar-container {
+/* === CONTENEDOR PRINCIPAL CENTRADO EN MITAD INFERIOR === */
+#pantalla {
   position: fixed;
-  width: 100vw;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 50vh;
+  max-width: 100vw;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  pointer-events: none;
-}
-
-/* Desktop: ocupa todo el ancho y centrado verticalmente */
-@media (min-width: 641px) {
-  .participar-container {
-    height: 100vh;
-    bottom: 0;
-    left: 0;
-    justify-content: center;
-    padding: 20px;
-  }
-}
-
-/* Mobile: ocupa mitad inferior */
-@media (max-width: 640px) {
-  .participar-container {
-    height: 50vh;
-    bottom: 0;
-    left: 0;
-    padding: 15px;
-  }
-}
-
-.participar-overlay-content {
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  pointer-events: auto;
-}
-
-.question-bar {
-  width: 100%;
-  max-width: 1200px;
-  min-height: 52px;
-  margin: 0 auto 2vh auto;
-  background: linear-gradient(90deg, #111b2b 80%, #004563 100%);
-  border-radius: 28px;
-  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.74rem;
-  font-weight: 700;
-  text-align: center;
-  color: #fff;
-  text-shadow: 0 0 10px #00f0ff;
-  box-shadow: 0 0 15px #19faffb9, 0 0 1px #fff6;
-  border: none;
-  letter-spacing: 1.2px;
-  font-family: 'Orbitron', Arial, sans-serif;
-  padding: 12px 20px;
+  padding: 15px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
-.answers-row {
+.neon-glow { text-shadow: 0 0 16px #00e8fc, 0 0 6px #fff3; }
+.drop-shadow-neon { text-shadow: 0 0 12px #19ff8cbb, 0 0 3px #fff3; }
+.neon-glow-btn { text-shadow: 0 0 6px #00e8fc99; letter-spacing: .03em; }
+
+#main-question-box {
   width: 100%;
-  max-width: 1200px;
+  max-width: min(672px, 95vw);
+  box-sizing: border-box;
+}
+
+.question-box {
+  border-radius: 1.7rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 2px 22px #012b4955, 0 0 2px #00f0ff22;
+  background: linear-gradient(120deg, rgba(4,38,78,0.81) 77%, rgba(0,52,94,0.81) 100%);
+  border-width: 4px;
+  border-color: #00f0ff66;
+  backdrop-filter: blur(2px);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* GRILLA 2x2 */
+.options-grid {
+  width: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px 28px;
-  margin-bottom: 1.3vh;
+  grid-template-rows: 1fr 1fr;
+  gap: 1.3rem;
+  max-width: min(520px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
 }
 
-.option-box {
+/* OPCIONES */
+.option-card {
+  min-height: 90px;
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 1.1rem !important;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  font-size: 1.32rem;
-  background: linear-gradient(90deg, #0b1530 75%, #12375c 100%);
-  color: #fff;
-  padding: 16px 28px;
-  border-radius: 23px;
-  box-shadow: 0 0 14px #19faffaa, 0 0 1px #fff8;
+  justify-content: center;
+  background-color: rgba(5, 30, 56, 0.64) !important;
+  border: 3px solid #00f0ff44;
+  box-shadow: 0 3px 15px #012b497a, 0 0 2px #00f0ff22;
+  color: #d7f6ff;
   font-family: 'Orbitron', Arial, sans-serif;
-  font-weight: 600;
-  position: relative;
-  border: none;
-  min-height: 46px;
-  transition: background 0.12s, box-shadow 0.14s, color 0.15s, transform 0.16s;
-  letter-spacing: 1px;
-  cursor: pointer;
-}
-
-.option-box .opt-label {
-  font-size: 1.62rem;
-  color: #36ffd0;
-  margin-right: 19px;
-  font-weight: 900;
-  text-shadow: 0 0 8px #1affd2b5;
-}
-
-.option-box .opt-text {
-  flex: 1;
-  font-size: 1.04em;
-}
-
-.option-box.selected,
-.option-box:hover {
-  background: linear-gradient(90deg, #ffe47a 80%, #e6be2f 100%);
-  color: #333;
-  transform: scale(1.07);
-  box-shadow: 0 0 22px #ffe47a99, 0 0 5px #e6be2f77;
-  z-index: 1;
-}
-
-@keyframes flash-green {
-  0%, 100% { background: linear-gradient(90deg, #0b1530 75%, #12375c 100%); color: #fff; }
-  25%, 75% { background: linear-gradient(90deg, #13ff79 70%, #07ce5e 110%); color: #fff; }
-  50% { background: linear-gradient(90deg, #0b1530 75%, #12375c 100%); color: #fff; }
-}
-
-.option-box.correct-flash {
-  animation: flash-green 0.65s 2;
-}
-
-.option-box.correct-final {
-  background: linear-gradient(90deg, #13ff79 80%, #07ce5e 100%);
-  color: #003e18;
-  box-shadow: 0 0 33px #15ff99c9, 0 0 5px #07ce5e99;
-}
-
-@keyframes flash-red {
-  0%, 100% { background: linear-gradient(90deg, #0b1530 75%, #12375c 100%); color: #fff; }
-  25%, 75% { background: linear-gradient(90deg, #ff3f34 80%, #d00015 100%); color: #fff; }
-  50% { background: linear-gradient(90deg, #0b1530 75%, #12375c 100%); color: #fff; }
-}
-
-.option-box.incorrect-flash {
-  animation: flash-red 0.65s 2;
-}
-
-.option-box.incorrect-final {
-  background: linear-gradient(90deg, #ff3f34 80%, #d00015 100%);
-  color: #fff;
-  box-shadow: 0 0 26px #ff4a4a99;
-}
-
-/* Mensaje de respuesta profesional */
-.respuesta-msg-top {
+  transition: all .19s cubic-bezier(.44,0,.61,1.15);
+  opacity: 1;
+  backdrop-filter: blur(2px);
+  padding: 1.1rem 0.4rem !important;
   text-align: center;
-  margin-bottom: 15px;
-  padding: 10px 20px;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  font-family: 'Orbitron', Arial, sans-serif;
-  letter-spacing: 0.5px;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+  box-sizing: border-box;
+  overflow: hidden;
+  word-wrap: break-word;
 }
 
-.respuesta-msg-top.success {
-  background: rgba(19, 255, 121, 0.15);
-  border: 2px solid #13ff79;
-  color: #13ff79;
-  text-shadow: 0 0 8px rgba(19, 255, 121, 0.5);
+.option-card span {
+  display: block;
+  width: 100%;
+  padding-top: 0.15em;
+  padding-bottom: 0.15em;
+  line-height: 1.2;
 }
 
-.respuesta-msg-top.error {
-  background: rgba(255, 63, 52, 0.15);
-  border: 2px solid #ff3f34;
-  color: #ff3f34;
-  text-shadow: 0 0 8px rgba(255, 63, 52, 0.5);
+.option-card:hover, .option-card:focus, .option-card.selected {
+  background: #00f0ff !important;
+  color: #002640 !important;
+  border-color: #00f0ff !important;
+  box-shadow: 0 0 30px #00e8fcaa, 0 0 16px #00f0ff;
+  z-index: 2;
+  opacity: 1 !important;
 }
 
-.respuesta-msg-top.warning {
-  background: rgba(255, 228, 122, 0.15);
-  border: 2px solid #ffe47a;
-  color: #ffe47a;
-  text-shadow: 0 0 8px rgba(255, 228, 122, 0.5);
+.option-card.selected .selected-animation { opacity: 1; }
+.option-card .selected-animation {
+  background: radial-gradient(circle, #00e8fc60 40%, transparent 80%);
+  transition: opacity 0.23s;
+  z-index: 1;
+  border-radius: 1.2em;
 }
+
+.option-card.disabled {
+  pointer-events: none;
+  opacity: 0.60;
+  filter: grayscale(0.85);
+  transition: opacity 0.2s ease;
+}
+
+.option-card.correct {
+  background: #19ff8c !important;
+  color: #000 !important;
+}
+
+.option-card.incorrect {
+  background: #ff4444 !important;
+  color: #fff !important;
+  animation: blink 0.8s steps(2, start) 2;
+}
+
+@keyframes blink { to { opacity: 0.5; } }
 
 /* Opciones bloqueadas (Solo yo) */
-.option-box.locked {
+.option-card.locked {
   opacity: 0.35 !important;
   filter: grayscale(1) !important;
   pointer-events: none !important;
   cursor: not-allowed !important;
-  background: rgba(11, 21, 48, 0.5) !important;
+  background-color: rgba(5, 30, 56, 0.3) !important;
   border-color: #555 !important;
 }
 
-.option-box.locked:hover {
+.option-card.locked:hover {
   transform: none !important;
-  box-shadow: 0 0 14px #19faffaa, 0 0 1px #fff8 !important;
+  box-shadow: none !important;
+}
+
+/* Mensajes profesionales */
+.respuesta-msg {
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-family: 'Orbitron', Arial, sans-serif;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+  max-width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.respuesta-msg.success {
+  background: rgba(19, 255, 121, 0.15);
+  border: 2px solid #13ff79;
+  color: #13ff79 !important;
+  text-shadow: 0 0 8px rgba(19, 255, 121, 0.5);
+}
+
+.respuesta-msg.error {
+  background: rgba(255, 63, 52, 0.15);
+  border: 2px solid #ff3f34;
+  color: #ff3f34 !important;
+  text-shadow: 0 0 8px rgba(255, 63, 52, 0.5);
+}
+
+.respuesta-msg.warning {
+  background: rgba(255, 228, 122, 0.15);
+  border: 2px solid #ffe47a;
+  color: #ffe47a !important;
+  text-shadow: 0 0 8px rgba(255, 228, 122, 0.5);
+}
+
+.question-title {
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 0;
+  padding: 0;
 }
 
 /* --- MOBILE Ajustes --- */
 @media (max-width: 640px) {
-  .question-bar {
-    font-size: 1.2rem;
-    padding: 10px 15px;
-    min-height: 46px;
+  #pantalla {
+    padding: 10px;
   }
 
-  .answers-row {
-    gap: 12px 16px;
+  #main-question-box {
+    max-width: calc(100vw - 20px);
+    width: 100%;
   }
 
-  .option-box {
-    font-size: 1rem;
-    padding: 12px 16px;
-    min-height: 60px;
+  .question-box {
+    padding: 1rem 0.5rem !important;
+    margin-bottom: 1.5rem !important;
+    border-radius: 1rem !important;
+    max-width: 100%;
   }
 
-  .option-box .opt-label {
-    font-size: 1.3rem;
-    margin-right: 12px;
+  .question-title {
+    font-size: 1.12rem !important;
+    padding: 0 0.3rem !important;
+    word-break: break-word;
   }
 
-  .option-box .opt-text {
-    font-size: 0.95em;
+  .options-grid {
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: 1fr 1fr !important;
+    gap: 0.8rem !important;
+    max-width: 100% !important;
+    padding: 0 !important;
   }
 
-  .respuesta-msg-top {
-    font-size: 0.95rem;
-    padding: 8px 15px;
+  .option-card {
+    min-height: 75px !important;
+    height: 75px !important;
+    font-size: 1.05rem !important;
+    border-radius: 0.85rem !important;
+    padding: 0.5rem 0.3rem !important;
+    max-width: 100%;
+  }
+
+  .option-card span.block.text-3xl,
+  .option-card span.block.text-4xl,
+  .option-card span.block.text-center {
+    font-size: 1.05rem !important;
+  }
+
+  .option-card span.block.text-lg,
+  .option-card span.block.text-2xl {
+    font-size: 0.93rem !important;
+    word-break: break-word;
   }
 }
 
 @media (max-width: 420px) {
-  .question-bar {
-    font-size: 1rem;
-    padding: 8px 12px;
-    min-height: 40px;
+  #pantalla {
+    padding: 8px;
   }
 
-  .option-box {
-    font-size: 0.9rem;
-    padding: 10px 12px;
-    min-height: 54px;
+  #main-question-box {
+    max-width: calc(100vw - 16px);
   }
 
-  .option-box .opt-label {
-    font-size: 1.1rem;
-    margin-right: 10px;
+  .question-box {
+    padding: 0.8rem 0.4rem !important;
   }
 
-  .option-box .opt-text {
-    font-size: 0.85em;
+  .question-title {
+    font-size: 0.98rem !important;
+    line-height: 1.3 !important;
+    padding: 0 0.2rem !important;
+  }
+
+  .options-grid {
+    gap: 0.6rem !important;
+  }
+
+  .option-card {
+    min-height: 54px !important;
+    height: 54px !important;
+    font-size: 0.93rem !important;
+    border-radius: 0.65rem !important;
+    padding: 0.4rem 0.2rem !important;
+  }
+
+  .option-card span {
+    padding-top: 0.1em;
+    padding-bottom: 0.1em;
+  }
+
+  .option-card span.block.text-3xl,
+  .option-card span.block.text-4xl,
+  .option-card span.block.text-center {
+    font-size: 0.93rem !important;
+  }
+
+  .option-card span.block.text-lg,
+  .option-card span.block.text-2xl {
+    font-size: 0.80rem !important;
   }
 }
 
@@ -497,64 +559,65 @@ body::before { display: none !important; }
   font-size: 1.15rem;
   padding: 2.5rem 1.2rem;
   border-radius: 1.1rem;
-  max-width: 96vw;
+  max-width: min(672px, 95vw);
+  width: 100%;
+  box-sizing: border-box;
 }
 .puntaje-top-container{
   position: fixed;
   top: max(env(safe-area-inset-top, 15px), 15px);
   right: max(env(safe-area-inset-right, 15px), 15px);
   z-index: 9999;
-  width: auto;              /* ya no 340px fijos aquí */
-  max-width: 98vw;          /* nunca más que el viewport */
+  width: auto;
+  max-width: calc(100vw - 30px);
   display: flex;
   justify-content: flex-end;
   box-sizing: border-box;
+  overflow: hidden;
 }
-
 
 /* Card interior animable y contenida */
 .puntaje-card{
   width: 340px;
-  max-width: min(340px, 92vw);
+  max-width: min(340px, calc(100vw - 30px));
   box-sizing: border-box;
-  transform-origin: center; /* que escale desde el centro */
+  transform-origin: center;
   will-change: transform;
+  overflow: hidden;
 }
 .salir-btn{
-  position: static;         /* deja de ser fixed */
+  position: static;
   background: transparent;
   border: none;
   padding: 0;
   cursor: pointer;
   display: block;
-  margin: 16px auto 0;      /* centrado debajo del contenido */
+  margin: 10px auto 0;
 }
+
 .salir-btn img {
     display: block;
-    width: 60px; /* ajusta tamaño según necesites */
+    width: 40px;
     height: auto;
     transition: transform 0.18s ease;
 }
+
 .salir-btn:hover img,
 .salir-btn:focus img{
-  transform: scale(1.05);  /* leve zoom a la imagen (opcional) */
-  opacity: .95;            /* opcional */
+  transform: scale(1.08);
+  opacity: .95;
 }
 
 .salir-btn:hover,
 .salir-btn:focus{
-  background: transparent !important;   /* SIN rojo */
+  background: transparent !important;
   box-shadow: none !important;
-  transform: none;                       /* no mueve el botón contenedor */
+  transform: none;
 }
+
 @media (max-width: 640px) {
-    .salir-btn {
-        left: 50%;
-        bottom: 15px;
-        transform: translateX(-50%);
-    }
     .salir-btn img {
-        width: 48px;
+        width: 35px;
     }
 }
 
@@ -608,17 +671,24 @@ body::before { display: none !important; }
 /* Fila bajo la tarjeta (mobile por defecto) */
 .status-row{
   width: 100%;
-  max-width: 980px;
+  max-width: min(980px, 100vw);
   margin: 6px auto 12px;
   padding: 0 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* MOBILE: anula los fixed y compáctalo */
 @media (max-width: 640px){
+  .status-row {
+    max-width: calc(100vw - 16px);
+    padding: 0 4px;
+  }
+
   .status-row .participant-name-top,
   .status-row .puntaje-top-container{
     position: static !important;
@@ -634,14 +704,22 @@ body::before { display: none !important; }
     padding: 8px 12px;
     font-size: .95rem;
     border-radius: 12px;
-    max-width: 60vw;         /* evita que se coma el espacio del puntaje */
+    max-width: calc(55vw - 20px);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    box-sizing: border-box;
   }
   .participant-label{ margin-right: 6px; }
-  .puntaje-top-container{ max-width: 40vw; }
-  .puntaje-card{ width: auto; max-width: 100%; }
+  .puntaje-top-container{
+    max-width: calc(40vw - 10px);
+    overflow: hidden;
+  }
+  .puntaje-card{
+    width: auto;
+    max-width: 100%;
+    overflow: hidden;
+  }
 }
 
 /* DESKTOP: tus posiciones fixed como las tenías */
@@ -665,25 +743,26 @@ body::before { display: none !important; }
     max-width: min(340px, 92vw);
   }
   /* La fila no ocupa alto en desktop (porque vuelven a fixed) */
-  .status-row{ height: 0; margin: 0; padding: 0; }
-}
-@media (max-width: 640px) {
-  .status-row {
-    flex-direction: column;  /* uno debajo del otro */
-    align-items: center;     /* centrados horizontalmente */
-    justify-content: center;
-    gap: 6px;                 /* espacio mínimo entre ellos */
+  .status-row{
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
   }
+}
+
 @media (max-width: 640px) {
   .status-row {
-    flex-direction: column;  /* uno debajo del otro */
-    align-items: center;     /* centrado horizontal */
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
     gap: 6px;
+    max-width: 100vw;
+    overflow: hidden;
   }
 
   .puntaje-top-container {
-    margin: 0 auto !important;  /* fuerza centrado horizontal */
+    margin: 0 auto !important;
     display: flex;
     justify-content: center;
     width: 100%;                 /* que ocupe todo el ancho disponible */
@@ -794,58 +873,66 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ===== FUNCIONES DE UI =====
   function limpiarSeleccionUI() {
-    document.querySelectorAll('.option-box').forEach(btn => {
-      btn.classList.remove('selected', 'correct-flash', 'correct-final', 'incorrect-flash', 'incorrect-final', 'locked');
+    document.querySelectorAll('.option-card').forEach(btn => {
+      btn.classList.remove('selected', 'disabled', 'correct', 'incorrect', 'blinking', 'locked');
+      btn.style.opacity = '1';
+      btn.style.filter = 'none';
     });
     if (msg) {
       msg.style.display = 'none';
-      msg.className = 'respuesta-msg-top';
+      msg.className = 'text-center mb-4 font-extrabold text-lg respuesta-msg';
     }
   }
 
   function marcarSeleccionUI(label) {
-    document.querySelectorAll('.option-box').forEach(btn => {
+    document.querySelectorAll('.option-card').forEach(btn => {
       if (btn.getAttribute('data-label') === label) {
         btn.classList.add('selected');
+        btn.classList.remove('disabled');
+        btn.style.opacity = '1';
+        btn.style.filter = 'none';
       } else {
         btn.classList.remove('selected');
+        btn.classList.add('disabled');
+        btn.style.opacity = '0.6';
+        btn.style.filter = 'grayscale(0.85)';
       }
     });
     if (msg) {
       msg.style.display = 'block';
-      msg.className = 'respuesta-msg-top success';
+      msg.className = 'text-center mb-4 font-extrabold text-lg respuesta-msg success';
       msg.innerHTML = 'Respuesta enviada. Esperando resultado...';
     }
   }
 
   function marcarCorrecta(label) {
-    const btn = document.querySelector(`.option-box[data-label="${label}"]`);
-    if (btn) {
-      btn.classList.add('correct-flash');
-      setTimeout(() => {
-        btn.classList.remove('correct-flash');
-        btn.classList.add('correct-final');
-      }, 1300);
-    }
+    document.querySelectorAll('.option-card').forEach(btn => {
+      if (btn.getAttribute('data-label') === label) {
+        btn.classList.add('correct');
+        btn.classList.remove('incorrect', 'disabled');
+        btn.style.opacity = '1';
+        btn.style.filter = 'none';
+      } else {
+        btn.classList.remove('correct');
+      }
+    });
     if (msg) {
       msg.style.display = 'block';
-      msg.className = 'respuesta-msg-top success';
+      msg.className = 'text-center mb-4 font-extrabold text-lg respuesta-msg success';
       msg.innerHTML = 'RESPUESTA CORRECTA';
     }
   }
 
   function marcarIncorrecta(label) {
-    const btn = document.querySelector(`.option-box[data-label="${label}"]`);
-    if (btn) {
-      btn.classList.add('incorrect-flash');
-      setTimeout(() => {
-        btn.classList.remove('incorrect-flash');
-        btn.classList.add('incorrect-final');
-      }, 1300);
-    }
+    document.querySelectorAll('.option-card').forEach(btn => {
+      if (btn.getAttribute('data-label') === label) {
+        btn.classList.add('incorrect', 'blinking');
+        btn.classList.remove('correct');
+      }
+    });
     if (msg) {
       msg.style.display = 'block';
-      msg.className = 'respuesta-msg-top error';
+      msg.className = 'text-center mb-4 font-extrabold text-lg respuesta-msg error';
       msg.innerHTML = 'RESPUESTA INCORRECTA';
     }
   }
@@ -882,7 +969,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('[ERROR] Al enviar respuesta:', err);
         if (msg) {
             msg.style.display = 'block';
-            msg.className = 'respuesta-msg-top error';
+            msg.className = 'text-center mb-4 font-extrabold text-lg respuesta-msg error';
             msg.innerHTML = 'Error al enviar la respuesta';
         }
         limpiarSeleccionUI();
@@ -905,37 +992,42 @@ function renderPregunta(data) {
         || (data.special_indicator && data.special_indicator.toLowerCase().includes('solo yo'))
         || (data.special_indicator && data.special_indicator.toLowerCase().includes('ahora yo'));
 
-    const answersRow = form ? form.querySelector('.answers-row') : null;
+    const optionsGrid = form ? form.querySelector('.options-grid') : null;
 
     // ✅ RENDERIZAR OPCIONES (SIEMPRE, pero deshabilitadas si es Ahora Yo)
-    if (answersRow) {
-      answersRow.innerHTML = '';
+    if (optionsGrid) {
+      optionsGrid.innerHTML = '';
       (data.opciones || []).forEach(op => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.setAttribute('data-label', op.label);
-        btn.className = 'option-box';
+
+        let classes = "option-card group relative flex flex-col items-center justify-center min-h-[108px] md:min-h-[138px] h-full bg-[#051e38fa] border-[3px] border-[#00f0ff44] text-[#d7f6ff] font-bold text-xl md:text-2xl rounded-2xl transition-all duration-200 ease-out shadow-lg select-none outline-none tracking-wide neon-glow-btn";
 
         if (isAhoraYo) {
-            btn.classList.add('locked');
+            classes += " locked";
             btn.disabled = true;
+        } else {
+            classes += " hover:bg-[#00f0ff] hover:text-[#002640] hover:scale-105 focus:ring-4 focus:ring-[#00f0ff77]";
         }
 
+        btn.className = classes;
         btn.innerHTML = `
-            <span class="opt-label">${op.label}</span>
-            <span class="opt-text">${op.texto}</span>
+            <span class="block text-3xl md:text-4xl font-black mb-2 group-hover:text-[#ff1fff] transition">${op.label}</span>
+            <span class="block text-center w-full font-bold text-lg md:text-2xl">${op.texto}</span>
+            <span class="selected-animation absolute inset-0 opacity-0 pointer-events-none"></span>
         `;
 
         if (!isAhoraYo) {
             btn.addEventListener('click', handleOptionClick);
         }
 
-        answersRow.appendChild(btn);
+        optionsGrid.appendChild(btn);
       });
     }
 
-    const questionBar = document.querySelector('.question-bar');
-    if (questionBar) questionBar.textContent = data.pregunta || '';
+    const questionTitle = document.querySelector('.question-title');
+    if (questionTitle) questionTitle.textContent = data.pregunta || '';
 
     enviado = false;
     yaRespondio = null;
@@ -946,7 +1038,7 @@ function renderPregunta(data) {
     if (isAhoraYo) {
         if (msg) {
             msg.style.display = 'block';
-            msg.className = 'respuesta-msg-top warning';
+            msg.className = 'text-center mb-4 font-extrabold text-lg respuesta-msg warning';
             msg.innerHTML = 'Solo el invitado puede responder';
         }
         console.log('[AHORA YO] Opciones deshabilitadas para el público');
@@ -963,7 +1055,7 @@ function renderPregunta(data) {
   // ===== INICIALIZACIÓN DEL FORMULARIO =====
   limpiarSeleccionUI();
   if (form) {
-    form.querySelectorAll('.option-box').forEach(btn => {
+    form.querySelectorAll('.option-card').forEach(btn => {
       btn.addEventListener('click', handleOptionClick);
     });
     form.addEventListener('submit', function(e) { e.preventDefault(); });
@@ -1003,7 +1095,7 @@ function renderPregunta(data) {
         setTimeout(() => {
           marcarCorrecta(data.label_correcto);
           if (msg) {
-            msg.className = 'respuesta-msg-top success';
+            msg.className = 'text-center mb-4 font-extrabold text-lg respuesta-msg success';
             msg.innerHTML = 'La respuesta correcta era: ' + data.label_correcto;
           }
         }, 5000);
@@ -1015,12 +1107,12 @@ function renderPregunta(data) {
         if (form) {
           form.style.display = 'none';
           form.querySelector('input[name="question_id"]').value = '';
-          const answersRow = form.querySelector('.answers-row');
-          if (answersRow) answersRow.innerHTML = '';
+          const optionsGrid = form.querySelector('.options-grid');
+          if (optionsGrid) optionsGrid.innerHTML = '';
         }
 
-        const questionBar = document.querySelector('.question-bar');
-        if (questionBar) questionBar.textContent = '';
+        const questionTitle = document.querySelector('.question-title');
+        if (questionTitle) questionTitle.textContent = '';
         if (msg) msg.style.display = 'none';
 
         let msgNoQuestion = document.getElementById('msg-no-question');
