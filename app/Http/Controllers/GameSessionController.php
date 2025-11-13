@@ -410,6 +410,65 @@ public function ruletaOverlay()
     return view('overlay', compact('sessionGame', 'activeSession'));
 }
 
+public function finalScores()
+{
+    $session = GameSession::where('status', 'active')->latest()->first();
+
+    if (!$session) {
+        // Si no hay sesión activa, buscar la última sesión terminada
+        $session = GameSession::where('status', 'ended')->latest()->first();
+    }
+
+    if (!$session) {
+        return back()->with('error', 'No hay sesión disponible.');
+    }
+
+    // Datos del invitado
+    $guestName = $session->guest_name ?? 'Invitado';
+    $guestScore = $session->guest_score ?? 0;
+
+    // Calcular respuestas correctas e incorrectas del invitado
+    $correctAnswers = ParticipantAnswer::where('game_session_id', $session->id)
+        ->where('participant_session_id', null) // Respuestas del invitado
+        ->where('is_correct', true)
+        ->count();
+
+    $incorrectAnswers = ParticipantAnswer::where('game_session_id', $session->id)
+        ->where('participant_session_id', null)
+        ->where('is_correct', false)
+        ->count();
+
+    // Top 3 participantes con mayor puntaje
+    $topParticipants = ParticipantSession::where('game_session_id', $session->id)
+        ->orderBy('total_points', 'desc')
+        ->take(3)
+        ->get()
+        ->map(function($participant) use ($session) {
+            // Calcular respuestas correctas e incorrectas de cada participante
+            $correctCount = ParticipantAnswer::where('game_session_id', $session->id)
+                ->where('participant_session_id', $participant->id)
+                ->where('is_correct', true)
+                ->count();
+
+            $incorrectCount = ParticipantAnswer::where('game_session_id', $session->id)
+                ->where('participant_session_id', $participant->id)
+                ->where('is_correct', false)
+                ->count();
+
+            $participant->correct_answers = $correctCount;
+            $participant->incorrect_answers = $incorrectCount;
+
+            return $participant;
+        });
+
+    return view('final-scores', compact(
+        'guestName',
+        'guestScore',
+        'correctAnswers',
+        'incorrectAnswers',
+        'topParticipants'
+    ));
+}
 
 public function lanzarPreguntaCategoria(Request $request)
 {
