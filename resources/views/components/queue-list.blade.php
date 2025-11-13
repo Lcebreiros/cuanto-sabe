@@ -129,7 +129,7 @@
 // Solo ejecutar si Echo está disponible
 if (window.Echo) {
     // Escuchar evento de actualización de puntajes de participantes
-    window.Echo.channel('overlay-channel')
+    window.Echo.channel('cuanto-sabe-overlay')
         .listen('.revelar-respuesta', (e) => {
             console.log('[QUEUE] Evento revelar recibido:', e);
             

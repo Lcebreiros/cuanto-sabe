@@ -931,8 +931,8 @@ function renderPregunta(data) {
   // ===== PUSHER/ECHO PARA PREGUNTAS =====
   if (window.Echo) {
     console.log('[ECHO] Inicializando canales...');
-    
-    window.Echo.channel('overlay-channel')
+
+    window.Echo.channel('cuanto-sabe-overlay')
       .listen('.nueva-pregunta', function(e) {
         console.log('[PUSHER] Nueva pregunta recibida:', e);
         const data = e.data || e;

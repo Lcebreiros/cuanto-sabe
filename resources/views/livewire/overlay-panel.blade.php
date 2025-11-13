@@ -27,7 +27,7 @@
 <script>
     // Escuchamos eventos de broadcasting con Echo y se los pasamos al componente Livewire
     if (window.Echo) {
-        window.Echo.channel('overlay-channel')
+        window.Echo.channel('cuanto-sabe-overlay')
             .listen('.nueva-pregunta', (e) => {
                 // Normalizamos la data y la enviamos a Livewire
                 let data = e.data || e || {};

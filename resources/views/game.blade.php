@@ -1289,7 +1289,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Escuchar broadcasts en overlay-channel -> GameBonusUpdated
+    // Escuchar broadcasts en cuanto-sabe-overlay -> GameBonusUpdated
     try {
         if (window.Echo) {
             window.Echo.channel('cuanto-sabe-overlay')
