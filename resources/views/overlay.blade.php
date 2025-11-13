@@ -501,6 +501,7 @@ let lastFetch = 0;
 const FETCH_COOLDOWN = 2000; // 2 segundos mínimo entre llamadas
 let lastPreguntaId = null; // Para detectar cambios
 let isHandlingPendingSpin = false; // 🔥 NUEVO: Evitar múltiples giros
+let isOverlayReset = true; // 🔥 NUEVO: Evitar resetear múltiples veces
 
 async function fetchOverlayState(force = false) {
     const now = Date.now();
@@ -550,26 +551,37 @@ async function fetchOverlayState(force = false) {
                 }
             }).then(() => {
                 console.log('[Overlay] ✅ Flag pending_spin limpiado');
-                // 🔥 INDICADOR VISUAL: Mostrar confirmación
-                questionBar.textContent = '✅ Flag limpiado - Girando ruleta...';
+                questionBar.textContent = '✅ Flag limpiado - Preparando ruleta...';
             }).catch(err => {
                 console.error('[Overlay] ❌ Error limpiando pending_spin:', err);
                 questionBar.textContent = '❌ Error al limpiar flag';
                 questionBar.style.backgroundColor = '#dc3545';
             });
 
-            // Llamar a la función que gira la ruleta (definida más abajo)
-            if (window.girarRuletaRemoto && typeof window.girarRuletaRemoto === 'function') {
-                window.girarRuletaRemoto();
-                // Resetear flag después de 15 segundos (tiempo máximo de giro)
-                setTimeout(() => {
-                    isHandlingPendingSpin = false;
-                    console.log('[Overlay] 🔄 Flag isHandlingPendingSpin reseteado');
-                }, 15000);
-            } else {
-                console.error('[Overlay] ❌ window.girarRuletaRemoto no está disponible');
-                isHandlingPendingSpin = false;
-            }
+            // 🔥 ASEGURAR QUE LA RULETA ESTÉ VISIBLE ANTES DE GIRAR
+            const ruleta = document.getElementById('ruleta-container');
+            const overlay = document.querySelector('.overlay-content');
+
+            // Ocultar overlay de contenido y mostrar ruleta
+            toggleAnim(overlay, 'show-up', 'hide-down', false, () => {
+                toggleAnim(ruleta, 'show-down', 'hide-up', true, () => {
+                    // 🔥 Esperar 800ms para que la ruleta termine de aparecer
+                    setTimeout(() => {
+                        questionBar.textContent = '🎲 Girando ruleta...';
+                        if (window.girarRuletaRemoto && typeof window.girarRuletaRemoto === 'function') {
+                            window.girarRuletaRemoto();
+                            // Resetear flag después de 15 segundos
+                            setTimeout(() => {
+                                isHandlingPendingSpin = false;
+                                console.log('[Overlay] 🔄 Flag isHandlingPendingSpin reseteado');
+                            }, 15000);
+                        } else {
+                            console.error('[Overlay] ❌ window.girarRuletaRemoto no está disponible');
+                            isHandlingPendingSpin = false;
+                        }
+                    }, 800);
+                });
+            });
         }
 
         if (pregunta && pregunta.pregunta) {
@@ -586,9 +598,12 @@ async function fetchOverlayState(force = false) {
 
             showQuestion(pregunta);
         } else {
-            console.log('[Overlay] ⭕ No hay pregunta activa, resetting overlay');
-            lastPreguntaId = null;
-            resetOverlay();
+            // 🔥 Solo resetear si aún no está reseteado
+            if (!isOverlayReset) {
+                console.log('[Overlay] ⭕ No hay pregunta activa, resetting overlay');
+                lastPreguntaId = null;
+                resetOverlay();
+            }
         }
 
         /*
@@ -635,7 +650,7 @@ function toggleAnim(el, showClass, hideClass, mostrar, cb) {
 }
 
 function resetOverlay() {
-        // 🔥 LIMPIA TENDENCIA DE TODAS LAS OPCIONES
+    // 🔥 LIMPIA TENDENCIA DE TODAS LAS OPCIONES
     ['A','B','C','D'].forEach(l => {
         const optEl = document.getElementById('op'+l);
         optEl && optEl.classList.remove('tendencia');
@@ -653,6 +668,7 @@ function resetOverlay() {
     correctLabel = null;
     ultimaSeleccionPanel = null;
     isHandlingPendingSpin = false; // 🔥 Resetear flag de pending spin
+    isOverlayReset = true; // 🔥 Marcar como reseteado
     options.forEach(opt => {
         const optEl = document.getElementById('op' + opt);
         optEl.classList.remove('selected', 'correct-flash', 'correct-final', 'incorrect-flash', 'incorrect-final');
@@ -670,6 +686,9 @@ function resetOverlay() {
 
 
 function showQuestion(data) {
+    // 🔥 Marcar que ya no está reseteado (hay contenido activo)
+    isOverlayReset = false;
+
     // 🔥 LIMPIA TENDENCIA DE TODAS LAS OPCIONES
     ['A','B','C','D'].forEach(l => {
         const optEl = document.getElementById('op'+l);
