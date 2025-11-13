@@ -122,7 +122,7 @@
   pointer-events: none;
   width: 100%;
   max-width: 100vw;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
 }
 
@@ -139,7 +139,7 @@
   text-align: center;
   backdrop-filter: blur(3px);
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .guest-chip {
@@ -278,16 +278,21 @@ body::before { display: none !important; }
   left: 0;
   right: 0;
   width: 100%;
-  height: 50vh;
+  max-height: 100vh;
   max-width: 100vw;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   padding: 15px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  padding-bottom: 20px;
+  overflow: visible;
   box-sizing: border-box;
+  pointer-events: none;
+}
+
+#pantalla > * {
+  pointer-events: auto;
 }
 
 .neon-glow { text-shadow: 0 0 16px #00e8fc, 0 0 6px #fff3; }
@@ -298,6 +303,7 @@ body::before { display: none !important; }
   width: 100%;
   max-width: min(672px, 95vw);
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .question-box {
@@ -323,6 +329,7 @@ body::before { display: none !important; }
   margin-left: auto;
   margin-right: auto;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 /* OPCIONES */
@@ -347,7 +354,7 @@ body::before { display: none !important; }
   padding: 1.1rem 0.4rem !important;
   text-align: center;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
   word-wrap: break-word;
 }
 
@@ -457,6 +464,8 @@ body::before { display: none !important; }
 @media (max-width: 640px) {
   #pantalla {
     padding: 10px;
+    padding-bottom: 15px;
+    max-height: none;
   }
 
   #main-question-box {
@@ -510,6 +519,8 @@ body::before { display: none !important; }
 @media (max-width: 420px) {
   #pantalla {
     padding: 8px;
+    padding-bottom: 12px;
+    max-height: none;
   }
 
   #main-question-box {
@@ -573,7 +584,7 @@ body::before { display: none !important; }
   display: flex;
   justify-content: flex-end;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Card interior animable y contenida */
@@ -583,7 +594,7 @@ body::before { display: none !important; }
   box-sizing: border-box;
   transform-origin: center;
   will-change: transform;
-  overflow: hidden;
+  overflow: visible;
 }
 .salir-btn{
   position: static;
@@ -626,13 +637,15 @@ body::before { display: none !important; }
     left: 50%;
     right: auto;
     transform: translateX(-50%);
-    width: calc(100vw - 24px);   /* margen de 12px por lado */
+    width: calc(100vw - 24px);
     justify-content: center;
     padding: 0;
+    overflow: visible !important;
   }
   .puntaje-card{
     width: 100%;
     max-width: calc(100vw - 24px);
+    overflow: visible !important;
   }
 }
 
@@ -679,7 +692,7 @@ body::before { display: none !important; }
   justify-content: space-between;
   gap: 12px;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* MOBILE: anula los fixed y compáctalo */
@@ -687,6 +700,7 @@ body::before { display: none !important; }
   .status-row {
     max-width: calc(100vw - 16px);
     padding: 0 4px;
+    overflow: visible;
   }
 
   .status-row .participant-name-top,
@@ -713,12 +727,12 @@ body::before { display: none !important; }
   .participant-label{ margin-right: 6px; }
   .puntaje-top-container{
     max-width: calc(40vw - 10px);
-    overflow: hidden;
+    overflow: visible !important;
   }
   .puntaje-card{
     width: auto;
     max-width: 100%;
-    overflow: hidden;
+    overflow: visible !important;
   }
 }
 
@@ -758,40 +772,11 @@ body::before { display: none !important; }
     justify-content: center;
     gap: 6px;
     max-width: 100vw;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .puntaje-top-container {
     margin: 0 auto !important;
-    display: flex;
-    justify-content: center;
-    width: 100%;                 /* que ocupe todo el ancho disponible */
-  }
-}
-
-}
-/* ==== FIX CENTRADO PUNTAJE (solo móvil) ==== */
-@media (max-width: 640px){
-  .status-row{
-    flex-direction: column;
-    align-items: center;      /* centra ambos bloques */
-    justify-content: center;
-    gap: 6px;                 /* padding mínimo entre ellos */
-    padding: 0;
-  }
-
-  .status-row .participant-name-top,
-  .status-row .puntaje-top-container{
-    position: static !important;
-    left: auto !important;
-    right: auto !important;
-    transform: none !important;
-    width: auto;              /* no forzar 100% */
-    margin: 0 auto;           /* centrado */
-  }
-
-  /* >>> El fix clave: centrar el contenido del contenedor de puntaje */
-  .puntaje-top-container{
     display: flex;
     justify-content: center !important;   /* sobrescribe el flex-end base */
     align-items: center;
@@ -803,43 +788,16 @@ body::before { display: none !important; }
 
   .puntaje-card{
     width: auto;
-    max-width: 92vw;                      /* contenido contenido y centrado */
+    max-width: 92vw;
     margin: 0 auto;
-  }
-}
-@media (max-width: 640px){
-  #main-question-box{
-    margin-top: clamp(16px, 20vh, 22vh) !important; /* empuja hacia abajo */
-  }
-}
-/* ===== Mensajes arriba del contenedor de pregunta (solo móvil) ===== */
-@media (max-width: 640px){
-  /* El contenedor pasa a ser el ancla para posicionar el msg */
-  #main-question-box{
-    position: relative;
+    overflow: visible !important;
   }
 
-  /* Mueve el mensaje por encima, centrado y contenido */
   #respuesta-msg{
-    position: absolute;
-    top: 0;                          /* anclado al borde superior del contenedor */
-    left: 50%;
-    transform: translate(-50%, calc(-100% - 10px)); /* justo encima con 10px de separación */
-    width: min(560px, 92vw);         /* nunca se corta a la derecha */
-    margin: 0;                       /* sin márgenes extra */
-    z-index: 2000;                   /* por encima de la caja de pregunta */
-    text-align: center;
-  }
-
-  /* Si tenés otras alertas similares, opcional: */
-  .alert{
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translate(-50%, calc(-100% - 10px));
-    width: min(560px, 92vw);
-    margin: 0;
-    z-index: 2000;
+    position: static;
+    width: 100%;
+    max-width: min(560px, 92vw);
+    margin: 0 auto 10px auto;
     text-align: center;
   }
 }
