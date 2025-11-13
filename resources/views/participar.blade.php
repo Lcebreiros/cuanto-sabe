@@ -463,6 +463,7 @@ body::before { display: none !important; }
   text-align: center;
   margin-bottom: 0;
   padding: 0;
+  color: white !important;
 }
 
 /* --- MOBILE Ajustes --- */
