@@ -491,7 +491,12 @@ body {
                             @foreach($answer['all_options'] as $option)
                                 @php
                                     $isCorrect = ($option === $answer['correct_text']);
-                                    $isWrong = (!$answer['is_correct'] && $option === $answer['selected_option_text']);
+                                    // Solo marcar como incorrecta si tenemos el texto de la opción seleccionada
+                                    $isWrong = (
+                                        !$answer['is_correct'] &&
+                                        !empty($answer['selected_option_text']) &&
+                                        $option === $answer['selected_option_text']
+                                    );
 
                                     if ($isWrong) {
                                         $class = 'opt-incorrect';

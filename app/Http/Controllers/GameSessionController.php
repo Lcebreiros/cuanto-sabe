@@ -143,12 +143,24 @@ public function revealAnswer(Request $request)
             // Buscar el texto de la opción seleccionada
             $selectedOptionText = null;
             if (isset($data['opciones'])) {
+                \Log::info('🔍 Buscando texto de opción', [
+                    'selected_option' => $selectedOption,
+                    'opciones' => $data['opciones']
+                ]);
+
                 foreach ($data['opciones'] as $opcion) {
                     if (strtoupper($opcion['label']) === strtoupper($selectedOption)) {
                         $selectedOptionText = $opcion['texto'];
+                        \Log::info('✅ Texto encontrado', ['texto' => $selectedOptionText]);
                         break;
                     }
                 }
+
+                if (!$selectedOptionText) {
+                    \Log::warning('⚠️ No se encontró el texto de la opción seleccionada');
+                }
+            } else {
+                \Log::warning('⚠️ $data[opciones] no existe');
             }
 
             \App\Models\GuestAnswer::create([
