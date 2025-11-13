@@ -137,6 +137,17 @@ public function revealAnswer(Request $request)
                 null
             );
 
+            // Guardar respuesta del invitado en guest_answers
+            $isCorrect = (strtoupper($selectedOption) === strtoupper($data['label_correcto']));
+            \App\Models\GuestAnswer::create([
+                'game_session_id' => $session->id,
+                'question_id' => $data['pregunta_id'],
+                'selected_option' => strtoupper($selectedOption),
+                'correct_option' => strtoupper($data['label_correcto']),
+                'is_correct' => $isCorrect,
+                'points_awarded' => (int)$delta,
+            ]);
+
             // Actualizar puntos del invitado
             $session->guest_points = ($session->guest_points ?? 0) + (int)$delta;
             $session->save();
@@ -436,6 +447,30 @@ public function finalScores()
         ->where('is_correct', false)
         ->count();
 
+    // Obtener todas las preguntas respondidas por el invitado con detalles
+    $guestAnswers = \App\Models\GuestAnswer::where('game_session_id', $session->id)
+        ->with('question')
+        ->orderBy('created_at', 'asc')
+        ->get()
+        ->map(function($answer) {
+            // Obtener las 4 opciones de la pregunta
+            $question = $answer->question;
+            $options = [
+                ['label' => 'A', 'text' => $question->opcion_correcta],
+                ['label' => 'B', 'text' => $question->opcion_1],
+                ['label' => 'C', 'text' => $question->opcion_2],
+                ['label' => 'D', 'text' => $question->opcion_3],
+            ];
+
+            return [
+                'question_text' => $question->texto,
+                'options' => $options,
+                'selected_option' => $answer->selected_option,
+                'correct_option' => $answer->correct_option,
+                'is_correct' => $answer->is_correct,
+            ];
+        });
+
     // Top 3 participantes con mayor puntaje
     $topParticipants = ParticipantSession::where('game_session_id', $session->id)
         ->orderBy('puntaje', 'desc')
@@ -462,6 +497,7 @@ public function finalScores()
         'guestScore',
         'correctAnswers',
         'incorrectAnswers',
+        'guestAnswers',
         'topParticipants'
     ));
 }

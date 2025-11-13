@@ -9,6 +9,8 @@ class GuestAnswer extends Model
     protected $fillable = [
         'game_session_id',
         'question_id',
+        'selected_option',
+        'correct_option',
         'is_correct',
         'points_awarded',
         'apuesta_x2',

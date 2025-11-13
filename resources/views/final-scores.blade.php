@@ -347,6 +347,93 @@ body {
     opacity: 0.7;
 }
 
+/* === MAPPING DE PREGUNTAS === */
+.questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.questions-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.questions-list::-webkit-scrollbar-track {
+    background: rgba(0, 240, 255, 0.1);
+    border-radius: 3px;
+}
+
+.questions-list::-webkit-scrollbar-thumb {
+    background: #00f0ff;
+    border-radius: 3px;
+}
+
+.question-item {
+    display: flex;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(0, 240, 255, 0.05);
+    border-left: 3px solid;
+    font-size: 0.75rem;
+}
+
+.question-item.correct {
+    border-left-color: #13ff79;
+}
+
+.question-item.incorrect {
+    border-left-color: #ff3f34;
+}
+
+.q-number {
+    font-weight: 700;
+    color: #36d1ff;
+    min-width: 25px;
+    font-size: 0.7rem;
+}
+
+.q-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.q-text {
+    color: #fff;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    opacity: 0.9;
+}
+
+.q-answer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.answer-correct {
+    color: #13ff79;
+    text-shadow: 0 0 10px #13ff79;
+}
+
+.answer-wrong {
+    color: #ff3f34;
+    text-shadow: 0 0 10px #ff3f34;
+    text-decoration: line-through;
+}
+
+.arrow {
+    color: #36d1ff;
+    font-size: 0.7rem;
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
     .final-scores-container {
@@ -383,6 +470,29 @@ body {
                     <div class="stat-label">Incorrectas</div>
                 </div>
             </div>
+
+            <!-- MAPPING DE PREGUNTAS -->
+            @if($guestAnswers->count() > 0)
+            <div class="questions-list">
+                @foreach($guestAnswers as $index => $answer)
+                <div class="question-item {{ $answer['is_correct'] ? 'correct' : 'incorrect' }}">
+                    <div class="q-number">Q{{ $index + 1 }}</div>
+                    <div class="q-content">
+                        <div class="q-text">{{ $answer['question_text'] }}</div>
+                        <div class="q-answer">
+                            @if($answer['is_correct'])
+                                <span class="answer-correct">{{ $answer['selected_option'] }}</span>
+                            @else
+                                <span class="answer-wrong">{{ $answer['selected_option'] }}</span>
+                                <span class="arrow">→</span>
+                                <span class="answer-correct">{{ $answer['correct_option'] }}</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @endif
         </div>
 
         <!-- PANEL DERECHO: TOP 3 -->
