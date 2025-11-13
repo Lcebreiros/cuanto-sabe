@@ -453,21 +453,25 @@ public function finalScores()
         ->orderBy('created_at', 'asc')
         ->get()
         ->map(function($answer) {
-            // Obtener las 4 opciones de la pregunta
             $question = $answer->question;
-            $options = [
-                ['label' => 'A', 'text' => $question->opcion_correcta],
-                ['label' => 'B', 'text' => $question->opcion_1],
-                ['label' => 'C', 'text' => $question->opcion_2],
-                ['label' => 'D', 'text' => $question->opcion_3],
+
+            // Necesitamos reconstruir las opciones como se mostraron originalmente
+            // Pero como fueron mezcladas, solo podemos mostrar info genérica
+            // Mostraremos todas las opciones disponibles
+            $allOptions = [
+                $question->opcion_correcta,
+                $question->opcion_1,
+                $question->opcion_2,
+                $question->opcion_3,
             ];
 
             return [
                 'question_text' => $question->texto,
-                'options' => $options,
+                'all_options' => $allOptions,
                 'selected_option' => $answer->selected_option,
                 'correct_option' => $answer->correct_option,
                 'is_correct' => $answer->is_correct,
+                'correct_text' => $question->opcion_correcta, // Siempre sabemos cuál es la correcta
             ];
         });
 

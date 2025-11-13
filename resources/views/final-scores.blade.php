@@ -21,17 +21,17 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 15px;
     box-sizing: border-box;
 }
 
 .final-scores-container {
     width: 100%;
     max-width: 1400px;
-    height: calc(100vh - 40px);
+    max-height: calc(100vh - 30px);
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 15px;
     animation: fadeIn 0.8s ease-out;
     box-sizing: border-box;
 }
@@ -408,6 +408,40 @@ body {
     font-size: 0.7rem;
 }
 
+.q-options {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 4px;
+}
+
+.option-line {
+    font-size: 0.7rem;
+    line-height: 1.2;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.opt-neutral {
+    color: #999;
+    opacity: 0.6;
+}
+
+.opt-correct {
+    color: #13ff79;
+    font-weight: 700;
+    background: rgba(19, 255, 121, 0.1);
+    text-shadow: 0 0 8px #13ff79;
+}
+
+.opt-incorrect {
+    color: #ff3f34;
+    font-weight: 700;
+    background: rgba(255, 63, 52, 0.1);
+    text-shadow: 0 0 8px #ff3f34;
+    text-decoration: line-through;
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
     .final-scores-container {
@@ -446,14 +480,20 @@ body {
                     <div class="q-number">Q{{ $index + 1 }}</div>
                     <div class="q-content">
                         <div class="q-text">{{ $answer['question_text'] }}</div>
-                        <div class="q-answer">
-                            @if($answer['is_correct'])
-                                <span class="answer-correct">{{ $answer['selected_option'] }}</span>
-                            @else
-                                <span class="answer-wrong">{{ $answer['selected_option'] }}</span>
-                                <span class="arrow">→</span>
-                                <span class="answer-correct">{{ $answer['correct_option'] }}</span>
-                            @endif
+                        <div class="q-options">
+                            @foreach($answer['all_options'] as $option)
+                                @php
+                                    $isCorrect = ($option === $answer['correct_text']);
+                                    $isSelected = false;
+
+                                    // Si respondió mal, necesitamos marcar cuál eligió
+                                    // Como no sabemos exactamente la correspondencia letra-texto,
+                                    // solo marcamos la correcta en verde
+                                @endphp
+                                <div class="option-line {{ $isCorrect ? 'opt-correct' : 'opt-neutral' }}">
+                                    {{ $option }}
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
