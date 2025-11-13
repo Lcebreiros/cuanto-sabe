@@ -509,6 +509,9 @@ async function fetchOverlayState(force = false) {
     // 🔥 DEBUG: Actualizar indicador de polling
     document.getElementById('dbgPolling').textContent = new Date().toLocaleTimeString();
 
+    // 🔥 DEBUG: Log del estado actual
+    console.log('[DEBUG] fetchOverlayState llamado - Force:', force, 'isOverlayReset:', isOverlayReset, 'isHandlingPendingSpin:', isHandlingPendingSpin, 'spinning:', spinning);
+
     // 🔥 Evitar llamadas duplicadas
     if (isFetching || (!force && (now - lastFetch) < FETCH_COOLDOWN)) {
         console.log('[DEBUG] fetchOverlayState: cooldown activo, skip');
@@ -575,10 +578,20 @@ async function fetchOverlayState(force = false) {
             setTimeout(() => {
                 questionBar.textContent = '🎲 Girando ruleta...';
                 console.log('[Overlay] 🎯 Iniciando giro de ruleta...');
+                console.log('[Overlay] Estado spinning antes:', spinning);
+
+                // 🔥 FORZAR RESET del estado de spinning por si quedó trabado
+                if (spinning) {
+                    console.warn('[Overlay] ⚠️ spinning estaba en true, reseteando...');
+                    spinning = false;
+                    stopRequested = false;
+                    finalized = false;
+                }
 
                 if (window.girarRuletaRemoto && typeof window.girarRuletaRemoto === 'function') {
                     window.girarRuletaRemoto();
                     console.log('[Overlay] ✅ girarRuletaRemoto() ejecutado');
+                    console.log('[Overlay] Estado spinning después:', spinning);
                     // Resetear flag después de 15 segundos
                     setTimeout(() => {
                         isHandlingPendingSpin = false;
@@ -657,6 +670,8 @@ function toggleAnim(el, showClass, hideClass, mostrar, cb) {
 }
 
 function resetOverlay() {
+    console.log('[DEBUG] 🔄 resetOverlay() ejecutándose - Trace:', new Error().stack);
+
     // 🔥 LIMPIA TENDENCIA DE TODAS LAS OPCIONES
     ['A','B','C','D'].forEach(l => {
         const optEl = document.getElementById('op'+l);
@@ -676,6 +691,7 @@ function resetOverlay() {
     ultimaSeleccionPanel = null;
     isHandlingPendingSpin = false; // 🔥 Resetear flag de pending spin
     isOverlayReset = true; // 🔥 Marcar como reseteado
+    console.log('[DEBUG] ✅ resetOverlay() completado - isOverlayReset ahora es:', isOverlayReset);
     options.forEach(opt => {
         const optEl = document.getElementById('op' + opt);
         optEl.classList.remove('selected', 'correct-flash', 'correct-final', 'incorrect-flash', 'incorrect-final');
