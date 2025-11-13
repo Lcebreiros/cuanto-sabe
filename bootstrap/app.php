@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
+
+        // Excluir rutas del CSRF token (para overlays de OBS que pueden estar abiertos mucho tiempo)
+        $middleware->validateCsrfTokens(except: [
+            '/overlay/lanzar-pregunta',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

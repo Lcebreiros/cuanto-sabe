@@ -1,4 +1,9 @@
 @extends('layouts.app')
+
+@php
+  $hideFooter = true;
+@endphp
+
 <!--@if(isset($participant))
 <div class="participant-name-top">
     <span class="participant-label">Participante:</span>

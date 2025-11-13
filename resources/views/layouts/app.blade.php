@@ -72,9 +72,11 @@
             @yield('content')
         </main>
 
-        <footer class="mt-8 py-4 text-center text-sm text-[#00f0ff80]">
-            © {{ date('Y') }} {{ config('app.name', 'Cuanto Sabe') }}. Todos los derechos reservados.
-        </footer>
+        @if (!isset($hideFooter) || !$hideFooter)
+            <footer class="mt-8 py-4 text-center text-sm text-[#00f0ff80]">
+                © {{ date('Y') }} {{ config('app.name', 'Cuanto Sabe') }}. Todos los derechos reservados.
+            </footer>
+        @endif
     </div>
 
     <!-- Livewire Scripts -->

@@ -21,17 +21,19 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+    padding: 20px;
     box-sizing: border-box;
 }
 
 .final-scores-container {
     width: 100%;
     max-width: 1400px;
+    height: 100vh;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 40px;
+    gap: 20px;
     animation: fadeIn 0.8s ease-out;
+    box-sizing: border-box;
 }
 
 @keyframes fadeIn {
@@ -48,33 +50,35 @@ body {
 /* === PANEL IZQUIERDO: INVITADO === */
 .guest-panel {
     background: linear-gradient(135deg, rgba(11, 21, 48, 0.95) 0%, rgba(18, 55, 92, 0.95) 100%);
-    border: 3px solid #00f0ff;
-    border-radius: 24px;
-    padding: 40px;
-    box-shadow: 0 0 40px #00f0ffaa, inset 0 0 60px rgba(0, 240, 255, 0.1);
+    border: 2px solid #00f0ff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 0 30px #00f0ffaa, inset 0 0 40px rgba(0, 240, 255, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 15px;
+    height: 100%;
+    overflow: hidden;
 }
 
 .guest-header {
     text-align: center;
     border-bottom: 2px solid #00f0ff44;
-    padding-bottom: 25px;
+    padding-bottom: 12px;
 }
 
 .guest-title {
-    font-size: 1.8rem;
+    font-size: 1rem;
     font-weight: 900;
     color: #00f0ff;
     text-shadow: 0 0 20px #00f0ff, 0 0 40px #00f0ff88;
-    margin: 0 0 15px 0;
+    margin: 0 0 8px 0;
     letter-spacing: 2px;
     text-transform: uppercase;
 }
 
 .guest-name {
-    font-size: 2.8rem;
+    font-size: 1.5rem;
     font-weight: 900;
     color: #fff;
     text-shadow: 0 0 25px #ffe47a, 0 0 50px #ffe47a88;
@@ -84,116 +88,55 @@ body {
 
 .guest-score-display {
     background: linear-gradient(90deg, #ffe47a 0%, #e6be2f 100%);
-    border-radius: 18px;
-    padding: 30px;
+    border-radius: 10px;
+    padding: 12px 15px;
     text-align: center;
-    box-shadow: 0 0 30px #ffe47a99, inset 0 0 30px rgba(255, 228, 122, 0.3);
+    box-shadow: 0 0 20px #ffe47a99, inset 0 0 20px rgba(255, 228, 122, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
 .score-label {
-    font-size: 1.3rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: #333;
-    margin: 0 0 10px 0;
+    margin: 0;
     letter-spacing: 1px;
 }
 
 .score-value {
-    font-size: 4.5rem;
+    font-size: 1.8rem;
     font-weight: 900;
     color: #000;
     margin: 0;
-    text-shadow: 0 0 15px rgba(255, 228, 122, 0.8);
-    letter-spacing: -2px;
-}
-
-.guest-stats {
-    display: flex;
-    gap: 20px;
-    justify-content: space-around;
-}
-
-.stat-box {
-    flex: 1;
-    border-radius: 16px;
-    padding: 25px 20px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.stat-box.correct {
-    background: linear-gradient(135deg, rgba(19, 255, 121, 0.2) 0%, rgba(7, 206, 94, 0.2) 100%);
-    border: 2px solid #13ff79;
-    box-shadow: 0 0 20px #13ff7988;
-}
-
-.stat-box.incorrect {
-    background: linear-gradient(135deg, rgba(255, 63, 52, 0.2) 0%, rgba(208, 0, 21, 0.2) 100%);
-    border: 2px solid #ff3f34;
-    box-shadow: 0 0 20px #ff3f3488;
-}
-
-.stat-icon {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-}
-
-.stat-box.correct .stat-icon {
-    color: #13ff79;
-    text-shadow: 0 0 15px #13ff79;
-}
-
-.stat-box.incorrect .stat-icon {
-    color: #ff3f34;
-    text-shadow: 0 0 15px #ff3f34;
-}
-
-.stat-number {
-    font-size: 3.5rem;
-    font-weight: 900;
-    margin: 10px 0;
-    line-height: 1;
-}
-
-.stat-box.correct .stat-number {
-    color: #13ff79;
-    text-shadow: 0 0 20px #13ff79;
-}
-
-.stat-box.incorrect .stat-number {
-    color: #ff3f34;
-    text-shadow: 0 0 20px #ff3f34;
-}
-
-.stat-label {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: 1px;
-    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(255, 228, 122, 0.8);
+    letter-spacing: -1px;
 }
 
 /* === PANEL DERECHO: TOP 3 === */
 .ranking-panel {
     background: linear-gradient(135deg, rgba(11, 21, 48, 0.95) 0%, rgba(18, 55, 92, 0.95) 100%);
-    border: 3px solid #19ff8c;
-    border-radius: 24px;
-    padding: 40px;
-    box-shadow: 0 0 40px #19ff8caa, inset 0 0 60px rgba(25, 255, 140, 0.1);
+    border: 2px solid #19ff8c;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 0 30px #19ff8caa, inset 0 0 40px rgba(25, 255, 140, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 25px;
+    gap: 15px;
+    height: 100%;
+    overflow: hidden;
 }
 
 .ranking-header {
     text-align: center;
     border-bottom: 2px solid #19ff8c44;
-    padding-bottom: 25px;
+    padding-bottom: 12px;
 }
 
 .ranking-title {
-    font-size: 1.8rem;
+    font-size: 1rem;
     font-weight: 900;
     color: #19ff8c;
     text-shadow: 0 0 20px #19ff8c, 0 0 40px #19ff8c88;
@@ -203,25 +146,44 @@ body {
 }
 
 .ranking-subtitle {
-    font-size: 1rem;
+    font-size: 0.75rem;
     color: #36d1ff;
-    margin: 10px 0 0 0;
+    margin: 5px 0 0 0;
     letter-spacing: 1px;
 }
 
 .podium {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 10px;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    padding-right: 5px;
+}
+
+.podium::-webkit-scrollbar {
+    width: 6px;
+}
+
+.podium::-webkit-scrollbar-track {
+    background: rgba(25, 255, 140, 0.1);
+    border-radius: 3px;
+}
+
+.podium::-webkit-scrollbar-thumb {
+    background: #19ff8c;
+    border-radius: 3px;
 }
 
 .podium-item {
     display: grid;
-    grid-template-columns: 60px 1fr auto;
+    grid-template-columns: 40px 1fr auto;
     align-items: center;
-    gap: 20px;
-    padding: 20px;
-    border-radius: 16px;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 10px;
     position: relative;
     overflow: hidden;
     animation: slideIn 0.6s ease-out backwards;
@@ -252,30 +214,30 @@ body {
 
 .podium-item.first {
     background: linear-gradient(90deg, rgba(255, 228, 122, 0.25) 0%, rgba(230, 190, 47, 0.25) 100%);
-    border: 3px solid #ffe47a;
-    box-shadow: 0 0 30px #ffe47a88;
+    border: 2px solid #ffe47a;
+    box-shadow: 0 0 20px #ffe47a88;
 }
 
 .podium-item.second {
     background: linear-gradient(90deg, rgba(54, 209, 255, 0.2) 0%, rgba(0, 240, 255, 0.2) 100%);
-    border: 3px solid #36d1ff;
-    box-shadow: 0 0 25px #36d1ff88;
+    border: 2px solid #36d1ff;
+    box-shadow: 0 0 15px #36d1ff88;
 }
 
 .podium-item.third {
     background: linear-gradient(90deg, rgba(255, 99, 71, 0.2) 0%, rgba(255, 69, 58, 0.2) 100%);
-    border: 3px solid #ff6347;
-    box-shadow: 0 0 20px #ff634788;
+    border: 2px solid #ff6347;
+    box-shadow: 0 0 15px #ff634788;
 }
 
 .rank-badge {
-    width: 60px;
-    height: 60px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 1.3rem;
     font-weight: 900;
     position: relative;
 }
@@ -283,29 +245,29 @@ body {
 .podium-item.first .rank-badge {
     background: linear-gradient(135deg, #ffe47a 0%, #e6be2f 100%);
     color: #000;
-    box-shadow: 0 0 25px #ffe47a, inset 0 0 20px rgba(230, 190, 47, 0.5);
+    box-shadow: 0 0 15px #ffe47a, inset 0 0 15px rgba(230, 190, 47, 0.5);
 }
 
 .podium-item.second .rank-badge {
     background: linear-gradient(135deg, #36d1ff 0%, #00f0ff 100%);
     color: #000;
-    box-shadow: 0 0 25px #36d1ff, inset 0 0 20px rgba(0, 240, 255, 0.5);
+    box-shadow: 0 0 15px #36d1ff, inset 0 0 15px rgba(0, 240, 255, 0.5);
 }
 
 .podium-item.third .rank-badge {
     background: linear-gradient(135deg, #ff6347 0%, #ff4537 100%);
     color: #fff;
-    box-shadow: 0 0 25px #ff6347, inset 0 0 20px rgba(255, 69, 58, 0.5);
+    box-shadow: 0 0 15px #ff6347, inset 0 0 15px rgba(255, 69, 58, 0.5);
 }
 
 .participant-info {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 3px;
 }
 
 .participant-name {
-    font-size: 1.5rem;
+    font-size: 1rem;
     font-weight: 900;
     color: #fff;
     margin: 0;
@@ -313,13 +275,13 @@ body {
 }
 
 .participant-details {
-    font-size: 0.9rem;
+    font-size: 0.7rem;
     color: #36d1ff;
     margin: 0;
 }
 
 .participant-score {
-    font-size: 2.5rem;
+    font-size: 1.5rem;
     font-weight: 900;
     text-align: right;
 }
@@ -351,10 +313,12 @@ body {
 .questions-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    max-height: 300px;
+    gap: 6px;
+    flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding-right: 5px;
+    min-height: 0;
 }
 
 .questions-list::-webkit-scrollbar {
@@ -438,7 +402,13 @@ body {
 @media (max-width: 1200px) {
     .final-scores-container {
         grid-template-columns: 1fr;
-        gap: 30px;
+        gap: 20px;
+        grid-template-rows: auto auto;
+    }
+
+    .guest-panel, .ranking-panel {
+        height: auto;
+        max-height: 45vh;
     }
 }
 </style>
@@ -453,22 +423,9 @@ body {
             </div>
 
             <div class="guest-score-display">
-                <div class="score-label">Puntuación Final</div>
+                <div class="score-label">Puntuación</div>
                 <div class="score-value">{{ $guestScore }}</div>
-            </div>
-
-            <div class="guest-stats">
-                <div class="stat-box correct">
-                    <div class="stat-icon">✓</div>
-                    <div class="stat-number">{{ $correctAnswers }}</div>
-                    <div class="stat-label">Correctas</div>
-                </div>
-
-                <div class="stat-box incorrect">
-                    <div class="stat-icon">✗</div>
-                    <div class="stat-number">{{ $incorrectAnswers }}</div>
-                    <div class="stat-label">Incorrectas</div>
-                </div>
+                <div class="score-label">pts</div>
             </div>
 
             <!-- MAPPING DE PREGUNTAS -->
