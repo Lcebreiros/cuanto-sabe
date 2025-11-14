@@ -140,40 +140,49 @@ body {
 
 /* === MAPPING DE PREGUNTAS === */
 .questions-list {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 5px;
-    min-height: 0;
-    align-content: start;
+    overflow: hidden;
+    position: relative;
 }
 
-.questions-list::-webkit-scrollbar {
-    width: 6px;
+.questions-scroll-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: scrollQuestions 60s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
 }
 
-.questions-list::-webkit-scrollbar-track {
-    background: rgba(0, 240, 255, 0.1);
-    border-radius: 3px;
-}
-
-.questions-list::-webkit-scrollbar-thumb {
-    background: #00f0ff;
-    border-radius: 3px;
+@keyframes scrollQuestions {
+    0% {
+        transform: translateY(0);
+    }
+    5% {
+        transform: translateY(0);
+    }
+    80% {
+        transform: translateY(calc(-100% + 100vh - 200px));
+    }
+    85% {
+        transform: translateY(calc(-100% + 100vh - 180px));
+    }
+    100% {
+        transform: translateY(calc(-100% + 100vh - 180px));
+    }
 }
 
 .question-item {
     display: flex;
-    gap: 5px;
-    padding: 3px 6px;
-    border-radius: 4px;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 8px;
     background: rgba(0, 240, 255, 0.05);
-    border-left: 2px solid;
-    font-size: 0.65rem;
-    height: fit-content;
+    border-left: 3px solid;
+    font-size: 0.85rem;
+    min-height: fit-content;
+    flex-shrink: 0;
 }
 
 .question-item.correct {
@@ -187,9 +196,78 @@ body {
 .q-number {
     font-weight: 700;
     color: #36d1ff;
-    min-width: 18px;
-    font-size: 0.6rem;
+    min-width: 25px;
+    font-size: 0.75rem;
     flex-shrink: 0;
+}
+
+/* Resultado Final */
+.final-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 60px 20px;
+    margin-top: 40px;
+    flex-shrink: 0;
+}
+
+.result-status {
+    font-size: 3rem;
+    font-weight: 900;
+    text-align: center;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.result-status.won {
+    color: #13ff79;
+    text-shadow: 0 0 30px #13ff79, 0 0 60px #13ff79;
+}
+
+.result-status.lost {
+    color: #ff3f34;
+    text-shadow: 0 0 30px #ff3f34, 0 0 60px #ff3f34;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+}
+
+.final-score-big {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #ffe47a;
+    text-shadow: 0 0 25px #ffe47a, 0 0 50px #ffe47a88;
+}
+
+.final-stats {
+    display: flex;
+    gap: 30px;
+    font-size: 1.2rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stat-item.correct {
+    color: #13ff79;
+}
+
+.stat-item.incorrect {
+    color: #ff3f34;
 }
 
 .q-content {
@@ -201,9 +279,9 @@ body {
 
 .q-text {
     color: #fff;
-    font-size: 0.65rem;
-    line-height: 1.15;
-    opacity: 0.9;
+    font-size: 0.9rem;
+    line-height: 1.3;
+    opacity: 0.95;
 }
 
 .q-answer {
@@ -233,20 +311,17 @@ body {
 .q-options {
     display: flex;
     flex-wrap: wrap;
-    gap: 3px;
-    margin-top: 2px;
+    gap: 6px;
+    margin-top: 6px;
 }
 
 .option-line {
-    font-size: 0.6rem;
-    line-height: 1.1;
-    padding: 1px 4px;
-    border-radius: 3px;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    padding: 4px 8px;
+    border-radius: 4px;
     display: inline-block;
-    white-space: nowrap;
     max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .opt-correct {
@@ -273,37 +348,25 @@ body {
 
 /* Responsive */
 @media (max-width: 1200px) {
-    .guest-header {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .guest-info {
-        align-items: center;
-        text-align: center;
-    }
-
-    .guest-score-display {
-        width: auto;
-    }
-
-    /* Mantener 2 columnas en preguntas incluso en pantallas pequeñas */
-    .questions-list {
-        grid-template-columns: 1fr 1fr;
-        gap: 3px 6px;
-    }
-
     .question-item {
-        padding: 3px 6px;
+        padding: 10px 12px;
     }
 
     .q-text {
-        font-size: 0.6rem;
+        font-size: 0.8rem;
     }
 
     .option-line {
-        font-size: 0.55rem;
-        padding: 1px 3px;
+        font-size: 0.7rem;
+        padding: 3px 6px;
+    }
+
+    .result-status {
+        font-size: 2.5rem;
+    }
+
+    .final-score-big {
+        font-size: 2rem;
     }
 }
 </style>
@@ -326,37 +389,64 @@ body {
 
             <!-- MAPPING DE PREGUNTAS -->
             @if($guestAnswers->count() > 0)
+            @php
+                $totalQuestions = $guestAnswers->count();
+                $correctCount = $guestAnswers->filter(fn($a) => $a['is_correct'])->count();
+                $incorrectCount = $totalQuestions - $correctCount;
+                $winThreshold = ceil($totalQuestions * 0.5); // 50% o más para ganar
+                $didWin = $correctCount >= $winThreshold;
+            @endphp
             <div class="questions-list">
-                @foreach($guestAnswers as $index => $answer)
-                <div class="question-item {{ $answer['is_correct'] ? 'correct' : 'incorrect' }}">
-                    <div class="q-number">Q{{ $index + 1 }}</div>
-                    <div class="q-content">
-                        <div class="q-text">{{ $answer['question_text'] }}</div>
-                        <div class="q-options">
-                            @foreach($answer['all_options'] as $option)
-                                @php
-                                    $isCorrect = ($option === $answer['correct_text']);
-                                    // Solo marcar como incorrecta si tenemos el texto de la opción seleccionada
-                                    $isWrong = (
-                                        !$answer['is_correct'] &&
-                                        !empty($answer['selected_option_text']) &&
-                                        $option === $answer['selected_option_text']
-                                    );
+                <div class="questions-scroll-container">
+                    @foreach($guestAnswers as $index => $answer)
+                    <div class="question-item {{ $answer['is_correct'] ? 'correct' : 'incorrect' }}">
+                        <div class="q-number">Q{{ $index + 1 }}</div>
+                        <div class="q-content">
+                            <div class="q-text">{{ $answer['question_text'] }}</div>
+                            <div class="q-options">
+                                @foreach($answer['all_options'] as $option)
+                                    @php
+                                        $isCorrect = ($option === $answer['correct_text']);
+                                        // Solo marcar como incorrecta si tenemos el texto de la opción seleccionada
+                                        $isWrong = (
+                                            !$answer['is_correct'] &&
+                                            !empty($answer['selected_option_text']) &&
+                                            $option === $answer['selected_option_text']
+                                        );
 
-                                    if ($isWrong) {
-                                        $class = 'opt-incorrect';
-                                    } elseif ($isCorrect) {
-                                        $class = 'opt-correct';
-                                    } else {
-                                        $class = 'opt-neutral';
-                                    }
-                                @endphp
-                                <span class="option-line {{ $class }}">{{ $option }}</span>
-                            @endforeach
+                                        if ($isWrong) {
+                                            $class = 'opt-incorrect';
+                                        } elseif ($isCorrect) {
+                                            $class = 'opt-correct';
+                                        } else {
+                                            $class = 'opt-neutral';
+                                        }
+                                    @endphp
+                                    <span class="option-line {{ $class }}">{{ $option }}</span>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+
+                    <!-- RESULTADO FINAL -->
+                    <div class="final-result">
+                        <div class="result-status {{ $didWin ? 'won' : 'lost' }}">
+                            {{ $didWin ? '¡GANASTE!' : 'PERDISTE' }}
+                        </div>
+                        <div class="final-score-big">{{ $guestScore }} puntos</div>
+                        <div class="final-stats">
+                            <div class="stat-item correct">
+                                <span>✓</span>
+                                <span>{{ $correctCount }} Correctas</span>
+                            </div>
+                            <div class="stat-item incorrect">
+                                <span>✗</span>
+                                <span>{{ $incorrectCount }} Incorrectas</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                @endforeach
             </div>
             @endif
         </div>
