@@ -99,13 +99,13 @@ body {
 }
 
 .podium-item:nth-child(1) {
-    animation-delay: 0.4s; /* Top 2 - Plata - Izquierda */
-    order: 1;
+    animation-delay: 0.2s; /* Top 1 - Oro - Centro */
+    order: 2;
 }
 
 .podium-item:nth-child(2) {
-    animation-delay: 0.2s; /* Top 1 - Oro - Centro */
-    order: 2;
+    animation-delay: 0.4s; /* Top 2 - Plata - Izquierda */
+    order: 1;
 }
 
 .podium-item:nth-child(3) {
@@ -200,7 +200,7 @@ body {
     align-items: center;
     text-align: center;
     width: 100%;
-    margin-top: 12px;
+    margin-top: 40px;
 }
 
 .participant-name {
