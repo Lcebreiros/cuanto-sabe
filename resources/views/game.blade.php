@@ -1442,12 +1442,8 @@ function reiniciarOverlay() {
 
     document.getElementById('textoPreguntaPanel').textContent = 'Pregunta aún no enviada';
 
-    // Ocultar badge de número de pregunta y resetear contador
-    const badge = document.getElementById('questionNumberBadge');
-    if (badge) {
-        badge.classList.remove('active');
-    }
-    panelQuestionCounter = 0;
+    // Mantener el badge visible con el número actual (no resetear)
+    // El contador se mantiene sincronizado con la DB
 
     ['A','B','C','D'].forEach(l => {
         const btn = document.getElementById('panel'+l);
