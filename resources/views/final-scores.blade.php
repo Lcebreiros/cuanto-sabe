@@ -48,14 +48,14 @@ body {
 
 /* === PANEL IZQUIERDO: INVITADO === */
 .guest-panel {
-    background: linear-gradient(135deg, rgba(11, 21, 48, 0.95) 0%, rgba(18, 55, 92, 0.95) 100%);
-    border: 2px solid #00f0ff;
-    border-radius: 16px;
-    padding: 15px;
-    box-shadow: 0 0 30px #00f0ffaa, inset 0 0 40px rgba(0, 240, 255, 0.1);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 20px;
     height: 100%;
     overflow: hidden;
 }
@@ -65,36 +65,38 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    border-bottom: 2px solid #00f0ff44;
-    padding-bottom: 12px;
+    gap: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+    padding-top: 20px;
 }
 
 .guest-info {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 0;
     align-items: center;
     text-align: center;
 }
 
 .guest-title {
-    font-size: 0.75rem;
-    font-weight: 900;
+    font-size: 1.2rem;
+    font-weight: 700;
     color: #00f0ff;
     text-shadow: 0 0 20px #00f0ff, 0 0 40px #00f0ff88;
     margin: 0;
     letter-spacing: 2px;
     text-transform: uppercase;
+    opacity: 0.7;
 }
 
 .guest-name {
-    font-size: 1.2rem;
+    font-size: 3rem;
     font-weight: 900;
     color: #fff;
-    text-shadow: 0 0 25px #ffe47a, 0 0 50px #ffe47a88;
+    text-shadow: 0 0 30px #ffe47a, 0 0 60px #ffe47a88;
     margin: 0;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
 }
 
 .guest-score-display {
@@ -146,6 +148,18 @@ body {
     flex: 1;
     overflow: hidden;
     position: relative;
+}
+
+.questions-list::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(to bottom, rgba(10, 14, 35, 1) 0%, rgba(10, 14, 35, 0) 100%);
+    z-index: 10;
+    pointer-events: none;
 }
 
 .questions-scroll-container {
@@ -207,29 +221,46 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 20px;
-    padding: 60px 20px;
-    margin-top: 40px;
+    gap: 30px;
+    padding: 80px 20px;
+    margin-top: 60px;
     flex-shrink: 0;
 }
 
+.final-score-big {
+    font-size: 4.5rem;
+    font-weight: 900;
+    color: #ffe47a;
+    text-shadow: 0 0 40px #ffe47a, 0 0 80px #ffe47a88;
+    animation: pulseScore 2s ease-in-out infinite;
+}
+
+@keyframes pulseScore {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.08);
+    }
+}
+
 .result-status {
-    font-size: 3rem;
+    font-size: 5rem;
     font-weight: 900;
     text-align: center;
-    letter-spacing: 3px;
+    letter-spacing: 5px;
     text-transform: uppercase;
     animation: pulse 2s ease-in-out infinite;
 }
 
 .result-status.won {
     color: #13ff79;
-    text-shadow: 0 0 30px #13ff79, 0 0 60px #13ff79;
+    text-shadow: 0 0 50px #13ff79, 0 0 100px #13ff79;
 }
 
 .result-status.lost {
     color: #ff3f34;
-    text-shadow: 0 0 30px #ff3f34, 0 0 60px #ff3f34;
+    text-shadow: 0 0 50px #ff3f34, 0 0 100px #ff3f34;
 }
 
 @keyframes pulse {
@@ -238,16 +269,9 @@ body {
         opacity: 1;
     }
     50% {
-        transform: scale(1.05);
-        opacity: 0.9;
+        transform: scale(1.1);
+        opacity: 0.85;
     }
-}
-
-.final-score-big {
-    font-size: 2.5rem;
-    font-weight: 900;
-    color: #ffe47a;
-    text-shadow: 0 0 25px #ffe47a, 0 0 50px #ffe47a88;
 }
 
 .final-stats {
@@ -380,11 +404,6 @@ body {
                     <div class="guest-title">Invitado</div>
                     <div class="guest-name">{{ $guestName }}</div>
                 </div>
-                <div class="guest-score-display">
-                    <span class="score-text">Puntuación Final:</span>
-                    <span class="score-value">{{ $guestScore }}</span>
-                    <span class="score-unit">puntos</span>
-                </div>
             </div>
 
             <!-- MAPPING DE PREGUNTAS -->
@@ -431,9 +450,6 @@ body {
 
                     <!-- RESULTADO FINAL -->
                     <div class="final-result">
-                        <div class="result-status {{ $didWin ? 'won' : 'lost' }}">
-                            {{ $didWin ? '¡GANASTE!' : 'PERDISTE' }}
-                        </div>
                         <div class="final-score-big">{{ $guestScore }} puntos</div>
                         <div class="final-stats">
                             <div class="stat-item correct">
@@ -444,6 +460,9 @@ body {
                                 <span>✗</span>
                                 <span>{{ $incorrectCount }} Incorrectas</span>
                             </div>
+                        </div>
+                        <div class="result-status {{ $didWin ? 'won' : 'lost' }}">
+                            {{ $didWin ? '¡GANASTE!' : 'PERDISTE' }}
                         </div>
                     </div>
                 </div>
