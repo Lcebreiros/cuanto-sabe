@@ -52,11 +52,11 @@ body {
     background: linear-gradient(135deg, rgba(11, 21, 48, 0.95) 0%, rgba(18, 55, 92, 0.95) 100%);
     border: 2px solid #00f0ff;
     border-radius: 16px;
-    padding: 20px;
+    padding: 15px;
     box-shadow: 0 0 30px #00f0ffaa, inset 0 0 40px rgba(0, 240, 255, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
     height: 100%;
     overflow: hidden;
 }
@@ -64,21 +64,21 @@ body {
 .guest-header {
     text-align: center;
     border-bottom: 2px solid #00f0ff44;
-    padding-bottom: 12px;
+    padding-bottom: 8px;
 }
 
 .guest-title {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 900;
     color: #00f0ff;
     text-shadow: 0 0 20px #00f0ff, 0 0 40px #00f0ff88;
-    margin: 0 0 8px 0;
+    margin: 0 0 6px 0;
     letter-spacing: 2px;
     text-transform: uppercase;
 }
 
 .guest-name {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 900;
     color: #fff;
     text-shadow: 0 0 25px #ffe47a, 0 0 50px #ffe47a88;
@@ -88,19 +88,19 @@ body {
 
 .guest-score-display {
     background: linear-gradient(90deg, #ffe47a 0%, #e6be2f 100%);
-    border-radius: 10px;
-    padding: 10px 15px;
+    border-radius: 8px;
+    padding: 8px 12px;
     text-align: center;
     box-shadow: 0 0 20px #ffe47a99, inset 0 0 20px rgba(255, 228, 122, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
 }
 
 .score-text {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #333;
     margin: 0;
@@ -109,7 +109,7 @@ body {
 }
 
 .score-value {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 900;
     color: #000;
     margin: 0;
@@ -118,7 +118,7 @@ body {
 }
 
 .score-unit {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #333;
     margin: 0;
@@ -321,14 +321,15 @@ body {
 
 /* === MAPPING DE PREGUNTAS === */
 .questions-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 8px;
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: 5px;
     min-height: 0;
+    align-content: start;
 }
 
 .questions-list::-webkit-scrollbar {
@@ -347,12 +348,13 @@ body {
 
 .question-item {
     display: flex;
-    gap: 8px;
-    padding: 6px 10px;
-    border-radius: 6px;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 5px;
     background: rgba(0, 240, 255, 0.05);
     border-left: 2px solid;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
+    height: fit-content;
 }
 
 .question-item.correct {
@@ -366,8 +368,8 @@ body {
 .q-number {
     font-weight: 700;
     color: #36d1ff;
-    min-width: 20px;
-    font-size: 0.65rem;
+    min-width: 18px;
+    font-size: 0.6rem;
     flex-shrink: 0;
 }
 
@@ -375,13 +377,13 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
 }
 
 .q-text {
     color: #fff;
-    font-size: 0.7rem;
-    line-height: 1.2;
+    font-size: 0.65rem;
+    line-height: 1.15;
     opacity: 0.9;
 }
 
@@ -412,14 +414,14 @@ body {
 .q-options {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 4px;
+    gap: 3px;
+    margin-top: 2px;
 }
 
 .option-line {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     line-height: 1.1;
-    padding: 2px 5px;
+    padding: 1px 4px;
     border-radius: 3px;
     display: inline-block;
     white-space: nowrap;
@@ -459,6 +461,25 @@ body {
     .guest-panel, .ranking-panel {
         height: auto;
         max-height: 45vh;
+    }
+
+    /* Mantener 2 columnas en preguntas incluso en pantallas pequeñas */
+    .questions-list {
+        grid-template-columns: 1fr 1fr;
+        gap: 3px 6px;
+    }
+
+    .question-item {
+        padding: 3px 6px;
+    }
+
+    .q-text {
+        font-size: 0.6rem;
+    }
+
+    .option-line {
+        font-size: 0.55rem;
+        padding: 1px 3px;
     }
 }
 </style>
