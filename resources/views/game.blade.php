@@ -3,6 +3,9 @@
 @section('content')
 @php
     $activeSession = \App\Models\GameSession::where('status', 'active')->latest()->first();
+    $questionCount = $activeSession
+        ? \App\Models\GuestAnswer::where('game_session_id', $activeSession->id)->count()
+        : 0;
 @endphp
 
 <style>
@@ -1388,7 +1391,7 @@ function girarRuleta() {
 }
 
 let lastOverlayQuestion = null;
-let panelQuestionCounter = 0;
+let panelQuestionCounter = {{ $questionCount }};
 
 
 // Función de revelar
@@ -1465,6 +1468,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const boton = document.getElementById('botonReiniciar');
     if (boton) {
         boton.addEventListener('click', reiniciarOverlay);
+    }
+
+    // Mostrar badge de número de pregunta si ya hay preguntas guardadas
+    const badge = document.getElementById('questionNumberBadge');
+    if (badge && panelQuestionCounter > 0) {
+        badge.textContent = `Pregunta ${panelQuestionCounter}`;
+        badge.classList.add('active');
     }
 });
 
