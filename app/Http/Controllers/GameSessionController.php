@@ -539,6 +539,43 @@ public function finalScores()
     ));
 }
 
+public function topParticipants()
+{
+    $session = GameSession::where('status', 'active')->latest()->first();
+
+    if (!$session) {
+        // Si no hay sesión activa, buscar la última sesión terminada
+        $session = GameSession::where('status', 'ended')->latest()->first();
+    }
+
+    if (!$session) {
+        return back()->with('error', 'No hay sesión disponible.');
+    }
+
+    // Top 3 participantes con mayor puntaje
+    $topParticipants = ParticipantSession::where('game_session_id', $session->id)
+        ->orderBy('puntaje', 'desc')
+        ->take(3)
+        ->get()
+        ->map(function($participant) use ($session) {
+            // Calcular respuestas correctas e incorrectas de cada participante
+            $correctCount = ParticipantAnswer::where('participant_session_id', $participant->id)
+                ->whereRaw('option_label = label_correcto')
+                ->count();
+
+            $incorrectCount = ParticipantAnswer::where('participant_session_id', $participant->id)
+                ->whereRaw('option_label != label_correcto OR label_correcto IS NULL')
+                ->count();
+
+            $participant->correct_answers = $correctCount;
+            $participant->incorrect_answers = $incorrectCount;
+
+            return $participant;
+        });
+
+    return view('top-participants', compact('topParticipants'));
+}
+
 public function lanzarPreguntaCategoria(Request $request)
 {
     $categoria = $request->input('categoria');

@@ -60,6 +60,7 @@ Route::get('/jugar', fn() => view('game.participate'))->name('game.participate')
 
 Route::get('/overlay', [App\Http\Controllers\GameSessionController::class, 'ruletaOverlay'])->name('overlay');
 Route::get('/final-scores', [App\Http\Controllers\GameSessionController::class, 'finalScores'])->name('final-scores');
+Route::get('/top-participants', [App\Http\Controllers\GameSessionController::class, 'topParticipants'])->name('top-participants');
 
 
 // Acciones del overlay/sesión de juego
