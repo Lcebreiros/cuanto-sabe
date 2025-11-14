@@ -62,18 +62,20 @@ body {
 
 .guest-header {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    justify-content: center;
+    gap: 8px;
     border-bottom: 2px solid #00f0ff44;
-    padding-bottom: 10px;
+    padding-bottom: 12px;
 }
 
 .guest-info {
-    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 4px;
+    align-items: center;
+    text-align: center;
 }
 
 .guest-title {
@@ -106,7 +108,6 @@ body {
     align-items: center;
     justify-content: center;
     gap: 5px;
-    flex-shrink: 0;
     white-space: nowrap;
 }
 
@@ -273,17 +274,17 @@ body {
 /* Responsive */
 @media (max-width: 1200px) {
     .guest-header {
-        flex-direction: row;
-        flex-wrap: wrap;
+        flex-direction: column;
+        align-items: center;
     }
 
     .guest-info {
-        flex: 1;
-        min-width: 200px;
+        align-items: center;
+        text-align: center;
     }
 
     .guest-score-display {
-        flex-shrink: 1;
+        width: auto;
     }
 
     /* Mantener 2 columnas en preguntas incluso en pantallas pequeñas */
