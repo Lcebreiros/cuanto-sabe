@@ -48,11 +48,11 @@ body {
 
 /* === PANEL IZQUIERDO: INVITADO === */
 .guest-panel {
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
+    background: linear-gradient(135deg, rgba(11, 21, 48, 0.95) 0%, rgba(18, 55, 92, 0.95) 100%);
+    border: 2px solid #00f0ff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 0 30px #00f0ffaa, inset 0 0 40px rgba(0, 240, 255, 0.1);
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -66,9 +66,9 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0;
-    border-bottom: none;
-    padding-bottom: 0;
-    padding-top: 20px;
+    border-bottom: 2px solid #00f0ff44;
+    padding-bottom: 15px;
+    padding-top: 0;
 }
 
 .guest-info {
@@ -157,7 +157,7 @@ body {
     left: 0;
     right: 0;
     height: 100px;
-    background: linear-gradient(to bottom, rgba(10, 14, 35, 1) 0%, rgba(10, 14, 35, 0) 100%);
+    background: linear-gradient(to bottom, rgba(11, 21, 48, 1) 0%, rgba(11, 21, 48, 0) 100%);
     z-index: 10;
     pointer-events: none;
 }
