@@ -37,21 +37,6 @@
         text-shadow: 0 0 10px #00f0ff; box-shadow: 0 0 15px #19faffb9, 0 0 1px #fff6;
         border: none; letter-spacing: 1.2px; font-family: 'Orbitron', Arial, sans-serif;
         transition: box-shadow 0.25s;
-        position: relative;
-        padding: 12px 60px 12px 12px;
-    }
-    .question-number {
-        position: absolute;
-        top: 8px;
-        right: 12px;
-        font-size: 0.65rem;
-        font-weight: 600;
-        color: #36d1ff;
-        text-shadow: 0 0 8px #36d1ff;
-        background: rgba(0, 20, 40, 0.6);
-        padding: 3px 8px;
-        border-radius: 8px;
-        letter-spacing: 0.5px;
     }
     .answers-row {
         display: grid; grid-template-columns: 1fr 1fr; gap: 16px 28px; margin-bottom: 1.3vh;
@@ -394,10 +379,7 @@
   <span class="gp-value" id="categoriaValue">-</span>
 </div>
   </div>
-  <div class="question-bar" id="questionBar">
-    <span class="question-number" id="questionNumber" style="display: none;"></span>
-    <span id="questionText">Esperando pregunta...</span>
-  </div>
+  <div class="question-bar" id="questionBar">Esperando pregunta...</div>
         <div class="answers-row">
             <div class="option-box" id="opA">
                 <span class="opt-label">A</span>
@@ -465,10 +447,7 @@ let currentOptions = [];
 let correctLabel = null;
 let ultimaSeleccionPanel = null;
 const questionBar = document.getElementById('questionBar');
-const questionText = document.getElementById('questionText');
-const questionNumber = document.getElementById('questionNumber');
 const options = ['A', 'B', 'C', 'D'];
-let questionCounter = 0;
 
 let isFetching = false;
 let lastFetch = 0;
@@ -547,9 +526,7 @@ function resetOverlay() {
         const optEl = document.getElementById('op'+l);
         optEl && optEl.classList.remove('tendencia');
     });
-    questionText.textContent = 'Esperando pregunta...';
-    questionNumber.style.display = 'none';
-    questionCounter = 0; // Resetear contador de preguntas
+    questionBar.textContent = 'Esperando pregunta...';
     const banner = document.getElementById('indicator-banner');
     banner.textContent = '';
     banner.style.display = 'none';
@@ -580,9 +557,6 @@ function showQuestion(data) {
         const optEl = document.getElementById('op'+l);
         optEl && optEl.classList.remove('tendencia');
     });
-
-    // Incrementar contador de preguntas
-    questionCounter++;
 
     window.lastQuestionData = data;
     console.log('[DEBUG] showQuestion data:', data);
@@ -639,11 +613,7 @@ function showQuestion(data) {
 
     // ✅ PRIMERO: Mostrar solo la categoría en el question-bar
     const categoria = data.categoria_nombre ? data.categoria_nombre.toUpperCase() : 'CATEGORÍA';
-    questionText.textContent = categoria;
-
-    // Mostrar número de pregunta
-    questionNumber.textContent = `Pregunta ${questionCounter}`;
-    questionNumber.style.display = 'block';
+    questionBar.textContent = categoria;
 
     // Ocultar todas las opciones inicialmente
     options.forEach(opt => {
@@ -661,7 +631,7 @@ function showQuestion(data) {
 
     // ✅ DESPUÉS DE 10 SEGUNDOS: Mostrar pregunta, opciones Y categoriaBar
     setTimeout(() => {
-        questionText.textContent = data.pregunta || 'Pregunta sin texto';
+        questionBar.textContent = data.pregunta || 'Pregunta sin texto';
 
         // ✅ MOSTRAR la barra de categoría ahora
         if (categoriaBar) {

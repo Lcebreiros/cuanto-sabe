@@ -256,6 +256,27 @@
         border: 1px solid rgba(0, 240, 255, 0.3);
         box-shadow: 0 0 25px rgba(0, 240, 255, 0.1);
         grid-column: 1;
+        position: relative;
+    }
+
+    .question-number-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: rgba(0, 240, 255, 0.15);
+        border: 1px solid rgba(0, 240, 255, 0.4);
+        border-radius: 8px;
+        padding: 4px 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        text-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
+        letter-spacing: 0.5px;
+        display: none;
+    }
+
+    .question-number-badge.active {
+        display: block;
     }
 
     .question-text {
@@ -956,6 +977,7 @@
 
         <!-- Panel de Pregunta -->
         <div class="question-panel">
+            <span id="questionNumberBadge" class="question-number-badge"></span>
             <div id="textoPreguntaPanel" class="question-text">
                 {{ $activeSession ? 'Pregunta aún no enviada' : 'Inicie una sesión para comenzar' }}
             </div>
@@ -1366,6 +1388,7 @@ function girarRuleta() {
 }
 
 let lastOverlayQuestion = null;
+let panelQuestionCounter = 0;
 
 
 // Función de revelar
@@ -1415,6 +1438,14 @@ function reiniciarOverlay() {
     });
 
     document.getElementById('textoPreguntaPanel').textContent = 'Pregunta aún no enviada';
+
+    // Ocultar badge de número de pregunta y resetear contador
+    const badge = document.getElementById('questionNumberBadge');
+    if (badge) {
+        badge.classList.remove('active');
+    }
+    panelQuestionCounter = 0;
+
     ['A','B','C','D'].forEach(l => {
         const btn = document.getElementById('panel'+l);
         if (!btn) return;
@@ -1549,6 +1580,14 @@ if (window.Echo) {
 
         const txt = document.getElementById('textoPreguntaPanel');
         if (txt) txt.textContent = pregunta || 'Pregunta aún no enviada';
+
+        // Incrementar contador y mostrar badge
+        panelQuestionCounter++;
+        const badge = document.getElementById('questionNumberBadge');
+        if (badge) {
+            badge.textContent = `Pregunta ${panelQuestionCounter}`;
+            badge.classList.add('active');
+        }
 
         ['A','B','C','D'].forEach((l) => {
             const btn = document.getElementById('panel'+l);
