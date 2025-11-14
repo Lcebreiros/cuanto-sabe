@@ -56,29 +56,39 @@ body {
     box-shadow: 0 0 30px #00f0ffaa, inset 0 0 40px rgba(0, 240, 255, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     height: 100%;
     overflow: hidden;
 }
 
 .guest-header {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     border-bottom: 2px solid #00f0ff44;
-    padding-bottom: 8px;
+    padding-bottom: 10px;
+}
+
+.guest-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .guest-title {
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     font-weight: 900;
     color: #00f0ff;
     text-shadow: 0 0 20px #00f0ff, 0 0 40px #00f0ff88;
-    margin: 0 0 6px 0;
+    margin: 0;
     letter-spacing: 2px;
     text-transform: uppercase;
 }
 
 .guest-name {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 900;
     color: #fff;
     text-shadow: 0 0 25px #ffe47a, 0 0 50px #ffe47a88;
@@ -87,41 +97,43 @@ body {
 }
 
 .guest-score-display {
-    background: linear-gradient(90deg, #ffe47a 0%, #e6be2f 100%);
+    background: linear-gradient(135deg, #ffe47a 0%, #e6be2f 100%);
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 8px;
     text-align: center;
     box-shadow: 0 0 20px #ffe47a99, inset 0 0 20px rgba(255, 228, 122, 0.3);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    flex-wrap: wrap;
+    min-width: 70px;
+    flex-shrink: 0;
 }
 
 .score-text {
-    font-size: 0.75rem;
+    font-size: 0.55rem;
     font-weight: 700;
     color: #333;
-    margin: 0;
+    margin: 0 0 2px 0;
     letter-spacing: 0.5px;
-    white-space: nowrap;
+    text-transform: uppercase;
 }
 
 .score-value {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 900;
     color: #000;
     margin: 0;
     text-shadow: 0 0 10px rgba(255, 228, 122, 0.8);
     letter-spacing: -1px;
+    line-height: 1;
 }
 
 .score-unit {
-    font-size: 0.75rem;
+    font-size: 0.5rem;
     font-weight: 700;
     color: #333;
-    margin: 0;
+    margin: 2px 0 0 0;
     letter-spacing: 0.5px;
 }
 
@@ -323,7 +335,7 @@ body {
 .questions-list {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4px 8px;
+    gap: 3px 8px;
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
@@ -348,9 +360,9 @@ body {
 
 .question-item {
     display: flex;
-    gap: 6px;
-    padding: 4px 8px;
-    border-radius: 5px;
+    gap: 5px;
+    padding: 3px 6px;
+    border-radius: 4px;
     background: rgba(0, 240, 255, 0.05);
     border-left: 2px solid;
     font-size: 0.65rem;
@@ -430,24 +442,20 @@ body {
     text-overflow: ellipsis;
 }
 
-.opt-neutral {
-    color: #999;
-    opacity: 0.5;
-    background: rgba(255, 255, 255, 0.02);
-}
-
 .opt-correct {
     color: #13ff79;
     font-weight: 700;
-    background: rgba(19, 255, 121, 0.15);
+    background: rgba(19, 255, 121, 0.2);
     text-shadow: 0 0 6px #13ff79;
+    border: 1px solid rgba(19, 255, 121, 0.3);
 }
 
 .opt-incorrect {
     color: #ff3f34;
     font-weight: 700;
-    background: rgba(255, 63, 52, 0.15);
+    background: rgba(255, 63, 52, 0.2);
     text-shadow: 0 0 6px #ff3f34;
+    border: 1px solid rgba(255, 63, 52, 0.3);
 }
 
 /* Responsive */
@@ -461,6 +469,20 @@ body {
     .guest-panel, .ranking-panel {
         height: auto;
         max-height: 45vh;
+    }
+
+    .guest-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .guest-info {
+        width: 100%;
+    }
+
+    .guest-score-display {
+        align-self: flex-end;
+        min-width: 60px;
     }
 
     /* Mantener 2 columnas en preguntas incluso en pantallas pequeñas */
@@ -489,14 +511,15 @@ body {
         <!-- PANEL IZQUIERDO: INVITADO -->
         <div class="guest-panel">
             <div class="guest-header">
-                <div class="guest-title">Invitado</div>
-                <div class="guest-name">{{ $guestName }}</div>
-            </div>
-
-            <div class="guest-score-display">
-                <span class="score-text">Puntuación Final =</span>
-                <span class="score-value">{{ $guestScore }}</span>
-                <span class="score-unit">puntos</span>
+                <div class="guest-info">
+                    <div class="guest-title">Invitado</div>
+                    <div class="guest-name">{{ $guestName }}</div>
+                </div>
+                <div class="guest-score-display">
+                    <span class="score-text">Score</span>
+                    <span class="score-value">{{ $guestScore }}</span>
+                    <span class="score-unit">pts</span>
+                </div>
             </div>
 
             <!-- MAPPING DE PREGUNTAS -->
@@ -508,25 +531,26 @@ body {
                     <div class="q-content">
                         <div class="q-text">{{ $answer['question_text'] }}</div>
                         <div class="q-options">
-                            @foreach($answer['all_options'] as $option)
-                                @php
-                                    $isCorrect = ($option === $answer['correct_text']);
-                                    // Solo marcar como incorrecta si tenemos el texto de la opción seleccionada
-                                    $isWrong = (
-                                        !$answer['is_correct'] &&
-                                        !empty($answer['selected_option_text']) &&
-                                        $option === $answer['selected_option_text']
-                                    );
+                            @php
+                                // Mostrar solo la opción correcta, o la seleccionada + correcta si falló
+                                $optionsToShow = [];
 
-                                    if ($isWrong) {
-                                        $class = 'opt-incorrect';
-                                    } elseif ($isCorrect) {
-                                        $class = 'opt-correct';
-                                    } else {
-                                        $class = 'opt-neutral';
-                                    }
-                                @endphp
-                                <span class="option-line {{ $class }}">{{ $option }}</span>
+                                // Si contestó incorrectamente, mostrar la seleccionada (incorrecta)
+                                if (!$answer['is_correct'] && !empty($answer['selected_option_text'])) {
+                                    $optionsToShow[] = [
+                                        'text' => $answer['selected_option_text'],
+                                        'class' => 'opt-incorrect'
+                                    ];
+                                }
+
+                                // Siempre mostrar la correcta
+                                $optionsToShow[] = [
+                                    'text' => $answer['correct_text'],
+                                    'class' => 'opt-correct'
+                                ];
+                            @endphp
+                            @foreach($optionsToShow as $option)
+                                <span class="option-line {{ $option['class'] }}">{{ $option['text'] }}</span>
                             @endforeach
                         </div>
                     </div>
