@@ -61,38 +61,39 @@
     }
 
     .back-button-container {
-        position: absolute;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%);
+        position: fixed;
+        left: 8px;
+        top: 8px;
+        z-index: 1000;
     }
 
     .back-btn {
-        background: rgba(0, 240, 255, 0.1);
+        background: rgba(0, 240, 255, 0.15);
         color: var(--primary-color);
-        border: 2px solid rgba(0, 240, 255, 0.3);
+        border: 2px solid rgba(0, 240, 255, 0.4);
         border-radius: 8px;
-        padding: 8px 15px;
-        font-size: 0.9rem;
+        padding: 6px 10px;
+        font-size: 0.85rem;
         font-weight: 600;
         cursor: pointer;
         transition: var(--transition);
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 4px;
         text-decoration: none;
+        backdrop-filter: blur(10px);
     }
 
     .back-btn:hover {
-        background: rgba(0, 240, 255, 0.2);
+        background: rgba(0, 240, 255, 0.3);
         border-color: var(--primary-color);
-        box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
-        transform: translateX(-2px);
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+        transform: scale(1.05);
     }
 
     .back-btn svg {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
     }
 
     .header-content {
@@ -394,7 +395,19 @@
     .panel-actions {
         display: flex;
         justify-content: center;
-        gap: 15px;
+        gap: 10px;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .panel-actions form {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+    }
+
+    .panel-actions form button {
+        width: 100%;
     }
 
     .panel-action-btn {
@@ -404,6 +417,9 @@
         cursor: pointer;
         transition: var(--transition);
         font-size: 0.9rem;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
     }
 
     .panel-action-btn:disabled {
@@ -496,10 +512,8 @@
     align-items: center;
     white-space: nowrap;
     vertical-align: middle;
-    /* IMPORTANTE: Mantener tamaño fijo SIEMPRE */
-    width: auto !important;
-    min-width: 100px !important;
-    max-width: 180px !important;
+    width: auto;
+    flex-shrink: 0;
 }
 .radio-light-btn .light {
     position: absolute;
@@ -592,16 +606,18 @@
     color: #7f8c8d; /* texto gris apagado */
     border: 2px solid #34495e;
     border-radius: 50px;
-    padding: 10px 30px;
-    font-size: 0.95rem;
+    padding: 8px 20px;
+    font-size: 0.85rem;
     font-weight: 800;
     text-transform: uppercase;
     cursor: pointer;
     box-shadow: 0 0 8px rgba(44, 62, 80, 0.3);
     transition: all 0.3s ease;
-    min-width: 160px;
+    flex: 1;
+    min-width: 0;
     opacity: 0.5; /* muy apagado por defecto */
     position: relative;
+    white-space: nowrap;
 }
 
 /* Estado activo */
@@ -629,15 +645,17 @@
     color: #7f8c8d; /* texto gris apagado */
     border: 2px solid #34495e;
     border-radius: 50px;
-    padding: 10px 30px;
-    font-size: 0.95rem;
+    padding: 8px 20px;
+    font-size: 0.85rem;
     font-weight: 800;
     text-transform: uppercase;
     cursor: pointer;
     box-shadow: 0 0 8px rgba(44, 62, 80, 0.3);
     transition: all 0.3s ease;
-    min-width: 160px;
+    flex: 1;
+    min-width: 0;
     opacity: 0.5; /* muy apagado por defecto */
+    white-space: nowrap;
 }
 
 /* Estado activo */
@@ -663,6 +681,37 @@
 .apuesta-btn:hover, .descarte-btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+}
+
+/* Estilos para elementos internos de botones bonus */
+.bonus-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    position: relative;
+}
+
+.bonus-btn .light {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+.bonus-btn .label {
+    flex: 1;
+    min-width: 0;
+}
+
+.bonus-btn .badge {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
 }
 
 .power-toggle-container {
@@ -810,11 +859,66 @@
         }
         
         .option-btn {
-            min-width: 160px;
+            min-width: 0;
+            font-size: 0.85rem;
+            padding: 8px;
         }
-        
+
         .options-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .game-panel-container {
             grid-template-columns: 1fr;
+            padding: 0.5rem;
+            gap: 10px;
+        }
+
+        .participants-container {
+            grid-row: auto;
+            max-height: 300px;
+        }
+
+        .apuesta-btn, .descarte-btn {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+        }
+
+        .panel-actions {
+            gap: 6px;
+        }
+
+        .back-btn {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+        }
+
+        .back-btn svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
+
+    /* Media query para pantallas muy pequeñas */
+    @media (max-width: 640px) {
+        .bonus-btn .label {
+            font-size: 0.7rem;
+        }
+
+        .bonus-btn .badge {
+            font-size: 0.65rem;
+            padding: 1px 6px;
+        }
+
+        .spin-btn {
+            font-size: 1rem;
+            padding: 10px 20px;
+            min-width: 150px;
+        }
+
+        .question-text {
+            font-size: 0.95rem;
         }
     }
 </style>
