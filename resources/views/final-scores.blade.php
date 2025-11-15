@@ -231,8 +231,8 @@ body {
     color: #ffe47a;
     text-shadow: 0 0 40px #ffe47a, 0 0 80px #ffe47a88;
     opacity: 0;
-    animation: showThenFadeScore 10s ease-in-out forwards;
-    animation-delay: 57s;
+    animation: showThenFadeScore 7s ease-in-out forwards;
+    animation-delay: 58s;
 }
 
 @keyframes showThenFadeScore {
@@ -266,7 +266,7 @@ body {
     text-transform: uppercase;
     opacity: 0;
     animation: showResultDelayed 4s ease-in-out forwards;
-    animation-delay: 67s;
+    animation-delay: 65.5s;
 }
 
 .result-status.won {
@@ -311,8 +311,8 @@ body {
     gap: 30px;
     font-size: 1.2rem;
     opacity: 0;
-    animation: showThenFadeScore 10s ease-in-out forwards;
-    animation-delay: 57s;
+    animation: showThenFadeScore 7s ease-in-out forwards;
+    animation-delay: 58s;
 }
 
 .stat-item {
