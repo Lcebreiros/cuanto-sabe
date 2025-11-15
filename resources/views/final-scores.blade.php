@@ -188,10 +188,16 @@ body {
 }
 
 @keyframes fadeOutQuestion {
-    0%, 90% {
+    0%, 50% {
         opacity: 1;
     }
-    95%, 100% {
+    60% {
+        opacity: 0.7;
+    }
+    70% {
+        opacity: 0.3;
+    }
+    75%, 100% {
         opacity: 0;
     }
 }
@@ -232,7 +238,7 @@ body {
     text-shadow: 0 0 40px #ffe47a, 0 0 80px #ffe47a88;
     opacity: 0;
     animation: showThenFadeScore 7s ease-in-out forwards;
-    animation-delay: 58s;
+    animation-delay: 46s;
 }
 
 @keyframes showThenFadeScore {
@@ -266,7 +272,7 @@ body {
     text-transform: uppercase;
     opacity: 0;
     animation: showResultDelayed 4s ease-in-out forwards;
-    animation-delay: 65.5s;
+    animation-delay: 53.5s;
 }
 
 .result-status.won {
@@ -312,7 +318,7 @@ body {
     font-size: 1.2rem;
     opacity: 0;
     animation: showThenFadeScore 7s ease-in-out forwards;
-    animation-delay: 58s;
+    animation-delay: 46s;
 }
 
 .stat-item {
