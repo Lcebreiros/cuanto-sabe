@@ -1,3 +1,8 @@
+@php
+    $hideNavigation = true;
+    $hideFooter = true;
+@endphp
+
 @extends('layouts.app')
 
 @section('content')
@@ -9,6 +14,15 @@
 @endphp
 
 <style>
+    /* Resetear padding del main para este panel específico */
+    main {
+        padding: 0 !important;
+    }
+
+    body {
+        overflow: hidden;
+    }
+
     :root {
         --primary-color: #00f0ff;
         --secondary-color: #ff00ff;
@@ -25,13 +39,15 @@
 
     .game-panel-container {
         max-width: 100vw;
-        margin: 0 auto;
+        width: 100vw;
+        margin: 0;
         padding: 0.5rem 1rem;
         display: grid;
         grid-template-columns: 1fr 320px;
         gap: 15px;
         height: 100vh;
         overflow: hidden;
+        box-sizing: border-box;
     }
 
     .panel-header {
@@ -41,6 +57,42 @@
         margin-bottom: 0.5rem;
         grid-column: 1 / -1;
         position: relative;
+        padding: 0.5rem 0;
+    }
+
+    .back-button-container {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .back-btn {
+        background: rgba(0, 240, 255, 0.1);
+        color: var(--primary-color);
+        border: 2px solid rgba(0, 240, 255, 0.3);
+        border-radius: 8px;
+        padding: 8px 15px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+
+    .back-btn:hover {
+        background: rgba(0, 240, 255, 0.2);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        transform: translateX(-2px);
+    }
+
+    .back-btn svg {
+        width: 16px;
+        height: 16px;
     }
 
     .header-content {
@@ -186,7 +238,7 @@
         flex-direction: column;
         gap: 10px;
         overflow-y: auto;
-        max-height: calc(100vh - 100px);
+        max-height: calc(100vh - 80px);
     }
 
     .spin-btn-container {
@@ -228,7 +280,7 @@
         background: transparent;
         border-radius: 16px;
         overflow: hidden;
-        max-height: calc(100vh - 100px);
+        max-height: calc(100vh - 80px);
         grid-column: 2;
         grid-row: 2 / span 2;
         display: flex;
@@ -770,6 +822,16 @@
 <div class="game-panel-container">
     <!-- Encabezado con información del invitado -->
     <div class="panel-header">
+        <!-- Botón Volver -->
+        <div class="back-button-container">
+            <a href="{{ route('dashboard') }}" class="back-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Volver
+            </a>
+        </div>
+
         <div class="header-content">
 <div class="guest-info-container">
     @if($activeSession)
