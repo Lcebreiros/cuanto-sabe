@@ -188,13 +188,10 @@ body {
 }
 
 @keyframes fadeOutQuestion {
-    0%, 5% {
+    0%, 90% {
         opacity: 1;
     }
-    70% {
-        opacity: 1;
-    }
-    100% {
+    95%, 100% {
         opacity: 0;
     }
 }
@@ -233,7 +230,9 @@ body {
     font-weight: 900;
     color: #ffe47a;
     text-shadow: 0 0 40px #ffe47a, 0 0 80px #ffe47a88;
-    animation: showThenFadeScore 12s ease-in-out forwards;
+    opacity: 0;
+    animation: showThenFadeScore 10s ease-in-out forwards;
+    animation-delay: 57s;
 }
 
 @keyframes showThenFadeScore {
@@ -241,19 +240,19 @@ body {
         opacity: 0;
         transform: scale(0.8);
     }
-    5% {
+    10% {
         opacity: 1;
         transform: scale(1);
     }
-    10%, 50% {
+    15%, 70% {
         opacity: 1;
         transform: scale(1);
     }
-    60% {
+    80% {
         opacity: 1;
         transform: scale(1.05);
     }
-    70%, 100% {
+    90%, 100% {
         opacity: 0;
         transform: scale(1.1);
     }
@@ -265,8 +264,9 @@ body {
     text-align: center;
     letter-spacing: 5px;
     text-transform: uppercase;
-    animation: showResultDelayed 14s ease-in-out forwards;
     opacity: 0;
+    animation: showResultDelayed 4s ease-in-out forwards;
+    animation-delay: 67s;
 }
 
 .result-status.won {
@@ -280,27 +280,23 @@ body {
 }
 
 @keyframes showResultDelayed {
-    0%, 70% {
+    0% {
         opacity: 0;
         transform: scale(0.5);
     }
-    75% {
-        opacity: 0;
-        transform: scale(0.8);
-    }
-    80% {
+    20% {
         opacity: 1;
-        transform: scale(1.2);
+        transform: scale(1.3);
     }
-    85% {
+    35% {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(0.95);
     }
-    90% {
+    50% {
         opacity: 1;
         transform: scale(1.05);
     }
-    95% {
+    65% {
         opacity: 1;
         transform: scale(1);
     }
@@ -314,7 +310,9 @@ body {
     display: flex;
     gap: 30px;
     font-size: 1.2rem;
-    animation: showThenFadeScore 12s ease-in-out forwards;
+    opacity: 0;
+    animation: showThenFadeScore 10s ease-in-out forwards;
+    animation-delay: 57s;
 }
 
 .stat-item {
