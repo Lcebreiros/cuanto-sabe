@@ -19,8 +19,37 @@
         padding: 0 !important;
     }
 
+    html {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+    }
+
     body {
         overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    /* Prevenir scroll horizontal */
+    .flex-grow,
+    .w-full,
+    .max-w-7xl,
+    .max-w-none {
+        overflow: hidden;
+        max-width: 100% !important;
+    }
+
+    /* Asegurar que inputs y selects se ajusten */
+    input, select, button {
+        max-width: 100%;
     }
 
     :root {
@@ -38,16 +67,16 @@
     }
 
     .game-panel-container {
-        max-width: 100vw;
-        width: 100vw;
+        max-width: 100%;
+        width: 100%;
         margin: 0;
-        padding: 0.5rem 1rem;
+        padding: 0.5rem;
         display: grid;
         grid-template-columns: 1fr 320px;
         gap: 15px;
         height: 100vh;
+        height: 100dvh; /* Dynamic viewport height para móvil */
         overflow: hidden;
-        box-sizing: border-box;
     }
 
     .panel-header {
@@ -561,6 +590,16 @@
         border: 1px solid rgba(0, 240, 255, 0.2);
         max-width: 800px;
         grid-column: 1;
+        width: 100%;
+    }
+
+    .random-question-form .form-group {
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .random-question-form .form-select {
+        width: 100%;
     }
 
     .form-label {
@@ -838,70 +877,70 @@
         }
     }
 
-    @media (max-width: 480px) {
-        .game-panel-container {
-            padding: 1rem;
-        }
-        
-        .spin-btn {
-            font-size: 1.2rem;
-            padding: 16px 30px;
-        }
-        
-        .power-btn {
-            min-width: 180px;
-            padding: 12px 20px 12px 60px;
-            font-size: 1.1rem;
-        }
-        
-        .guest-name {
-            font-size: 1.3rem;
-        }
-        
-        .option-btn {
-            min-width: 0;
-            font-size: 0.85rem;
-            padding: 8px;
-        }
-
-        .options-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
+    /* Tablet y menor */
+    @media (max-width: 768px) {
         .game-panel-container {
             grid-template-columns: 1fr;
-            padding: 0.5rem;
-            gap: 10px;
+            padding: 0.25rem;
+            gap: 8px;
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        .panel-header {
+            margin-bottom: 0.25rem;
+            padding: 0.25rem 0;
+        }
+
+        .main-content {
+            max-height: calc(100dvh - 60px);
+            gap: 8px;
         }
 
         .participants-container {
             grid-row: auto;
-            max-height: 300px;
+            max-height: 200px;
+        }
+
+        .question-panel {
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+
+        .question-text {
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            min-height: 30px;
+        }
+
+        .options-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .option-btn {
+            min-width: 0;
+            font-size: 0.8rem;
+            padding: 8px 4px;
+            min-height: 50px;
+        }
+
+        .spin-btn {
+            font-size: 1rem;
+            padding: 10px 20px;
+            min-width: 150px;
+        }
+
+        .spin-btn-container {
+            margin: 8px 0;
         }
 
         .apuesta-btn, .descarte-btn {
             padding: 6px 12px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
         }
 
-        .panel-actions {
-            gap: 6px;
-        }
-
-        .back-btn {
-            padding: 4px 8px;
-            font-size: 0.75rem;
-        }
-
-        .back-btn svg {
-            width: 12px;
-            height: 12px;
-        }
-    }
-
-    /* Media query para pantallas muy pequeñas */
-    @media (max-width: 640px) {
         .bonus-btn .label {
             font-size: 0.7rem;
         }
@@ -911,14 +950,162 @@
             padding: 1px 6px;
         }
 
-        .spin-btn {
-            font-size: 1rem;
-            padding: 10px 20px;
-            min-width: 150px;
+        .panel-actions {
+            gap: 6px;
         }
 
-        .question-text {
-            font-size: 0.95rem;
+        .panel-action-btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .back-btn {
+            padding: 4px 8px;
+            font-size: 0.7rem;
+        }
+
+        .back-btn svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .guest-info-container {
+            gap: 8px;
+            padding: 6px 10px;
+        }
+
+        .guest-avatar {
+            width: 30px;
+            height: 30px;
+            font-size: 0.9rem;
+        }
+
+        .guest-name {
+            font-size: 0.85rem;
+        }
+
+        .guest-meta {
+            font-size: 0.7rem;
+        }
+
+        .guest-points {
+            font-size: 0.85rem;
+        }
+
+        .radio-light-btn {
+            font-size: 0.8rem;
+            padding: 6px 16px 6px 35px;
+        }
+
+        .radio-light-btn .light {
+            width: 16px;
+            height: 16px;
+            left: 10px;
+        }
+
+        .fullscreen-btn-minimal {
+            width: 30px;
+            height: 30px;
+            padding: 5px;
+        }
+
+        .random-question-form {
+            padding: 8px;
+            margin: 0 auto 8px;
+            gap: 6px;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .random-question-form .form-group {
+            min-width: 100%;
+        }
+
+        .random-question-form .form-label {
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+
+        .submit-random-btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            width: 100%;
+        }
+
+        .start-game-form {
+            padding: 10px;
+            margin: 0 auto 8px;
+        }
+
+        .start-game-form.show {
+            max-height: 400px;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .form-control, .form-select {
+            padding: 6px;
+            font-size: 0.9rem;
+        }
+
+        .start-btn {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+
+        .mode-options {
+            gap: 8px;
+            padding: 4px;
+        }
+
+        .mode-label {
+            font-size: 0.8rem;
+        }
+
+        .participants-title {
+            font-size: 0.9rem;
+            padding: 8px 12px;
+        }
+
+        .power-toggle-container {
+            gap: 6px;
+        }
+
+        .power-toggle-container form {
+            margin: 0;
+        }
+
+        /* Asegurar que nada cause scroll horizontal */
+        .panel-header,
+        .header-content,
+        .guest-info-container {
+            max-width: 100%;
+            overflow: hidden;
+        }
+    }
+
+    /* Ajustes específicos para pantallas muy pequeñas */
+    @media (max-width: 480px) {
+        .game-panel-container {
+            padding: 0.2rem;
+        }
+
+        .back-btn {
+            font-size: 0.65rem;
+            padding: 3px 6px;
+        }
+
+        .guest-info-container {
+            padding: 4px 8px;
+        }
+
+        .mode-pill {
+            font-size: 0.65rem;
+            padding: 3px 8px;
         }
     }
 </style>
