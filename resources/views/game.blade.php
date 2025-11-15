@@ -269,6 +269,7 @@
         gap: 10px;
         overflow-y: auto;
         max-height: calc(100vh - 80px);
+        flex: 1;
     }
 
     .spin-btn-container {
@@ -882,19 +883,22 @@
         .game-panel-container {
             grid-template-columns: 1fr;
             padding: 0.25rem;
-            gap: 8px;
+            gap: 4px;
             height: 100vh;
             height: 100dvh;
+            grid-template-rows: auto 1fr auto;
         }
 
         .panel-header {
-            margin-bottom: 0.25rem;
+            margin-bottom: 0;
             padding: 0.25rem 0;
         }
 
         .main-content {
-            max-height: calc(100dvh - 60px);
-            gap: 8px;
+            max-height: none;
+            overflow: visible;
+            gap: 4px;
+            flex: 1;
         }
 
         .participants-container {
@@ -903,60 +907,72 @@
         }
 
         .question-panel {
-            padding: 10px;
-            margin-bottom: 8px;
+            padding: 6px;
+            margin-bottom: 4px;
         }
 
         .question-text {
-            font-size: 0.95rem;
-            margin-bottom: 8px;
-            min-height: 30px;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            min-height: 25px;
         }
 
         .options-grid {
             grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            margin-bottom: 8px;
+            gap: 4px;
+            margin-bottom: 4px;
         }
 
         .option-btn {
             min-width: 0;
-            font-size: 0.8rem;
-            padding: 8px 4px;
-            min-height: 50px;
+            font-size: 0.7rem;
+            padding: 6px 2px;
+            min-height: 40px;
         }
 
         .spin-btn {
-            font-size: 1rem;
-            padding: 10px 20px;
-            min-width: 150px;
+            font-size: 0.85rem;
+            padding: 8px 16px;
+            min-width: 120px;
         }
 
         .spin-btn-container {
-            margin: 8px 0;
+            margin: 4px 0;
+        }
+
+        .question-number-badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            top: 8px;
+            right: 8px;
         }
 
         .apuesta-btn, .descarte-btn {
-            padding: 6px 12px;
-            font-size: 0.7rem;
+            padding: 5px 10px;
+            font-size: 0.65rem;
         }
 
         .bonus-btn .label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
         }
 
         .bonus-btn .badge {
-            font-size: 0.65rem;
-            padding: 1px 6px;
+            font-size: 0.6rem;
+            padding: 1px 4px;
+        }
+
+        .bonus-btn .light {
+            width: 8px;
+            height: 8px;
         }
 
         .panel-actions {
-            gap: 6px;
+            gap: 4px;
         }
 
         .panel-action-btn {
-            padding: 6px 12px;
-            font-size: 0.8rem;
+            padding: 5px 10px;
+            font-size: 0.7rem;
         }
 
         .back-btn {
@@ -970,113 +986,142 @@
         }
 
         .guest-info-container {
-            gap: 8px;
-            padding: 6px 10px;
+            gap: 6px;
+            padding: 4px 8px;
         }
 
         .guest-avatar {
-            width: 30px;
-            height: 30px;
-            font-size: 0.9rem;
+            width: 28px;
+            height: 28px;
+            font-size: 0.8rem;
         }
 
         .guest-name {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
         }
 
         .guest-meta {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
+            gap: 4px;
         }
 
         .guest-points {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
+            padding: 4px 12px;
         }
 
         .radio-light-btn {
-            font-size: 0.8rem;
-            padding: 6px 16px 6px 35px;
+            font-size: 0.7rem;
+            padding: 5px 12px 5px 28px;
         }
 
         .radio-light-btn .light {
-            width: 16px;
-            height: 16px;
-            left: 10px;
+            width: 14px;
+            height: 14px;
+            left: 8px;
         }
 
         .fullscreen-btn-minimal {
-            width: 30px;
-            height: 30px;
-            padding: 5px;
+            width: 28px;
+            height: 28px;
+            padding: 4px;
+        }
+
+        .fullscreen-btn-minimal svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .power-toggle-container {
+            gap: 4px;
         }
 
         .random-question-form {
-            padding: 8px;
-            margin: 0 auto 8px;
-            gap: 6px;
+            padding: 6px;
+            margin: 0 auto 4px;
+            gap: 4px;
             flex-direction: column;
             align-items: stretch;
         }
 
         .random-question-form .form-group {
             min-width: 100%;
+            margin-bottom: 0;
         }
 
         .random-question-form .form-label {
-            font-size: 0.8rem;
-            margin-bottom: 4px;
+            font-size: 0.7rem;
+            margin-bottom: 2px;
+        }
+
+        .random-question-form .form-select {
+            font-size: 0.75rem;
+            padding: 4px;
         }
 
         .submit-random-btn {
-            padding: 6px 12px;
-            font-size: 0.8rem;
+            padding: 5px 10px;
+            font-size: 0.7rem;
             width: 100%;
         }
 
         .start-game-form {
-            padding: 10px;
-            margin: 0 auto 8px;
+            padding: 8px;
+            margin: 0 auto 4px;
         }
 
         .start-game-form.show {
-            max-height: 400px;
+            max-height: 350px;
         }
 
         .form-grid {
             grid-template-columns: 1fr;
-            gap: 10px;
+            gap: 8px;
         }
 
         .form-control, .form-select {
-            padding: 6px;
-            font-size: 0.9rem;
+            padding: 5px;
+            font-size: 0.8rem;
         }
 
         .start-btn {
-            padding: 8px 16px;
-            font-size: 0.85rem;
+            padding: 6px 12px;
+            font-size: 0.75rem;
             width: 100%;
         }
 
         .mode-options {
-            gap: 8px;
-            padding: 4px;
+            gap: 6px;
+            padding: 3px;
         }
 
         .mode-label {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
+            padding: 6px;
         }
 
         .participants-title {
-            font-size: 0.9rem;
-            padding: 8px 12px;
+            font-size: 0.85rem;
+            padding: 6px 10px;
         }
 
         .power-toggle-container {
-            gap: 6px;
+            gap: 4px;
         }
 
         .power-toggle-container form {
             margin: 0;
+        }
+
+        .mode-pill {
+            font-size: 0.65rem;
+            padding: 3px 10px;
+            gap: 4px;
+        }
+
+        .mode-pill::before {
+            width: 5px;
+            height: 5px;
         }
 
         /* Asegurar que nada cause scroll horizontal */
@@ -1092,20 +1137,66 @@
     @media (max-width: 480px) {
         .game-panel-container {
             padding: 0.2rem;
+            gap: 2px;
         }
 
         .back-btn {
-            font-size: 0.65rem;
-            padding: 3px 6px;
+            font-size: 0.6rem;
+            padding: 2px 5px;
         }
 
         .guest-info-container {
-            padding: 4px 8px;
+            padding: 3px 6px;
+        }
+
+        .guest-avatar {
+            width: 24px;
+            height: 24px;
+            font-size: 0.7rem;
+        }
+
+        .guest-name {
+            font-size: 0.7rem;
+        }
+
+        .guest-meta {
+            font-size: 0.6rem;
+        }
+
+        .guest-points {
+            font-size: 0.7rem;
+            padding: 3px 10px;
         }
 
         .mode-pill {
+            font-size: 0.6rem;
+            padding: 2px 8px;
+        }
+
+        .spin-btn {
+            font-size: 0.75rem;
+            padding: 6px 12px;
+            min-width: 100px;
+        }
+
+        .option-btn {
             font-size: 0.65rem;
-            padding: 3px 8px;
+            padding: 4px 2px;
+            min-height: 35px;
+        }
+
+        .question-text {
+            font-size: 0.75rem;
+        }
+
+        .panel-action-btn {
+            font-size: 0.65rem;
+            padding: 4px 8px;
+        }
+
+        .apuesta-btn, .descarte-btn {
+            font-size: 0.6rem;
+            padding: 4px 8px;
         }
     }
 </style>
