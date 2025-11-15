@@ -24,19 +24,21 @@
     }
 
     .game-panel-container {
-        max-width: 1400px;
+        max-width: 100vw;
         margin: 0 auto;
-        padding: 1rem 2rem;
+        padding: 0.5rem 1rem;
         display: grid;
-        grid-template-columns: 1fr 350px;
-        gap: 30px;
+        grid-template-columns: 1fr 320px;
+        gap: 15px;
+        height: 100vh;
+        overflow: hidden;
     }
 
     .panel-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
         grid-column: 1 / -1;
         position: relative;
     }
@@ -182,13 +184,15 @@
     .main-content {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 10px;
+        overflow-y: auto;
+        max-height: calc(100vh - 100px);
     }
 
     .spin-btn-container {
         display: flex;
         justify-content: center;
-        margin: 20px 0;
+        margin: 10px 0;
         grid-column: 1;
     }
 
@@ -197,8 +201,8 @@
         color: #00122c;
         border: none;
         border-radius: 50px;
-        padding: 20px 40px;
-        font-size: 1.5rem;
+        padding: 12px 30px;
+        font-size: 1.2rem;
         font-weight: 800;
         letter-spacing: 1px;
         text-transform: uppercase;
@@ -208,7 +212,7 @@
         transition: var(--transition);
         position: relative;
         overflow: hidden;
-        min-width: 250px;
+        min-width: 200px;
     }
 
     .spin-btn:disabled {
@@ -224,24 +228,27 @@
         background: transparent;
         border-radius: 16px;
         overflow: hidden;
-        max-height: 600px;
+        max-height: calc(100vh - 100px);
         grid-column: 2;
         grid-row: 2 / span 2;
+        display: flex;
+        flex-direction: column;
     }
 
     .participants-title {
         color: var(--primary-color);
-        font-size: 1.2rem;
+        font-size: 1rem;
         margin: 0;
-        padding: 15px 20px;
+        padding: 10px 15px;
         text-shadow: 0 0 8px var(--primary-color);
         border-bottom: 1px solid rgba(0, 240, 255, 0.3);
         background: rgba(15, 18, 42, 0.5);
+        flex-shrink: 0;
     }
 
     .participants-content {
         padding: 0;
-        max-height: 540px;
+        flex: 1;
         overflow-y: auto;
     }
 
@@ -254,8 +261,8 @@
     .question-panel {
         background: var(--card-bg);
         border-radius: 16px;
-        padding: 25px;
-        margin-bottom: 25px;
+        padding: 15px;
+        margin-bottom: 10px;
         border: 1px solid rgba(0, 240, 255, 0.3);
         box-shadow: 0 0 25px rgba(0, 240, 255, 0.1);
         grid-column: 1;
@@ -283,20 +290,20 @@
     }
 
     .question-text {
-        font-size: 1.3rem;
+        font-size: 1.1rem;
         color: #18fff9;
         font-weight: 700;
         text-shadow: 0 0 10px rgba(25, 250, 255, 0.8);
-        margin-bottom: 20px;
-        min-height: 50px;
+        margin-bottom: 12px;
+        min-height: 35px;
         text-align: center;
     }
 
     .options-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 15px;
-        margin-bottom: 20px;
+        gap: 10px;
+        margin-bottom: 12px;
     }
 
     .option-btn {
@@ -304,13 +311,13 @@
         color: #fff;
         border: 2px solid var(--primary-color);
         border-radius: 12px;
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 700;
-        padding: 15px;
+        padding: 10px;
         cursor: pointer;
         transition: var(--transition);
         text-align: center;
-        min-height: 80px;
+        min-height: 60px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -339,12 +346,12 @@
     }
 
     .panel-action-btn {
-        padding: 12px 25px;
+        padding: 8px 18px;
         border-radius: 8px;
         font-weight: 600;
         cursor: pointer;
         transition: var(--transition);
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
 
     .panel-action-btn:disabled {
@@ -367,8 +374,8 @@
     .start-game-form {
         background: var(--card-bg);
         border-radius: 16px;
-        padding: 25px;
-        margin: 0 auto 25px;
+        padding: 15px;
+        margin: 0 auto 10px;
         border: 1px solid rgba(0, 240, 255, 0.3);
         box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
         max-height: 0;
@@ -380,7 +387,7 @@
     }
 
     .start-game-form.show {
-        max-height: 500px;
+        max-height: 300px;
         opacity: 1;
     }
 
@@ -400,7 +407,7 @@
         color: var(--text-primary);
         border: 1px solid rgba(37, 45, 67, 0.8);
         border-radius: 8px;
-        padding: 12px;
+        padding: 8px;
         width: 100%;
     }
 
@@ -409,11 +416,12 @@
         color: #00361e;
         border: none;
         border-radius: 8px;
-        padding: 12px 25px;
+        padding: 8px 18px;
         font-weight: 600;
         cursor: pointer;
         transition: var(--transition);
         height: fit-content;
+        font-size: 0.9rem;
     }
 
     /* ---- LUZ DE RADIO ---- */
@@ -421,12 +429,12 @@
     border: none;
     outline: none;
     border-radius: 38px;
-    font-size: 1.24rem;
+    font-size: 1rem;
     font-family: 'Orbitron', Arial, sans-serif;
     font-weight: bold;
-    padding: 12px 30px 12px 60px;
-    margin-right: 10px;
-    letter-spacing: 2px;
+    padding: 8px 20px 8px 45px;
+    margin-right: 8px;
+    letter-spacing: 1.5px;
     background: #211;
     color: #fff;
     position: relative;
@@ -438,16 +446,16 @@
     vertical-align: middle;
     /* IMPORTANTE: Mantener tamaño fijo SIEMPRE */
     width: auto !important;
-    min-width: 130px !important;
-    max-width: 240px !important;
+    min-width: 100px !important;
+    max-width: 180px !important;
 }
 .radio-light-btn .light {
     position: absolute;
-    left: 16px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    width: 26px;
-    height: 26px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: #ff2d3b;
     box-shadow: 0 0 14px #ff2d3b99, 0 0 0 #fff0;
@@ -477,13 +485,13 @@
 
     .random-question-form {
         display: flex;
-        gap: 15px;
+        gap: 10px;
         align-items: center;
-        margin: 0 auto 25px;
+        margin: 0 auto 10px;
         flex-wrap: wrap;
         background: var(--card-bg);
         border-radius: 12px;
-        padding: 20px;
+        padding: 12px;
         border: 1px solid rgba(0, 240, 255, 0.2);
         max-width: 800px;
         grid-column: 1;
@@ -500,10 +508,11 @@
         color: #002;
         border: none;
         border-radius: 8px;
-        padding: 12px 25px;
+        padding: 8px 18px;
         font-weight: 600;
         cursor: pointer;
         transition: var(--transition);
+        font-size: 0.9rem;
     }
 
     /* resaltar opción en tendencia */
@@ -531,14 +540,14 @@
     color: #7f8c8d; /* texto gris apagado */
     border: 2px solid #34495e;
     border-radius: 50px;
-    padding: 14px 50px;
-    font-size: 1.2rem;
+    padding: 10px 30px;
+    font-size: 0.95rem;
     font-weight: 800;
     text-transform: uppercase;
     cursor: pointer;
     box-shadow: 0 0 8px rgba(44, 62, 80, 0.3);
     transition: all 0.3s ease;
-    min-width: 220px;
+    min-width: 160px;
     opacity: 0.5; /* muy apagado por defecto */
     position: relative;
 }
@@ -568,14 +577,14 @@
     color: #7f8c8d; /* texto gris apagado */
     border: 2px solid #34495e;
     border-radius: 50px;
-    padding: 14px 50px;
-    font-size: 1.2rem;
+    padding: 10px 30px;
+    font-size: 0.95rem;
     font-weight: 800;
     text-transform: uppercase;
     cursor: pointer;
     box-shadow: 0 0 8px rgba(44, 62, 80, 0.3);
     transition: all 0.3s ease;
-    min-width: 220px;
+    min-width: 160px;
     opacity: 0.5; /* muy apagado por defecto */
 }
 
@@ -618,16 +627,16 @@
     background: rgba(79, 70, 229, 0.15);
     color: #818cf8;
     border: 1.5px solid rgba(129, 140, 248, 0.3);
-    border-radius: 10px;
-    padding: 10px;
+    border-radius: 8px;
+    padding: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: blur(8px);
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
     flex-shrink: 0;  /* Evita que se comprima */
 }
 
@@ -880,11 +889,11 @@
             onclick="toggleFullscreen()"
             title="Pantalla completa (Ctrl+F)">
         <!-- Ícono expandir -->
-        <svg class="fs-icon expand" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="fs-icon expand" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
         </svg>
         <!-- Ícono contraer -->
-        <svg class="fs-icon compress" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+        <svg class="fs-icon compress" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
             <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
         </svg>
     </button>
