@@ -150,17 +150,7 @@ body {
     position: relative;
 }
 
-.questions-list::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 100px;
-    background: linear-gradient(to bottom, rgba(11, 21, 48, 1) 0%, rgba(11, 21, 48, 0) 100%);
-    z-index: 10;
-    pointer-events: none;
-}
+/* Gradient deshabilitado - ahora usamos fade en las preguntas */
 
 .questions-scroll-container {
     display: flex;
@@ -176,14 +166,11 @@ body {
     5% {
         transform: translateY(0);
     }
-    80% {
-        transform: translateY(calc(-100% + 100vh - 200px));
-    }
-    85% {
-        transform: translateY(calc(-100% + 100vh - 180px));
+    70% {
+        transform: translateY(calc(-100% + 100vh - 150px));
     }
     100% {
-        transform: translateY(calc(-100% + 100vh - 180px));
+        transform: translateY(calc(-100% + 100vh - 150px));
     }
 }
 
@@ -197,6 +184,19 @@ body {
     font-size: 0.85rem;
     min-height: fit-content;
     flex-shrink: 0;
+    animation: fadeOutQuestion 60s linear forwards;
+}
+
+@keyframes fadeOutQuestion {
+    0%, 5% {
+        opacity: 1;
+    }
+    70% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
 }
 
 .question-item.correct {
@@ -225,6 +225,7 @@ body {
     padding: 80px 20px;
     margin-top: 60px;
     flex-shrink: 0;
+    min-height: 400px;
 }
 
 .final-score-big {
@@ -232,25 +233,40 @@ body {
     font-weight: 900;
     color: #ffe47a;
     text-shadow: 0 0 40px #ffe47a, 0 0 80px #ffe47a88;
-    animation: pulseScore 2s ease-in-out infinite;
+    animation: showThenFadeScore 12s ease-in-out forwards;
 }
 
-@keyframes pulseScore {
-    0%, 100% {
+@keyframes showThenFadeScore {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    5% {
+        opacity: 1;
         transform: scale(1);
     }
-    50% {
-        transform: scale(1.08);
+    10%, 50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    60% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70%, 100% {
+        opacity: 0;
+        transform: scale(1.1);
     }
 }
 
 .result-status {
-    font-size: 5rem;
+    font-size: 6rem;
     font-weight: 900;
     text-align: center;
     letter-spacing: 5px;
     text-transform: uppercase;
-    animation: pulse 2s ease-in-out infinite;
+    animation: showResultDelayed 14s ease-in-out forwards;
+    opacity: 0;
 }
 
 .result-status.won {
@@ -263,14 +279,34 @@ body {
     text-shadow: 0 0 50px #ff3f34, 0 0 100px #ff3f34;
 }
 
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-        opacity: 1;
+@keyframes showResultDelayed {
+    0%, 70% {
+        opacity: 0;
+        transform: scale(0.5);
     }
-    50% {
-        transform: scale(1.1);
-        opacity: 0.85;
+    75% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    80% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+    85% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    90% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    95% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
     }
 }
 
@@ -278,6 +314,7 @@ body {
     display: flex;
     gap: 30px;
     font-size: 1.2rem;
+    animation: showThenFadeScore 12s ease-in-out forwards;
 }
 
 .stat-item {
@@ -386,11 +423,11 @@ body {
     }
 
     .result-status {
-        font-size: 2.5rem;
+        font-size: 3rem;
     }
 
     .final-score-big {
-        font-size: 2rem;
+        font-size: 2.5rem;
     }
 }
 </style>
