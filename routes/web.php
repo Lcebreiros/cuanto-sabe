@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\UserManagementController;
-use App\Http\Middleware\IsAdmin;
+use App\Http\Middleware\AdminMiddleware as IsAdmin;
 use App\Models\Question;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\GameSessionController;
