@@ -208,10 +208,10 @@
                                 @if ($photo)
                                     <div class="mt-3 p-3 bg-gray-700/50 rounded-lg">
                                         <p class="text-sm text-cyan-300 mb-2">Vista previa:</p>
-                                        <img src="{{ $photo->temporaryUrl() }}"
-                                             alt="Preview"
-                                             loading="lazy"
-                                             class="w-32 h-32 object-cover rounded-lg border border-cyan-500/30">
+                                        <img src="data:image/{{ $photo->extension() }};base64,{{ base64_encode(file_get_contents($photo->getRealPath())) }}"
+     alt="Preview"
+     loading="lazy"
+     class="w-32 h-32 object-cover rounded-lg border border-cyan-500/30">
                                     </div>
                                 @endif
                             </div>
