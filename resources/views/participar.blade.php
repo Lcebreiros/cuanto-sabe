@@ -112,7 +112,6 @@
     </div>
 </div>
 
-@endsection
 
 <style>
 
