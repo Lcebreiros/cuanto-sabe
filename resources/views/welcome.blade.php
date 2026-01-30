@@ -313,13 +313,6 @@
                 Un juego donde solo los que más saben llegan al podio.<br>
                 ¡Probá tus conocimientos en vivo!
             </p>
-            
-            <h3 class="section-title">El equipo</h3>
-            <div class="team-members">
-                <div class="member-avatar"></div>
-                <div class="member-avatar"></div>
-                <div class="member-avatar"></div>
-            </div>
         </div>
     </div>
     <div style="
