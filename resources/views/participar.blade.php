@@ -341,7 +341,7 @@ body::before { display: none !important; }
 
 /* === OPCIONES ALARGADAS === */
 .option-card {
-  min-height: 85px; /* Reducido de 120px */
+  min-height: 85px;
   height: 85px;
   width: 100%;
   border-radius: 1.2rem !important;
@@ -357,19 +357,41 @@ body::before { display: none !important; }
   transition: all .19s cubic-bezier(.44,0,.61,1.15);
   opacity: 1;
   backdrop-filter: blur(2px);
-  padding: 0.8rem 0.5rem !important; /* Reducido de 1.2rem */
+  padding: 0.6rem 0.4rem !important; /* Reducido para más espacio al texto */
   text-align: center;
   box-sizing: border-box;
-  overflow: visible;
+  overflow: hidden; /* Cambiado de visible a hidden */
   word-wrap: break-word;
 }
 
 .option-card span {
   display: block;
   width: 100%;
-  padding-top: 0.2em;
-  padding-bottom: 0.2em;
-  line-height: 1.3;
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+  line-height: 1.1; /* Reducido de 1.3 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tamaños de letra reducidos para desktop */
+.option-card span.block.text-3xl,
+.option-card span.block.text-4xl {
+  font-size: 1.3rem !important; /* Label (A, B, C, D) más pequeño */
+  margin-bottom: 0.2rem;
+}
+
+.option-card span.block.text-center,
+.option-card span.block.text-lg,
+.option-card span.block.text-2xl {
+  font-size: 0.85rem !important; /* Texto de la opción más pequeño */
+  line-height: 1.1 !important;
+  max-height: 2.4em; /* Limita a 2 líneas aprox */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .option-card:hover, .option-card:focus, .option-card.selected {
@@ -498,23 +520,29 @@ body::before { display: none !important; }
   }
 
   .option-card {
-    min-height: 70px !important; /* Reducido de 90px */
+    min-height: 70px !important;
     height: 70px !important;
     font-size: 1rem !important;
     border-radius: 1rem !important;
-    padding: 0.6rem 0.4rem !important;
+    padding: 0.5rem 0.3rem !important;
+    overflow: hidden;
   }
 
   .option-card span.block.text-3xl,
   .option-card span.block.text-4xl,
   .option-card span.block.text-center {
-    font-size: 1rem !important;
+    font-size: 0.9rem !important; /* Label mobile */
+    margin-bottom: 0.1rem;
   }
+
 
   .option-card span.block.text-lg,
   .option-card span.block.text-2xl {
-    font-size: 0.9rem !important;
+    font-size: 0.75rem !important; /* Texto mobile */
     word-break: break-word;
+    line-height: 1.1 !important;
+    max-height: 2.2em;
+    -webkit-line-clamp: 2;
   }
 }
 
@@ -542,27 +570,32 @@ body::before { display: none !important; }
   }
 
   .option-card {
-    min-height: 60px !important; /* Reducido de 70px */
+    min-height: 60px !important;
     height: 60px !important;
     font-size: 0.9rem !important;
     border-radius: 0.8rem !important;
-    padding: 0.5rem 0.3rem !important;
+    padding: 0.4rem 0.25rem !important;
+    overflow: hidden;
   }
 
   .option-card span {
-    padding-top: 0.1em;
-    padding-bottom: 0.1em;
+    padding-top: 0.05em;
+    padding-bottom: 0.05em;
   }
 
   .option-card span.block.text-3xl,
   .option-card span.block.text-4xl,
   .option-card span.block.text-center {
-    font-size: 0.9rem !important;
+    font-size: 0.8rem !important; /* Label mobile pequeño */
+    margin-bottom: 0.1rem;
   }
 
   .option-card span.block.text-lg,
   .option-card span.block.text-2xl {
-    font-size: 0.8rem !important;
+    font-size: 0.7rem !important; /* Texto mobile pequeño */
+    line-height: 1.05 !important;
+    max-height: 2em;
+    -webkit-line-clamp: 2;
   }
 }
 
