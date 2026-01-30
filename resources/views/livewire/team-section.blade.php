@@ -8,26 +8,26 @@
   </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-    @foreach($members as $member)
-      <div class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow">
-<div class="w-full aspect-square bg-gray-200 flex items-center justify-center overflow-hidden">
-  @if(!empty($member['photo_url']))
-    <img 
-      src="{{ $member['photo_url'] }}" 
-      alt="{{ $member['name'] }}" 
-      class="w-full h-full object-cover"
-      style="max-width: 100%; max-height: 100%;">
-  @else
-    <div class="text-gray-500">Sin foto</div>
-  @endif
-</div>
-
-        <div class="p-4">
-          <h3 class="font-semibold">{{ $member['name'] }}</h3>
-          @if(!empty($member['role']))<p class="text-sm text-gray-500">{{ $member['role'] }}</p>@endif
-          <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">{!! nl2br(e($member['description'])) !!}</p>
-        </div>
+  @foreach($members as $member)
+    <div class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow">
+      <div class="w-full bg-gray-200 flex items-center justify-center overflow-hidden" style="height: 250px;">
+        @if(!empty($member['photo_url']))
+          <img 
+            src="{{ $member['photo_url'] }}" 
+            alt="{{ $member['name'] }}" 
+            class="w-full h-full object-cover">
+        @else
+          <div class="text-gray-500">Sin foto</div>
+        @endif
       </div>
-    @endforeach
-  </div>
+
+      <div class="p-4">
+        <h3 class="font-semibold text-cyan-300">{{ $member['name'] }}</h3>
+        @if(!empty($member['role']))
+          <p class="text-sm text-cyan-400">{{ $member['role'] }}</p>
+        @endif
+        <p class="mt-2 text-sm text-gray-300">{!! nl2br(e($member['description'])) !!}</p>
+      </div>
+    </div>
+  @endforeach
 </div>
