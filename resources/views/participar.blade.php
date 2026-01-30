@@ -1205,5 +1205,5 @@ if (modalSalir) {
 }
 </script>
 
-@endif
 @endsection
+@endif
