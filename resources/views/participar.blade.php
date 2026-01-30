@@ -1,5 +1,6 @@
 @extends('layouts.app')
 
+@section('content')
 @php
   $hideFooter = true;
 @endphp
@@ -45,7 +46,6 @@
 </div>
 
 
-@section('content')
 <div id="pantalla" class="flex flex-col items-center justify-end px-3 py-4">
 
   <!-- Contenedor pregunta -->
@@ -1206,4 +1206,3 @@ if (modalSalir) {
 </script>
 
 @endsection
-@endif
