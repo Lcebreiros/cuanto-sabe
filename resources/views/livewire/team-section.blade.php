@@ -1,4 +1,3 @@
-<!--
 <div class="max-w-6xl mx-auto py-16 px-6">
   <div class="flex justify-between items-center mb-8">
     <h2 class="text-3xl font-bold">Conocé Nuestro Equipo</h2>
@@ -16,8 +15,8 @@
     <img 
       src="{{ $member['photo_url'] }}" 
       alt="{{ $member['name'] }}" 
-      class="object-contain w-[40%] h-[40%]"
-    >
+      class="w-full h-full object-cover"
+      style="max-width: 100%; max-height: 100%;">
   @else
     <div class="text-gray-500">Sin foto</div>
   @endif
@@ -32,4 +31,3 @@
     @endforeach
   </div>
 </div>
--->

@@ -315,7 +315,7 @@ body::before { display: none !important; }
 
 .question-box {
   border-radius: 1.7rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem; /* Reducido de 2rem */
   box-shadow: 0 2px 22px #012b4955, 0 0 2px #00f0ff22;
   background: linear-gradient(120deg, rgba(4,38,78,0.81) 77%, rgba(0,52,94,0.81) 100%);
   border-width: 4px;
@@ -323,16 +323,16 @@ body::before { display: none !important; }
   backdrop-filter: blur(2px);
   width: 100%;
   box-sizing: border-box;
-  padding: 1.5rem 2rem;
+  padding: 1rem 2rem; /* Reducido de 1.5rem */
 }
 
 /* === GRILLA 2x2 CON OPCIONES ALARGADAS === */
 .options-grid {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 2 columnas */
-  grid-template-rows: 1fr 1fr; /* 2 filas */
-  gap: 1.5rem;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1rem; /* Reducido de 1.5rem */
   max-width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
@@ -341,8 +341,8 @@ body::before { display: none !important; }
 
 /* === OPCIONES ALARGADAS === */
 .option-card {
-  min-height: 120px; /* Más altas */
-  height: 120px;
+  min-height: 85px; /* Reducido de 120px */
+  height: 85px;
   width: 100%;
   border-radius: 1.2rem !important;
   display: flex;
@@ -357,7 +357,7 @@ body::before { display: none !important; }
   transition: all .19s cubic-bezier(.44,0,.61,1.15);
   opacity: 1;
   backdrop-filter: blur(2px);
-  padding: 1.2rem 0.6rem !important;
+  padding: 0.8rem 0.5rem !important; /* Reducido de 1.2rem */
   text-align: center;
   box-sizing: border-box;
   overflow: visible;
@@ -471,7 +471,7 @@ body::before { display: none !important; }
 @media (max-width: 640px) {
   #pantalla {
     padding: 15px 10px;
-    height: auto; /* Altura automática en mobile */
+    height: auto;
     bottom: 0;
   }
 
@@ -482,38 +482,38 @@ body::before { display: none !important; }
   }
 
   .question-box {
-    padding: 1rem 0.8rem !important;
-    margin-bottom: 1.2rem !important;
+    padding: 0.8rem 0.8rem !important; /* Reducido */
+    margin-bottom: 1rem !important;
     border-radius: 1.2rem !important;
   }
 
   .question-title {
-    font-size: 1.2rem !important;
+    font-size: 1.1rem !important; /* Reducido */
     padding: 0 0.5rem !important;
     word-break: break-word;
   }
 
   .options-grid {
-    gap: 1rem !important;
+    gap: 0.8rem !important;
   }
 
   .option-card {
-    min-height: 90px !important;
-    height: 90px !important;
+    min-height: 70px !important; /* Reducido de 90px */
+    height: 70px !important;
     font-size: 1rem !important;
     border-radius: 1rem !important;
-    padding: 0.8rem 0.4rem !important;
+    padding: 0.6rem 0.4rem !important;
   }
 
   .option-card span.block.text-3xl,
   .option-card span.block.text-4xl,
   .option-card span.block.text-center {
-    font-size: 1.1rem !important;
+    font-size: 1rem !important;
   }
 
   .option-card span.block.text-lg,
   .option-card span.block.text-2xl {
-    font-size: 0.95rem !important;
+    font-size: 0.9rem !important;
     word-break: break-word;
   }
 }
@@ -528,25 +528,25 @@ body::before { display: none !important; }
   }
 
   .question-box {
-    padding: 0.8rem 0.6rem !important;
+    padding: 0.6rem 0.6rem !important; /* Reducido */
   }
 
   .question-title {
-    font-size: 1rem !important;
+    font-size: 0.95rem !important; /* Reducido */
     line-height: 1.3 !important;
     padding: 0 0.3rem !important;
   }
 
   .options-grid {
-    gap: 0.8rem !important;
+    gap: 0.6rem !important;
   }
 
   .option-card {
-    min-height: 70px !important;
-    height: 70px !important;
+    min-height: 60px !important; /* Reducido de 70px */
+    height: 60px !important;
     font-size: 0.9rem !important;
     border-radius: 0.8rem !important;
-    padding: 0.6rem 0.3rem !important;
+    padding: 0.5rem 0.3rem !important;
   }
 
   .option-card span {
@@ -557,12 +557,12 @@ body::before { display: none !important; }
   .option-card span.block.text-3xl,
   .option-card span.block.text-4xl,
   .option-card span.block.text-center {
-    font-size: 0.95rem !important;
+    font-size: 0.9rem !important;
   }
 
   .option-card span.block.text-lg,
   .option-card span.block.text-2xl {
-    font-size: 0.85rem !important;
+    font-size: 0.8rem !important;
   }
 }
 
