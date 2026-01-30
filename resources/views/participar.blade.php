@@ -115,12 +115,18 @@
 
 <style>
 
+/* === AJUSTE PARA EVITAR SOLAPAMIENTO CON NAVIGATION === */
+#pantalla {
+  padding-top: 80px !important; /* Espacio para el navigation */
+}
+
 .guest-card-wrap {
   pointer-events: none;
   width: 100%;
   max-width: 100vw;
   overflow: visible;
   box-sizing: border-box;
+  margin-top: 20px; /* Separación del navigation */
 }
 
 .guest-card {
@@ -180,11 +186,15 @@
     max-width: calc(100vw - 20px);
     min-width: unset;
   }
+  
+  #pantalla {
+    padding-top: 60px !important;
+  }
 }
 
 .participant-name-top {
     position: fixed;
-    top: 15px;
+    top: 80px; /* Debajo del navigation */
     left: 20px;
     z-index: 9999;
     background: linear-gradient(90deg, #161936ea 80%, #172047cc 100%);
@@ -216,7 +226,7 @@
 }
 @media (max-width: 640px) {
     .participant-name-top {
-        top: 9px;
+        top: 60px; /* Debajo del navigation en mobile */
         left: 50%;
         transform: translateX(-50%);
         font-size: 1rem;
@@ -274,15 +284,13 @@ body::before { display: none !important; }
   bottom: 0;
   left: 0;
   right: 0;
-  width: 100%;
-  max-height: 100vh;
-  max-width: 100vw;
+  width: 100vw; /* Ancho completo */
+  height: 50vh; /* Mitad inferior de la pantalla */
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  padding: 15px;
-  padding-bottom: 20px;
+  justify-content: center; /* Centrado vertical en la mitad inferior */
+  padding: 20px;
   overflow: visible;
   box-sizing: border-box;
   pointer-events: none;
@@ -296,16 +304,18 @@ body::before { display: none !important; }
 .drop-shadow-neon { text-shadow: 0 0 12px #19ff8cbb, 0 0 3px #fff3; }
 .neon-glow-btn { text-shadow: 0 0 6px #00e8fc99; letter-spacing: .03em; }
 
+/* === PREGUNTA OCUPA TODO EL ANCHO === */
 #main-question-box {
-  width: 100%;
-  max-width: min(672px, 95vw);
+  width: 100%; /* Ancho completo */
+  max-width: 100vw;
   box-sizing: border-box;
   overflow: visible;
+  padding: 0 20px;
 }
 
 .question-box {
   border-radius: 1.7rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
   box-shadow: 0 2px 22px #012b4955, 0 0 2px #00f0ff22;
   background: linear-gradient(120deg, rgba(4,38,78,0.81) 77%, rgba(0,52,94,0.81) 100%);
   border-width: 4px;
@@ -313,29 +323,28 @@ body::before { display: none !important; }
   backdrop-filter: blur(2px);
   width: 100%;
   box-sizing: border-box;
+  padding: 1.5rem 2rem;
 }
 
-/* GRILLA 2x2 */
+/* === GRILLA 2x2 CON OPCIONES ALARGADAS === */
 .options-grid {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 1.3rem;
-  max-width: min(520px, 100%);
-  margin-left: auto;
-  margin-right: auto;
+  grid-template-columns: 1fr 1fr; /* 2 columnas */
+  grid-template-rows: 1fr 1fr; /* 2 filas */
+  gap: 1.5rem;
+  max-width: 100%;
+  margin: 0 auto;
   box-sizing: border-box;
   overflow: visible;
 }
 
-/* OPCIONES */
+/* === OPCIONES ALARGADAS === */
 .option-card {
-  min-height: 90px;
-  height: 100%;
+  min-height: 120px; /* Más altas */
+  height: 120px;
   width: 100%;
-  max-width: 100%;
-  border-radius: 1.1rem !important;
+  border-radius: 1.2rem !important;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -348,7 +357,7 @@ body::before { display: none !important; }
   transition: all .19s cubic-bezier(.44,0,.61,1.15);
   opacity: 1;
   backdrop-filter: blur(2px);
-  padding: 1.1rem 0.4rem !important;
+  padding: 1.2rem 0.6rem !important;
   text-align: center;
   box-sizing: border-box;
   overflow: visible;
@@ -358,9 +367,9 @@ body::before { display: none !important; }
 .option-card span {
   display: block;
   width: 100%;
-  padding-top: 0.15em;
-  padding-bottom: 0.15em;
-  line-height: 1.2;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+  line-height: 1.3;
 }
 
 .option-card:hover, .option-card:focus, .option-card.selected {
@@ -461,90 +470,83 @@ body::before { display: none !important; }
 /* --- MOBILE Ajustes --- */
 @media (max-width: 640px) {
   #pantalla {
-    padding: 10px;
-    padding-bottom: 15px;
-    max-height: none;
+    padding: 15px 10px;
+    height: auto; /* Altura automática en mobile */
+    bottom: 0;
   }
 
   #main-question-box {
-    max-width: calc(100vw - 20px);
+    max-width: 100vw;
     width: 100%;
+    padding: 0 10px;
   }
 
   .question-box {
-    padding: 1rem 0.5rem !important;
-    margin-bottom: 1.5rem !important;
-    border-radius: 1rem !important;
-    max-width: 100%;
+    padding: 1rem 0.8rem !important;
+    margin-bottom: 1.2rem !important;
+    border-radius: 1.2rem !important;
   }
 
   .question-title {
-    font-size: 1.12rem !important;
-    padding: 0 0.3rem !important;
+    font-size: 1.2rem !important;
+    padding: 0 0.5rem !important;
     word-break: break-word;
   }
 
   .options-grid {
-    grid-template-columns: 1fr 1fr !important;
-    grid-template-rows: 1fr 1fr !important;
-    gap: 0.8rem !important;
-    max-width: 100% !important;
-    padding: 0 !important;
+    gap: 1rem !important;
   }
 
   .option-card {
-    min-height: 75px !important;
-    height: 75px !important;
-    font-size: 1.05rem !important;
-    border-radius: 0.85rem !important;
-    padding: 0.5rem 0.3rem !important;
-    max-width: 100%;
+    min-height: 90px !important;
+    height: 90px !important;
+    font-size: 1rem !important;
+    border-radius: 1rem !important;
+    padding: 0.8rem 0.4rem !important;
   }
 
   .option-card span.block.text-3xl,
   .option-card span.block.text-4xl,
   .option-card span.block.text-center {
-    font-size: 1.05rem !important;
+    font-size: 1.1rem !important;
   }
 
   .option-card span.block.text-lg,
   .option-card span.block.text-2xl {
-    font-size: 0.93rem !important;
+    font-size: 0.95rem !important;
     word-break: break-word;
   }
 }
 
 @media (max-width: 420px) {
   #pantalla {
-    padding: 8px;
-    padding-bottom: 12px;
-    max-height: none;
+    padding: 10px 8px;
   }
 
   #main-question-box {
-    max-width: calc(100vw - 16px);
+    padding: 0 8px;
   }
 
   .question-box {
-    padding: 0.8rem 0.4rem !important;
+    padding: 0.8rem 0.6rem !important;
   }
 
   .question-title {
-    font-size: 0.98rem !important;
+    font-size: 1rem !important;
     line-height: 1.3 !important;
-    padding: 0 0.2rem !important;
+    padding: 0 0.3rem !important;
   }
 
   .options-grid {
-    gap: 0.6rem !important;
+    gap: 0.8rem !important;
   }
 
   .option-card {
-    min-height: 54px !important;
-    height: 54px !important;
-    font-size: 0.93rem !important;
-    border-radius: 0.65rem !important;
-    padding: 0.4rem 0.2rem !important;
+    min-height: 70px !important;
+    height: 70px !important;
+    font-size: 0.9rem !important;
+    border-radius: 0.8rem !important;
+    padding: 0.6rem 0.3rem !important;
   }
 
   .option-card span {
@@ -555,12 +557,12 @@ body::before { display: none !important; }
   .option-card span.block.text-3xl,
   .option-card span.block.text-4xl,
   .option-card span.block.text-center {
-    font-size: 0.93rem !important;
+    font-size: 0.95rem !important;
   }
 
   .option-card span.block.text-lg,
   .option-card span.block.text-2xl {
-    font-size: 0.80rem !important;
+    font-size: 0.85rem !important;
   }
 }
 
@@ -568,17 +570,18 @@ body::before { display: none !important; }
   font-size: 1.15rem;
   padding: 2.5rem 1.2rem;
   border-radius: 1.1rem;
-  max-width: min(672px, 95vw);
+  max-width: 100vw;
   width: 100%;
   box-sizing: border-box;
 }
+
 .puntaje-top-container{
   position: fixed;
-  top: max(env(safe-area-inset-top, 15px), 15px);
-  right: max(env(safe-area-inset-right, 15px), 15px);
+  top: 80px; /* Debajo del navigation */
+  right: max(env(safe-area-inset-right, 20px), 20px);
   z-index: 9999;
   width: auto;
-  max-width: calc(100vw - 30px);
+  max-width: calc(100vw - 40px);
   display: flex;
   justify-content: flex-end;
   box-sizing: border-box;
@@ -588,12 +591,13 @@ body::before { display: none !important; }
 /* Card interior animable y contenida */
 .puntaje-card{
   width: 340px;
-  max-width: min(340px, calc(100vw - 30px));
+  max-width: min(340px, calc(100vw - 40px));
   box-sizing: border-box;
   transform-origin: center;
   will-change: transform;
   overflow: visible;
 }
+
 .salir-btn{
   position: static;
   background: transparent;
@@ -601,12 +605,12 @@ body::before { display: none !important; }
   padding: 0;
   cursor: pointer;
   display: block;
-  margin: 10px auto 0;
+  margin: 15px auto 0;
 }
 
 .salir-btn img {
     display: block;
-    width: 40px;
+    width: 45px;
     height: auto;
     transition: transform 0.18s ease;
 }
@@ -626,7 +630,11 @@ body::before { display: none !important; }
 
 @media (max-width: 640px) {
     .salir-btn img {
-        width: 35px;
+        width: 38px;
+    }
+    
+    .puntaje-top-container {
+      top: 60px;
     }
 }
 
@@ -647,10 +655,10 @@ body::before { display: none !important; }
   }
 }
 
-/* Ajuste de animaciones: en desktop puede “rebotar” más, en mobile menos */
+/* Ajuste de animaciones: en desktop puede "rebotar" más, en mobile menos */
 @keyframes puntaje-bounce{
   0%   { transform: scale(1); }
-  25%  { transform: scale(1.12); }   /* un poco menos que 1.18 */
+  25%  { transform: scale(1.12); }
   60%  { transform: scale(0.99); }
   80%  { transform: scale(1.05); }
   100% { transform: scale(1); }
@@ -665,11 +673,11 @@ body::before { display: none !important; }
   90% { transform: translateX(1px); }
   100% { transform: translateX(0); }
 }
-/* Reutilizo tus clases, pero ahora se aplicarán a .puntaje-card */
+
 .puntaje-anim-bounce{ animation: puntaje-bounce .55s cubic-bezier(.23,1.38,.55,.98); }
 .puntaje-anim-shake{ animation: puntaje-shake .45s cubic-bezier(.45,1.38,.55,.98); }
 
-/* Mobile: escala aún más conservadora para no “salirse” nunca */
+/* Mobile: escala aún más conservadora para no "salirse" nunca */
 @media (max-width: 640px){
   @keyframes puntaje-bounce{
     0%   { transform: scale(1); }
@@ -679,12 +687,13 @@ body::before { display: none !important; }
     100% { transform: scale(1); }
   }
 }
+
 /* Fila bajo la tarjeta (mobile por defecto) */
 .status-row{
   width: 100%;
-  max-width: min(980px, 100vw);
+  max-width: 100vw;
   margin: 6px auto 12px;
-  padding: 0 8px;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -696,8 +705,8 @@ body::before { display: none !important; }
 /* MOBILE: anula los fixed y compáctalo */
 @media (max-width: 640px){
   .status-row {
-    max-width: calc(100vw - 16px);
-    padding: 0 4px;
+    max-width: 100vw;
+    padding: 0 10px;
     overflow: visible;
   }
 
@@ -710,6 +719,7 @@ body::before { display: none !important; }
     transform: none !important;
     z-index: auto !important;
   }
+  
   .participant-name-top{
     display: inline-flex;
     align-items: center;
@@ -722,11 +732,14 @@ body::before { display: none !important; }
     text-overflow: ellipsis;
     box-sizing: border-box;
   }
+  
   .participant-label{ margin-right: 6px; }
+  
   .puntaje-top-container{
     max-width: calc(40vw - 10px);
     overflow: visible !important;
   }
+  
   .puntaje-card{
     width: auto;
     max-width: 100%;
@@ -734,27 +747,29 @@ body::before { display: none !important; }
   }
 }
 
-/* DESKTOP: tus posiciones fixed como las tenías */
+/* DESKTOP: posiciones fixed */
 @media (min-width: 641px){
   .participant-name-top{
     position: fixed !important;
-    top: 15px !important;
+    top: 80px !important; /* Debajo del navigation */
     left: 20px !important;
     z-index: 9999 !important;
   }
+  
   .puntaje-top-container{
     position: fixed !important;
-    top: max(env(safe-area-inset-top, 15px), 15px) !important;
-    right: max(env(safe-area-inset-right, 15px), 15px) !important;
+    top: 80px !important; /* Debajo del navigation */
+    right: max(env(safe-area-inset-right, 20px), 20px) !important;
     z-index: 9999 !important;
     display: flex;
     justify-content: flex-end;
   }
+  
   .puntaje-card{
     width: 340px;
     max-width: min(340px, 92vw);
   }
-  /* La fila no ocupa alto en desktop (porque vuelven a fixed) */
+  
   .status-row{
     height: 0;
     margin: 0;
@@ -776,12 +791,11 @@ body::before { display: none !important; }
   .puntaje-top-container {
     margin: 0 auto !important;
     display: flex;
-    justify-content: center !important;   /* sobrescribe el flex-end base */
+    justify-content: center !important;
     align-items: center;
-    max-width: none !important;           /* anula el 40vw */
+    max-width: none !important;
     width: 100%;
     padding: 0;
-    margin: 0 auto !important;
   }
 
   .puntaje-card{
@@ -794,12 +808,12 @@ body::before { display: none !important; }
   #respuesta-msg{
     position: static;
     width: 100%;
-    max-width: min(560px, 92vw);
+    max-width: 92vw;
     margin: 0 auto 10px auto;
     text-align: center;
   }
 }
-  </style>
+</style>
 
 
 <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
