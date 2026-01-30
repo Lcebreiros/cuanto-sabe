@@ -5,13 +5,6 @@
   $hideFooter = true;
 @endphp
 
-<!--@if(isset($participant))
-<div class="participant-name-top">
-    <span class="participant-label">Participante:</span>
-    <span class="participant-value">{{ $participant->username }}</span>
-</div>
-@endif-->
-
 @php
   $activeSession = \App\Models\GameSession::where('status', 'active')->latest()->first();
   $guestName = $activeSession->guest_name ?? 'Invitado';
