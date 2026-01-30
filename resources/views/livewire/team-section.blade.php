@@ -1,3 +1,4 @@
+<!--
 <div class="max-w-6xl mx-auto py-16 px-6">
   <div class="flex justify-between items-center mb-8">
     <h2 class="text-3xl font-bold">Conocé Nuestro Equipo</h2>
@@ -31,3 +32,4 @@
     @endforeach
   </div>
 </div>
+-->
