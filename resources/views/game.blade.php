@@ -72,7 +72,7 @@
         margin: 0;
         padding: 0.5rem;
         display: grid;
-        grid-template-columns: 1fr 320px;
+        grid-template-columns: 1fr 380px;
         gap: 15px;
         height: 100vh;
         height: 100dvh; /* Dynamic viewport height para móvil */
@@ -300,9 +300,10 @@
 
     .control-buttons-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: repeat(3, minmax(120px, 150px));
         gap: 12px;
         align-items: stretch;
+        justify-content: center;
     }
 
     .control-btn {
@@ -321,7 +322,9 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        min-height: 90px;
+        min-height: 100px;
+        max-height: 100px;
+        aspect-ratio: 1;
         position: relative;
         overflow: hidden;
     }
@@ -524,6 +527,7 @@
         .control-btn, .apuesta-btn, .descarte-btn, .power-btn-control {
             min-height: 70px;
             max-height: 70px;
+            aspect-ratio: 1;
             padding: 12px 8px;
             font-size: 0.75rem;
         }
@@ -551,6 +555,7 @@
         .control-btn, .apuesta-btn, .descarte-btn, .power-btn-control {
             min-height: 60px;
             max-height: 60px;
+            aspect-ratio: 1;
             padding: 10px 6px;
             font-size: 0.65rem;
         }
@@ -644,7 +649,9 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 90px;
+    min-height: 100px;
+    max-height: 100px;
+    aspect-ratio: 1;
     position: relative;
     overflow: hidden;
 }
@@ -762,8 +769,9 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-    min-height: 90px;
-    max-height: 90px;
+    min-height: 100px;
+    max-height: 100px;
+    aspect-ratio: 1;
     position: relative;
     color: var(--text-secondary);
 }
@@ -1033,6 +1041,7 @@
         .control-btn, .apuesta-btn, .descarte-btn, .power-btn-control {
             min-height: 65px;
             max-height: 65px;
+            aspect-ratio: 1;
             padding: 10px 8px;
             font-size: 0.7rem;
         }
@@ -1307,6 +1316,7 @@
         .control-btn, .apuesta-btn, .descarte-btn, .power-btn-control {
             min-height: 55px;
             max-height: 55px;
+            aspect-ratio: 1;
             padding: 8px 5px;
             font-size: 0.6rem;
         }
@@ -1479,6 +1489,21 @@
 
     <!-- Contenido principal -->
     <div class="main-content">
+        <!-- Panel de Pregunta -->
+        <div class="question-panel">
+            <span id="slotSpecialBadge" class="slot-special-badge"></span>
+            <span id="questionNumberBadge" class="question-number-badge"></span>
+            <div id="textoPreguntaPanel" class="question-text">
+                {{ $activeSession ? 'Pregunta aún no enviada' : 'Inicie una sesión para comenzar' }}
+            </div>
+            <div class="options-grid">
+                <button type="button" class="option-btn" id="panelA" style="display:none;" {{ !$activeSession ? 'disabled' : '' }}></button>
+                <button type="button" class="option-btn" id="panelB" style="display:none;" {{ !$activeSession ? 'disabled' : '' }}></button>
+                <button type="button" class="option-btn" id="panelC" style="display:none;" {{ !$activeSession ? 'disabled' : '' }}></button>
+                <button type="button" class="option-btn" id="panelD" style="display:none;" {{ !$activeSession ? 'disabled' : '' }}></button>
+            </div>
+        </div>
+
         <!-- BOTONERA UNIFICADA -->
         <div class="control-panel">
             @php
@@ -1567,22 +1592,6 @@
                         </button>
                     </form>
                 @endif
-            </div>
-        </div>
-
-
-        <!-- Panel de Pregunta -->
-        <div class="question-panel">
-            <span id="slotSpecialBadge" class="slot-special-badge"></span>
-            <span id="questionNumberBadge" class="question-number-badge"></span>
-            <div id="textoPreguntaPanel" class="question-text">
-                {{ $activeSession ? 'Pregunta aún no enviada' : 'Inicie una sesión para comenzar' }}
-            </div>
-            <div class="options-grid">
-                <button type="button" class="option-btn" id="panelA" style="display:none;" {{ !$activeSession ? 'disabled' : '' }}></button>
-                <button type="button" class="option-btn" id="panelB" style="display:none;" {{ !$activeSession ? 'disabled' : '' }}></button>
-                <button type="button" class="option-btn" id="panelC" style="display:none;" {{ !$activeSession ? 'disabled' : '' }}></button>
-                <button type="button" class="option-btn" id="panelD" style="display:none;" {{ !$activeSession ? 'disabled' : '' }}></button>
             </div>
         </div>
 
