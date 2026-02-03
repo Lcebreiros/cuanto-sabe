@@ -255,6 +255,34 @@
         box-shadow: 0 0 20px rgba(25, 255, 140, 0.1);
     }
 
+    .tendencias-counter {
+        background: rgba(0, 191, 255, 0.2);
+        border-radius: 50px;
+        padding: 8px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border: 1px solid rgba(0, 191, 255, 0.3);
+        box-shadow: 0 0 20px rgba(0, 191, 255, 0.1);
+        min-width: 120px;
+    }
+
+    .tendencias-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+    }
+
+    .tendencias-value {
+        font-weight: 800;
+        font-size: 1.3rem;
+        color: #00bfff;
+        text-shadow: 0 0 10px rgba(0, 191, 255, 0.8);
+    }
+
     .guest-info-placeholder {
         font-size: 1.2rem;
         color: var(--text-secondary);
@@ -1010,6 +1038,19 @@
             padding: 4px 12px;
         }
 
+        .tendencias-counter {
+            padding: 4px 12px;
+            min-width: 100px;
+        }
+
+        .tendencias-label {
+            font-size: 0.6rem;
+        }
+
+        .tendencias-value {
+            font-size: 0.85rem;
+        }
+
         .radio-light-btn {
             font-size: 0.7rem;
             padding: 5px 12px 5px 28px;
@@ -1168,6 +1209,19 @@
             padding: 3px 10px;
         }
 
+        .tendencias-counter {
+            padding: 3px 10px;
+            min-width: 90px;
+        }
+
+        .tendencias-label {
+            font-size: 0.55rem;
+        }
+
+        .tendencias-value {
+            font-size: 0.75rem;
+        }
+
         .mode-pill {
             font-size: 0.6rem;
             padding: 2px 8px;
@@ -1236,6 +1290,14 @@
         </div>
 <div class="guest-points">
     <span id="guestPointsValue">{{ $activeSession->guest_points ?? 0 }}</span> pts
+</div>
+<div class="tendencias-counter">
+    <span class="tendencias-label">Tendencias del público</span>
+    <span class="tendencias-value">
+        <span id="tendenciasAcertadas">{{ $activeSession->tendencias_acertadas ?? 0 }}</span>
+        /
+        <span id="tendenciasObjetivo">{{ $activeSession->tendencias_objetivo ?? 10 }}</span>
+    </span>
 </div>
     @else
         <div class="guest-info-placeholder">
@@ -1656,6 +1718,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const apuestaBadge = document.getElementById('apuesta-badge');
     const descarteBadge = document.getElementById('descarte-badge');
 
+    // ✅ DESHABILITAR BONOS AL INICIO si no hay pregunta activa
+    if (!lastOverlayQuestion) {
+        if (apuestaBtn) {
+            apuestaBtn.style.opacity = '0.5';
+            apuestaBtn.style.pointerEvents = 'none';
+        }
+        if (descarteBtn) {
+            descarteBtn.style.opacity = '0.5';
+            descarteBtn.style.pointerEvents = 'none';
+        }
+    }
+
     // helper UI update
     function updateApuestaUI(payload) {
         // payload: { apuesta_x2_active, apuesta_x2_usadas, apuesta_x2_disponibles, modo_juego }
@@ -2037,6 +2111,18 @@ if (window.Echo) {
         lastOverlayQuestion = data;
         console.log('✅ Pregunta guardada en lastOverlayQuestion:', lastOverlayQuestion);
 
+        // ✅ HABILITAR BOTONES DE BONOS cuando hay pregunta activa
+        const apuestaBtn = document.getElementById('apuesta-btn');
+        const descarteBtn = document.getElementById('descarte-btn');
+        if (apuestaBtn && !apuestaBtn.disabled) {
+            apuestaBtn.style.opacity = '1';
+            apuestaBtn.style.pointerEvents = 'auto';
+        }
+        if (descarteBtn && !descarteBtn.disabled) {
+            descarteBtn.style.opacity = '1';
+            descarteBtn.style.pointerEvents = 'auto';
+        }
+
         const txt = document.getElementById('textoPreguntaPanel');
         if (txt) txt.textContent = pregunta || 'Pregunta aún no enviada';
 
@@ -2111,6 +2197,19 @@ if (window.Echo) {
     overlay.listen('.overlay-reset', () => {
         lastOverlayQuestion = null; // 🔥 LIMPIAR AL RESETEAR
         console.log('🔄 Overlay reseteado, lastOverlayQuestion limpiado');
+
+        // ✅ DESHABILITAR BOTONES DE BONOS cuando no hay pregunta
+        const apuestaBtn = document.getElementById('apuesta-btn');
+        const descarteBtn = document.getElementById('descarte-btn');
+        if (apuestaBtn) {
+            apuestaBtn.style.opacity = '0.5';
+            apuestaBtn.style.pointerEvents = 'none';
+        }
+        if (descarteBtn) {
+            descarteBtn.style.opacity = '0.5';
+            descarteBtn.style.pointerEvents = 'none';
+        }
+
         reiniciarOverlay();
     });
 }
@@ -2165,7 +2264,27 @@ if (window.Echo) {
                 }
             }
 
-            // Aquí podés actualizar puntajes y overlay según payload
+            // ✅ ACTUALIZAR CONTADOR DE TENDENCIAS
+            if (typeof payload.tendencias_acertadas !== 'undefined') {
+                const acertadasEl = document.getElementById('tendenciasAcertadas');
+                const objetivoEl = document.getElementById('tendenciasObjetivo');
+
+                if (acertadasEl) acertadasEl.textContent = payload.tendencias_acertadas;
+                if (objetivoEl) objetivoEl.textContent = payload.tendencias_objetivo;
+
+                console.log('✅ Tendencias actualizadas:', {
+                    acertadas: payload.tendencias_acertadas,
+                    objetivo: payload.tendencias_objetivo,
+                    restantes: payload.tendencias_restantes
+                });
+
+                // Verificar si el público ganó
+                if (payload.publico_gano) {
+                    console.log('🎉 ¡EL PÚBLICO GANÓ!');
+                    // Aquí puedes agregar una alerta o animación
+                }
+            }
+
             console.log(payload);
         });
 }

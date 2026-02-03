@@ -191,6 +191,25 @@ public function revealAnswer(Request $request)
 
             // Calcular tendencia del público
             $tendencia = $gamePoints->calcularTendencia($session->id, $data['pregunta_id']);
+
+            // ✅ VERIFICAR SI EL PÚBLICO ACERTÓ LA TENDENCIA
+            if ($tendencia && $tendencia['option']) {
+                $tendenciaAcierta = (strtoupper($tendencia['option']) === strtoupper($data['label_correcto']));
+
+                if ($tendenciaAcierta) {
+                    $session->incrementarTendenciasAcertadas();
+                    \Log::info('✅ TENDENCIA ACERTADA', [
+                        'tendencias_acertadas' => $session->tendencias_acertadas,
+                        'tendencias_objetivo' => $session->tendencias_objetivo,
+                        'restantes' => $session->tendenciasRestantes()
+                    ]);
+                } else {
+                    \Log::info('❌ TENDENCIA FALLIDA', [
+                        'tendencia' => $tendencia['option'],
+                        'correcta' => $data['label_correcto']
+                    ]);
+                }
+            }
         }
 
         // ✅ PUNTAJES DE PARTICIPANTES - INDIVIDUAL
@@ -225,6 +244,9 @@ public function revealAnswer(Request $request)
         // Verificar victoria del invitado
         $victoria = $gamePoints->verificarVictoriaInvitado($session->id);
 
+        // ✅ Refrescar sesión para obtener valores actualizados
+        $session = $session->fresh();
+
         // ✅ Broadcast general con toda la data necesaria
         broadcast(new \App\Events\RevealAnswerOverlay([
             'pregunta_id' => $data['pregunta_id'],
@@ -238,6 +260,11 @@ public function revealAnswer(Request $request)
             'racha_publico' => $rachaPublico,
             'victoria' => $victoria,
             'golden' => ($data['special_indicator'] ?? null) === 'PREGUNTA DE ORO',
+            // ✅ Agregar información de tendencias del público
+            'tendencias_acertadas' => $session->tendencias_acertadas,
+            'tendencias_objetivo' => $session->tendencias_objetivo,
+            'tendencias_restantes' => $session->tendenciasRestantes(),
+            'publico_gano' => $session->publicoGano(),
         ]));
 
         \Log::info('✅ REVEAL: Completado exitosamente', [
@@ -624,7 +651,16 @@ public function lanzarPreguntaCategoria(Request $request)
     elseif ($categoriaLower === 'responde el chat' || $categoriaLower === 'solo yo') {
         // ✅ Diferenciar: "Solo yo" deshabilita público, "Responde el chat" no
         $disablePublic = ($categoriaLower === 'solo yo');
-        
+
+        // ✅ Si es "Solo Yo", el público no puede responder, por lo que se reduce el objetivo de tendencias
+        if ($categoriaLower === 'solo yo') {
+            $session->reducirObjetivoTendencias();
+            \Log::info('🔒 SOLO YO: Reducido objetivo de tendencias', [
+                'tendencias_objetivo' => $session->tendencias_objetivo,
+                'tendencias_restantes' => $session->tendenciasRestantes()
+            ]);
+        }
+
         $data = [
             'pregunta' => strtoupper($categoria),
             'opciones' => [],
@@ -639,9 +675,9 @@ public function lanzarPreguntaCategoria(Request $request)
         $session->active_question_id = null;
         $session->pregunta_json = null;
         $session->save();
-        
+
         session(['last_overlay_question' => $data]);
-        
+
         broadcast(new NuevaPreguntaOverlay($data));
         return response()->json(['ok' => true]);
     }

@@ -15,6 +15,15 @@ class GameBonusController extends Controller
         return response()->json(['error' => 'No hay sesión activa.'], 404);
     }
 
+    // ✅ VALIDAR QUE HAY UNA PREGUNTA ACTIVA
+    if (!$session->pregunta_json) {
+        return response()->json([
+            'error' => 'Debes esperar a que aparezca una pregunta antes de activar la apuesta',
+            'success' => false,
+            'apuesta_x2_active' => false
+        ], 400);
+    }
+
     $limite = ($session->modo_juego === 'express') ? 1 : 2;
 
     if ($session->apuesta_x2_active) {
@@ -29,7 +38,7 @@ class GameBonusController extends Controller
             ], 400);
         }
         $session->apuesta_x2_active = true;
-        Log::info("[BONUS] Apuesta x2 ACTIVADA");
+        Log::info("[BONUS] Apuesta x2 ACTIVADA para pregunta actual");
     }
 
     $session->save();
@@ -55,6 +64,15 @@ class GameBonusController extends Controller
             return response()->json(['error' => 'No hay sesión activa.'], 404);
         }
 
+        // ✅ VALIDAR QUE HAY UNA PREGUNTA ACTIVA
+        if (!$session->pregunta_json) {
+            return response()->json([
+                'error' => 'Debes esperar a que aparezca una pregunta antes de usar el descarte',
+                'success' => false,
+                'descarte_usado' => false
+            ], 400);
+        }
+
         // El descarte es 1 vez en ambos modos
         if ($session->descarte_usados >= 1) {
             return response()->json([
@@ -64,11 +82,20 @@ class GameBonusController extends Controller
             ], 400);
         }
 
-        // Usar descarte
+        // Usar descarte - se consume automáticamente
         $session->descarte_usados = 1;
         $session->save();
 
+        Log::info("[DESCARTE] Descarte usado. Pregunta descartada.");
+
+        // ✅ Automáticamente resetear el overlay para forzar nueva pregunta
+        $session->active_question_id = null;
+        $session->pregunta_json = null;
+        $session->save();
+
+        // ✅ Broadcast de eventos
         broadcast(new GameBonusUpdated($session));
+        broadcast(new \App\Events\OverlayReset());
 
         return response()->json([
             'success' => true,

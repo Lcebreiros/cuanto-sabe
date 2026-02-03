@@ -21,6 +21,9 @@ class GameSession extends Model
         'apuesta_x2_active',
         'apuesta_x2_usadas',
         'descarte_usados',
+        // columnas de tendencias
+        'tendencias_acertadas',
+        'tendencias_objetivo',
     ];
 
     // valores por defecto al crear una nueva sesión
@@ -31,6 +34,8 @@ class GameSession extends Model
         'apuesta_x2_active' => false,
         'apuesta_x2_usadas' => 0,
         'descarte_usados' => 0,
+        'tendencias_acertadas' => 0,
+        'tendencias_objetivo' => 10,
     ];
 
     // castear tipos para facilitar uso en PHP
@@ -40,6 +45,8 @@ class GameSession extends Model
         'descarte_usados'    => 'integer',
         'guest_points'       => 'integer',
         'pregunta_json'      => 'array',
+        'tendencias_acertadas' => 'integer',
+        'tendencias_objetivo' => 'integer',
     ];
 
     /* -------------------------
@@ -93,6 +100,46 @@ class GameSession extends Model
     public function apuestaDisponiblesCount(): int
     {
         return max(0, $this->apuestaLimite() - (int)$this->apuesta_x2_usadas);
+    }
+
+    /* -------------------------
+       Métodos de tendencias
+       ------------------------- */
+
+    /**
+     * Obtener tendencias restantes para ganar
+     */
+    public function tendenciasRestantes(): int
+    {
+        return max(0, $this->tendencias_objetivo - $this->tendencias_acertadas);
+    }
+
+    /**
+     * Verificar si el público ganó (acertó el objetivo de tendencias)
+     */
+    public function publicoGano(): bool
+    {
+        return $this->tendencias_acertadas >= $this->tendencias_objetivo;
+    }
+
+    /**
+     * Incrementar el contador de tendencias acertadas
+     */
+    public function incrementarTendenciasAcertadas(): void
+    {
+        $this->tendencias_acertadas += 1;
+        $this->save();
+    }
+
+    /**
+     * Reducir el objetivo de tendencias (para slots especiales como "Solo Yo")
+     */
+    public function reducirObjetivoTendencias(): void
+    {
+        if ($this->tendencias_objetivo > 0) {
+            $this->tendencias_objetivo -= 1;
+            $this->save();
+        }
     }
 
     /* -------------------------

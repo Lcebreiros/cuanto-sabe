@@ -7,17 +7,17 @@
     @endcan
   </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
     @foreach($members as $member)
-        <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg flex flex-col">
-            
-            <!-- CONTENEDOR DE IMAGEN -->
-            <div class="w-full aspect-square bg-gray-100 dark:bg-gray-700 flex items-center justify-center p-3">
+        <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg flex flex-col hover:shadow-2xl transition-all duration-300 hover:scale-105">
+
+            <!-- CONTENEDOR DE IMAGEN - TAMAÑO FIJO -->
+            <div class="w-full h-64 bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
                 @if(!empty($member['photo_url']))
-                    <img 
-                        src="{{ $member['photo_url'] }}" 
+                    <img
+                        src="{{ $member['photo_url'] }}"
                         alt="{{ $member['name'] }}"
-                        class="max-w-full max-h-full object-contain"
+                        class="w-full h-full object-cover"
                         loading="lazy"
                     >
                 @else
