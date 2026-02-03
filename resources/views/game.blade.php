@@ -300,9 +300,9 @@
 
     .control-buttons-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        grid-template-columns: 1fr 1fr 1fr;
         gap: 12px;
-        align-items: center;
+        align-items: stretch;
     }
 
     .control-btn {
@@ -433,6 +433,37 @@
         display: block;
     }
 
+    .slot-special-badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: linear-gradient(135deg, #ff00ff 0%, #00f0ff 100%);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        padding: 6px 14px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        display: none;
+        animation: pulse-glow 2s infinite;
+    }
+
+    .slot-special-badge.active {
+        display: block;
+    }
+
+    @keyframes pulse-glow {
+        0%, 100% {
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+        50% {
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.8);
+        }
+    }
+
     .question-text {
         font-size: 1.1rem;
         color: #18fff9;
@@ -484,20 +515,15 @@
     }
 
     /* Ajustes para responsive de botonera */
-    @media (max-width: 992px) {
-        .control-buttons-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
-    }
-
     @media (max-width: 768px) {
         .control-buttons-grid {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1fr 1fr;
             gap: 8px;
         }
 
-        .control-btn, .apuesta-btn, .descarte-btn {
+        .control-btn, .apuesta-btn, .descarte-btn, .power-btn-control {
             min-height: 70px;
+            max-height: 70px;
             padding: 12px 8px;
             font-size: 0.75rem;
         }
@@ -505,6 +531,11 @@
         .control-btn svg {
             width: 18px;
             height: 18px;
+        }
+
+        .power-btn-control .indicator {
+            width: 16px;
+            height: 16px;
         }
 
         .control-panel {
@@ -517,8 +548,9 @@
             gap: 6px;
         }
 
-        .control-btn, .apuesta-btn, .descarte-btn {
+        .control-btn, .apuesta-btn, .descarte-btn, .power-btn-control {
             min-height: 60px;
+            max-height: 60px;
             padding: 10px 6px;
             font-size: 0.65rem;
         }
@@ -526,6 +558,11 @@
         .control-btn svg {
             width: 16px;
             height: 16px;
+        }
+
+        .power-btn-control .indicator {
+            width: 14px;
+            height: 14px;
         }
 
         .bonus-btn .label {
@@ -591,61 +628,61 @@
         font-size: 0.9rem;
     }
 
-    /* ---- LUZ DE RADIO ---- */
-.radio-light-btn {
-    border: none;
-    outline: none;
-    border-radius: 38px;
-    font-size: 1rem;
-    font-family: 'Orbitron', Arial, sans-serif;
-    font-weight: bold;
-    padding: 8px 20px 8px 45px;
-    margin-right: 8px;
-    letter-spacing: 1.5px;
-    background: #211;
-    color: #fff;
-    position: relative;
-    transition: background 0.18s, color 0.16s, box-shadow 0.18s, transform 0.15s;
-    box-shadow: 0 0 8px #211, 0 0 0 #fff0;
-    display: inline-flex;
+    /* ---- BOTÓN POWER EN BOTONERA ---- */
+.power-btn-control {
+    background: rgba(15, 18, 42, 0.8);
+    border: 2px solid rgba(0, 240, 255, 0.3);
+    border-radius: 12px;
+    padding: 20px 15px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    white-space: nowrap;
-    vertical-align: middle;
-    width: auto;
-    flex-shrink: 0;
+    justify-content: center;
+    gap: 8px;
+    min-height: 90px;
+    position: relative;
+    overflow: hidden;
 }
-.radio-light-btn .light {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
+
+.power-btn-control.off {
+    background: linear-gradient(135deg, #2d1313 0%, #4a1a1a 100%);
+    color: #ff9a9a;
+    border-color: rgba(255, 45, 59, 0.5);
+}
+
+.power-btn-control.on {
+    background: linear-gradient(135deg, #0c3320 0%, #1a4a2d 100%);
+    color: #00ffb7;
+    border-color: rgba(16, 255, 98, 0.5);
+    box-shadow: 0 0 25px rgba(25, 255, 169, 0.3);
+}
+
+.power-btn-control .indicator {
     width: 20px;
     height: 20px;
     border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: var(--transition);
+}
+
+.power-btn-control.off .indicator {
     background: #ff2d3b;
-    box-shadow: 0 0 14px #ff2d3b99, 0 0 0 #fff0;
-    border: 2px solid #fff2;
-    transition: background 0.18s, box-shadow 0.18s, width 0.16s, height 0.16s;
+    box-shadow: 0 0 20px #ff2d3b99;
 }
-.radio-light-btn.off .light { background: #ff2d3b; box-shadow: 0 0 14px #ff2d3b99; }
-.radio-light-btn.off { background: #2d1313; color: #ff8888; box-shadow: 0 0 16px #ff2d3b30; }
-.radio-light-btn.on .light { background: #10ff62; box-shadow: 0 0 22px #10ff628f, 0 0 14px #00ffb7bb inset; }
-.radio-light-btn.on { background: #0c3320; color: #00ffb7; box-shadow: 0 0 28px #19ffa990, 0 0 1px #fff6; }
-.radio-light-btn:hover, .radio-light-btn:focus {
-    filter: brightness(1.09) contrast(1.07);
-    transform: scale(1.04);
-    box-shadow: 0 0 24px #00f0ff22, 0 0 0 #fff0;
+
+.power-btn-control.on .indicator {
+    background: #10ff62;
+    box-shadow: 0 0 25px #10ff628f, 0 0 15px #00ffb7bb inset;
 }
-.radio-light-btn:hover .light, .radio-light-btn:focus .light {
-    width: 33px;
-    height: 33px;
-    box-shadow:
-        0 0 30px #ffe78caa,
-        0 0 50px #fff93333,
-        0 0 30px #00ffb7a1,
-        0 0 18px #ff2d3b80,
-        0 0 38px #15ff90c9,
-        0 0 22px #10ff6299;
+
+.power-btn-control:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0, 240, 255, 0.4);
 }
 
     .random-question-form {
@@ -714,7 +751,7 @@
     background: rgba(15, 18, 42, 0.8);
     border: 2px solid rgba(0, 240, 255, 0.3);
     border-radius: 12px;
-    padding: 20px 15px;
+    padding: 15px 10px;
     font-size: 0.85rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -724,8 +761,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
     min-height: 90px;
+    max-height: 90px;
     position: relative;
     color: var(--text-secondary);
 }
@@ -977,6 +1015,13 @@
             right: 8px;
         }
 
+        .slot-special-badge {
+            font-size: 0.65rem;
+            padding: 4px 10px;
+            top: 8px;
+            left: 8px;
+        }
+
         .control-panel {
             padding: 8px;
         }
@@ -985,8 +1030,9 @@
             gap: 4px;
         }
 
-        .control-btn, .apuesta-btn, .descarte-btn {
+        .control-btn, .apuesta-btn, .descarte-btn, .power-btn-control {
             min-height: 65px;
+            max-height: 65px;
             padding: 10px 8px;
             font-size: 0.7rem;
         }
@@ -994,6 +1040,11 @@
         .control-btn svg {
             width: 16px;
             height: 16px;
+        }
+
+        .power-btn-control .indicator {
+            width: 15px;
+            height: 15px;
         }
 
         .bonus-btn .light {
@@ -1238,6 +1289,13 @@
             font-size: 0.75rem;
         }
 
+        .slot-special-badge {
+            font-size: 0.6rem;
+            padding: 3px 8px;
+            top: 6px;
+            left: 6px;
+        }
+
         .control-panel {
             padding: 6px;
         }
@@ -1246,8 +1304,9 @@
             gap: 3px;
         }
 
-        .control-btn, .apuesta-btn, .descarte-btn {
+        .control-btn, .apuesta-btn, .descarte-btn, .power-btn-control {
             min-height: 55px;
+            max-height: 55px;
             padding: 8px 5px;
             font-size: 0.6rem;
         }
@@ -1255,6 +1314,11 @@
         .control-btn svg {
             width: 14px;
             height: 14px;
+        }
+
+        .power-btn-control .indicator {
+            width: 12px;
+            height: 12px;
         }
 
         .bonus-btn .light {
@@ -1390,48 +1454,22 @@
 
         </div>
         
-        <!-- Botón ON/OFF -->
+        <!-- Botón Pantalla Completa -->
         <div class="power-toggle-container">
-                        <button type="button" 
-            id="fullscreenBtn" 
-            class="fullscreen-btn-minimal" 
-            onclick="toggleFullscreen()"
-            title="Pantalla completa (Ctrl+F)">
-        <!-- Ícono expandir -->
-        <svg class="fs-icon expand" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-        </svg>
-        <!-- Ícono contraer -->
-        <svg class="fs-icon compress" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
-        </svg>
-    </button>
-           @if(!$activeSession)
             <button type="button"
-                class="radio-light-btn off"
-                onclick="toggleStartForm('formStartGame')"
-                style="display: inline-flex !important; 
-                       align-items: center !important; 
-                       white-space: nowrap !important;
-                       vertical-align: middle !important;">
-                <span class="light"></span>
-                OFF
+                id="fullscreenBtn"
+                class="fullscreen-btn-minimal"
+                onclick="toggleFullscreen()"
+                title="Pantalla completa (Ctrl+F)">
+                <!-- Ícono expandir -->
+                <svg class="fs-icon expand" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                </svg>
+                <!-- Ícono contraer -->
+                <svg class="fs-icon compress" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+                </svg>
             </button>
-        @else
-            <form action="{{ route('game-session.end') }}" method="POST" 
-                  style="display: inline-flex !important; margin: 0 !important; padding: 0 !important;">
-                @csrf
-                <button type="submit" 
-                    class="radio-light-btn on"
-                    style="display: inline-flex !important; 
-                           align-items: center !important; 
-                           white-space: nowrap !important;
-                           vertical-align: middle !important;">
-                    <span class="light"></span>
-                    ON
-                </button>
-            </form>
-        @endif
         </div>
     </div>
 
@@ -1473,14 +1511,6 @@
                     <span>Revelar</span>
                 </button>
 
-                <!-- Botón Reset/Refrescar -->
-                <button type="button" id="botonReiniciar" class="control-btn reset-btn" {{ !$activeSession ? 'disabled' : '' }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
-                    </svg>
-                    <span>Refrescar</span>
-                </button>
-
                 <!-- Botón Apuesta x2 -->
                 <form id="form-apuesta-x2" style="margin: 0;">
                     @csrf
@@ -1513,12 +1543,37 @@
                         <span id="descarte-badge" class="badge">x{{ $descarteDisponibles }}</span>
                     </button>
                 </form>
+
+                <!-- Botón Reset/Refrescar -->
+                <button type="button" id="botonReiniciar" class="control-btn reset-btn" {{ !$activeSession ? 'disabled' : '' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+                    </svg>
+                    <span>Refrescar</span>
+                </button>
+
+                <!-- Botón ON/OFF -->
+                @if(!$activeSession)
+                    <button type="button" class="power-btn-control off" onclick="toggleStartForm('formStartGame')">
+                        <span class="indicator"></span>
+                        <span>OFF</span>
+                    </button>
+                @else
+                    <form action="{{ route('game-session.end') }}" method="POST" style="margin: 0;">
+                        @csrf
+                        <button type="submit" class="power-btn-control on">
+                            <span class="indicator"></span>
+                            <span>ON</span>
+                        </button>
+                    </form>
+                @endif
             </div>
         </div>
 
 
         <!-- Panel de Pregunta -->
         <div class="question-panel">
+            <span id="slotSpecialBadge" class="slot-special-badge"></span>
             <span id="questionNumberBadge" class="question-number-badge"></span>
             <div id="textoPreguntaPanel" class="question-text">
                 {{ $activeSession ? 'Pregunta aún no enviada' : 'Inicie una sesión para comenzar' }}
@@ -1990,6 +2045,13 @@ function reiniciarOverlay() {
 
     document.getElementById('textoPreguntaPanel').textContent = 'Pregunta aún no enviada';
 
+    // Limpiar slot especial badge
+    const slotBadge = document.getElementById('slotSpecialBadge');
+    if (slotBadge) {
+        slotBadge.textContent = '';
+        slotBadge.classList.remove('active');
+    }
+
     // Mantener el badge visible con el número actual (no resetear)
     // El contador se mantiene sincronizado con la DB
 
@@ -2127,6 +2189,7 @@ if (window.Echo) {
         const data = e.data || e || {};
         const pregunta = data.pregunta || (data.data ? data.data.pregunta : '') || '';
         const opciones = data.opciones || (data.data ? data.data.opciones : []) || [];
+        const slotSpecial = data.slot_special || (data.data ? data.data.slot_special : '') || '';
 
         // 🔥 GUARDAR EN VARIABLE GLOBAL
         lastOverlayQuestion = data;
@@ -2146,6 +2209,18 @@ if (window.Echo) {
 
         const txt = document.getElementById('textoPreguntaPanel');
         if (txt) txt.textContent = pregunta || 'Pregunta aún no enviada';
+
+        // ✅ MOSTRAR SLOT ESPECIAL si existe
+        const slotBadge = document.getElementById('slotSpecialBadge');
+        if (slotBadge) {
+            if (slotSpecial) {
+                slotBadge.textContent = slotSpecial;
+                slotBadge.classList.add('active');
+            } else {
+                slotBadge.textContent = '';
+                slotBadge.classList.remove('active');
+            }
+        }
 
         // Incrementar contador y mostrar badge
         panelQuestionCounter++;
@@ -2191,9 +2266,12 @@ if (window.Echo) {
 
     // Tendencia actualizada
     overlay.listen('.tendencia-actualizada', (e) => {
-        const payload = e.data || {};
-        const label = payload.option_label;
-        const total = payload.total;
+        const payload = e.data || e || {};
+        const tendencia = payload.tendencia || payload;
+        const label = tendencia.option_label || payload.option_label;
+        const total = tendencia.total || payload.total || 0;
+
+        console.log('✅ Tendencia actualizada recibida en panel:', { label, total, payload });
 
         // limpiar tendencia previa
         ['A','B','C','D'].forEach(l => {
@@ -2210,6 +2288,7 @@ if (window.Echo) {
                 btn.classList.add('trend');
                 const base = btn.dataset.baseText || btn.textContent || label;
                 btn.textContent = `${base} — Tendencia (${total})`;
+                console.log('✅ Tendencia aplicada al botón:', label);
             }
         }
     });
@@ -2229,6 +2308,13 @@ if (window.Echo) {
         if (descarteBtn) {
             descarteBtn.style.opacity = '0.5';
             descarteBtn.style.pointerEvents = 'none';
+        }
+
+        // ✅ LIMPIAR SLOT ESPECIAL
+        const slotBadge = document.getElementById('slotSpecialBadge');
+        if (slotBadge) {
+            slotBadge.textContent = '';
+            slotBadge.classList.remove('active');
         }
 
         reiniciarOverlay();
