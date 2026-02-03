@@ -205,19 +205,6 @@
         margin: 0 auto;
     }
 
-    .guest-avatar {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #00f0ff 0%, #ff00ff 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--dark-bg);
-    }
-
     .guest-details {
         flex: 1;
     }
@@ -300,39 +287,85 @@
         flex: 1;
     }
 
-    .spin-btn-container {
-        display: flex;
-        justify-content: center;
-        margin: 10px 0;
+    /* BOTONERA UNIFICADA */
+    .control-panel {
+        background: rgba(10, 14, 35, 0.95);
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(0, 240, 255, 0.2);
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
         grid-column: 1;
     }
 
-    .spin-btn {
-        background: linear-gradient(135deg, #00f0ff 0%, #ff00ff 100%);
-        color: #00122c;
-        border: none;
-        border-radius: 50px;
-        padding: 12px 30px;
-        font-size: 1.2rem;
-        font-weight: 800;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        cursor: pointer;
-        box-shadow: 0 0 40px rgba(0, 240, 255, 0.5),
-                    0 0 80px rgba(255, 0, 255, 0.3);
-        transition: var(--transition);
-        position: relative;
-        overflow: hidden;
-        min-width: 200px;
+    .control-buttons-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        align-items: center;
     }
 
-    .spin-btn:disabled {
-        opacity: 0.6;
+    .control-btn {
+        background: rgba(15, 18, 42, 0.8);
+        color: var(--primary-color);
+        border: 2px solid rgba(0, 240, 255, 0.3);
+        border-radius: 12px;
+        padding: 20px 15px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 90px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .control-btn:disabled {
+        opacity: 0.4;
         cursor: not-allowed;
+    }
+
+    .control-btn:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(0, 240, 255, 0.4);
+        border-color: var(--primary-color);
+    }
+
+    .control-btn svg {
+        width: 24px;
+        height: 24px;
+        stroke: currentColor;
+    }
+
+    .spin-btn {
+        border-color: rgba(0, 240, 255, 0.5);
     }
 
     .spin-btn.spinning {
         background: linear-gradient(135deg, #ff00ff 0%, #ff2d3b 100%);
+        border-color: #ff00ff;
+        animation: pulse 1s infinite;
+    }
+
+    .reveal-btn {
+        border-color: rgba(25, 255, 140, 0.5);
+        color: var(--success-color);
+    }
+
+    .reset-btn {
+        border-color: rgba(255, 204, 0, 0.5);
+        color: var(--warning-color);
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
     }
 
     .participants-container {
@@ -450,51 +483,59 @@
         box-shadow: 0 0 20px rgba(255, 228, 122, 0.7);
     }
 
-    .panel-actions {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        width: 100%;
+    /* Ajustes para responsive de botonera */
+    @media (max-width: 992px) {
+        .control-buttons-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
     }
 
-    .panel-actions form {
-        flex: 1;
-        min-width: 0;
-        display: flex;
+    @media (max-width: 768px) {
+        .control-buttons-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .control-btn, .apuesta-btn, .descarte-btn {
+            min-height: 70px;
+            padding: 12px 8px;
+            font-size: 0.75rem;
+        }
+
+        .control-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .control-panel {
+            padding: 12px;
+        }
     }
 
-    .panel-actions form button {
-        width: 100%;
-    }
+    @media (max-width: 480px) {
+        .control-buttons-grid {
+            gap: 6px;
+        }
 
-    .panel-action-btn {
-        padding: 8px 18px;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: var(--transition);
-        font-size: 0.9rem;
-        flex: 1;
-        min-width: 0;
-        white-space: nowrap;
-    }
+        .control-btn, .apuesta-btn, .descarte-btn {
+            min-height: 60px;
+            padding: 10px 6px;
+            font-size: 0.65rem;
+        }
 
-    .panel-action-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
+        .control-btn svg {
+            width: 16px;
+            height: 16px;
+        }
 
-    .reveal-btn {
-        background: var(--success-color);
-        color: #00361e;
-        border: none;
-    }
+        .bonus-btn .label {
+            font-size: 0.7rem;
+        }
 
-    .reset-btn {
-        background: #111b2b;
-        color: var(--primary-color);
-        border: 1px solid var(--primary-color);
+        .bonus-btn .badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+        }
     }
 
     .start-game-form {
@@ -668,118 +709,89 @@
     background: linear-gradient(90deg,#22fa68 60%,#19faff 100%);
     color: #0b2314;
 }
-/* Botón Apuesta x2 - azul profesional */
-.apuesta-btn {
-    background-color: #2c3e50; /* gris oscuro apagado */
-    color: #7f8c8d; /* texto gris apagado */
-    border: 2px solid #34495e;
-    border-radius: 50px;
-    padding: 8px 20px;
+/* Botones Bonus - estilo cuadrado unificado */
+.apuesta-btn, .descarte-btn {
+    background: rgba(15, 18, 42, 0.8);
+    border: 2px solid rgba(0, 240, 255, 0.3);
+    border-radius: 12px;
+    padding: 20px 15px;
     font-size: 0.85rem;
-    font-weight: 800;
+    font-weight: 700;
     text-transform: uppercase;
     cursor: pointer;
-    box-shadow: 0 0 8px rgba(44, 62, 80, 0.3);
-    transition: all 0.3s ease;
-    flex: 1;
-    min-width: 0;
-    opacity: 0.5; /* muy apagado por defecto */
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 90px;
     position: relative;
-    white-space: nowrap;
+    color: var(--text-secondary);
 }
 
-/* Estado activo */
+.apuesta-btn {
+    border-color: rgba(30, 144, 255, 0.5);
+}
+
+.descarte-btn {
+    border-color: rgba(255, 69, 0, 0.5);
+}
+
+/* Estado activo Apuesta */
 .apuesta-btn.on {
     background: linear-gradient(135deg, #1e90ff 0%, #00bfff 100%);
     color: #fff;
     border-color: #00bfff;
-    box-shadow: 
-        0 0 25px rgba(0, 191, 255, 0.8), 
-        0 0 50px rgba(0, 191, 255, 0.5),
-        0 0 5px #fff inset;
-    opacity: 1;
+    box-shadow: 0 0 25px rgba(0, 191, 255, 0.8);
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
-/* Estado inactivo */
-.apuesta-btn.off {
-    background-color: #1874cd;
-    box-shadow: 0 0 12px rgba(24, 116, 205, 0.4), 0 0 25px rgba(24, 116, 205, 0.2);
-}
-
-/* Botón Descarte - rojo profesional */
-.descarte-btn {
-    background-color: #2c3e50; /* gris oscuro apagado */
-    color: #7f8c8d; /* texto gris apagado */
-    border: 2px solid #34495e;
-    border-radius: 50px;
-    padding: 8px 20px;
-    font-size: 0.85rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    cursor: pointer;
-    box-shadow: 0 0 8px rgba(44, 62, 80, 0.3);
-    transition: all 0.3s ease;
-    flex: 1;
-    min-width: 0;
-    opacity: 0.5; /* muy apagado por defecto */
-    white-space: nowrap;
-}
-
-/* Estado activo */
+/* Estado activo Descarte */
 .descarte-btn.on {
     background: linear-gradient(135deg, #ff4500 0%, #ff6347 100%);
     color: #fff;
     border-color: #ff6347;
-    box-shadow: 
-        0 0 25px rgba(255, 99, 71, 0.8), 
-        0 0 50px rgba(255, 99, 71, 0.5),
-        0 0 5px #fff inset;
-    opacity: 1;
+    box-shadow: 0 0 25px rgba(255, 99, 71, 0.8);
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
-/* Estado inactivo */
-.descarte-btn.off {
-    background-color: #cd3700;
-    box-shadow: 0 0 12px rgba(205, 55, 0, 0.4), 0 0 25px rgba(205, 55, 0, 0.2);
+/* Hover */
+.apuesta-btn:hover:not(:disabled), .descarte-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0, 240, 255, 0.4);
 }
 
-/* Efecto hover suave */
-.apuesta-btn:hover, .descarte-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+.apuesta-btn:disabled, .descarte-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 /* Estilos para elementos internos de botones bonus */
 .bonus-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    position: relative;
+    width: 100%;
 }
 
 .bonus-btn .light {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     background: currentColor;
     flex-shrink: 0;
 }
 
 .bonus-btn .label {
-    flex: 1;
-    min-width: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
 }
 
 .bonus-btn .badge {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 12px;
-    padding: 2px 8px;
-    font-size: 0.75rem;
+    padding: 3px 10px;
+    font-size: 0.8rem;
     font-weight: 700;
-    flex-shrink: 0;
+    margin-top: 4px;
 }
 
 .power-toggle-container {
@@ -958,16 +970,6 @@
             min-height: 40px;
         }
 
-        .spin-btn {
-            font-size: 0.85rem;
-            padding: 8px 16px;
-            min-width: 120px;
-        }
-
-        .spin-btn-container {
-            margin: 4px 0;
-        }
-
         .question-number-badge {
             font-size: 0.65rem;
             padding: 2px 8px;
@@ -975,32 +977,37 @@
             right: 8px;
         }
 
-        .apuesta-btn, .descarte-btn {
-            padding: 5px 10px;
-            font-size: 0.65rem;
+        .control-panel {
+            padding: 8px;
         }
 
-        .bonus-btn .label {
-            font-size: 0.65rem;
-        }
-
-        .bonus-btn .badge {
-            font-size: 0.6rem;
-            padding: 1px 4px;
-        }
-
-        .bonus-btn .light {
-            width: 8px;
-            height: 8px;
-        }
-
-        .panel-actions {
+        .control-buttons-grid {
             gap: 4px;
         }
 
-        .panel-action-btn {
-            padding: 5px 10px;
+        .control-btn, .apuesta-btn, .descarte-btn {
+            min-height: 65px;
+            padding: 10px 8px;
             font-size: 0.7rem;
+        }
+
+        .control-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .bonus-btn .light {
+            width: 10px;
+            height: 10px;
+        }
+
+        .bonus-btn .label {
+            font-size: 0.7rem;
+        }
+
+        .bonus-btn .badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
         }
 
         .back-btn {
@@ -1016,12 +1023,6 @@
         .guest-info-container {
             gap: 6px;
             padding: 4px 8px;
-        }
-
-        .guest-avatar {
-            width: 28px;
-            height: 28px;
-            font-size: 0.8rem;
         }
 
         .guest-name {
@@ -1190,12 +1191,6 @@
             padding: 3px 6px;
         }
 
-        .guest-avatar {
-            width: 24px;
-            height: 24px;
-            font-size: 0.7rem;
-        }
-
         .guest-name {
             font-size: 0.7rem;
         }
@@ -1243,14 +1238,37 @@
             font-size: 0.75rem;
         }
 
-        .panel-action-btn {
-            font-size: 0.65rem;
-            padding: 4px 8px;
+        .control-panel {
+            padding: 6px;
         }
 
-        .apuesta-btn, .descarte-btn {
+        .control-buttons-grid {
+            gap: 3px;
+        }
+
+        .control-btn, .apuesta-btn, .descarte-btn {
+            min-height: 55px;
+            padding: 8px 5px;
             font-size: 0.6rem;
-            padding: 4px 8px;
+        }
+
+        .control-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .bonus-btn .light {
+            width: 8px;
+            height: 8px;
+        }
+
+        .bonus-btn .label {
+            font-size: 0.65rem;
+        }
+
+        .bonus-btn .badge {
+            font-size: 0.65rem;
+            padding: 1px 5px;
         }
     }
 </style>
@@ -1271,9 +1289,6 @@
         <div class="header-content">
 <div class="guest-info-container">
     @if($activeSession)
-        <div class="guest-avatar">
-            {{ substr($activeSession->guest_name, 0, 1) }}
-        </div>
         <div class="guest-details">
             <div class="guest-name">{{ $activeSession->guest_name }}</div>
             <div class="guest-meta">
@@ -1315,18 +1330,6 @@
     background-color: #1f1b2e;
     border-radius: 12px;
     color: #fff;
-}
-
-.guest-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: #4f46e5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 1.1rem;
 }
 
 .guest-details {
@@ -1438,59 +1441,80 @@
 
     <!-- Contenido principal -->
     <div class="main-content">
-        <!-- Botón Girar Ruleta -->
-        <div class="spin-btn-container">
-            <button id="spinButton" class="spin-btn" onclick="toggleSpinButton()" {{ !$activeSession ? 'disabled' : '' }}>
-                Girar Ruleta
-            </button>
+        <!-- BOTONERA UNIFICADA -->
+        <div class="control-panel">
+            @php
+            // calcular límites y disponibles
+            $apuestaLimite = $activeSession ? ($activeSession->isExpress() ? 1 : 2) : 0;
+            $apuestaUsadas = $activeSession ? (int)$activeSession->apuesta_x2_usadas : 0;
+            $apuestaDisponibles = max(0, $apuestaLimite - $apuestaUsadas);
+
+            $descarteLimite = 1;
+            $descarteUsados = $activeSession ? (int)$activeSession->descarte_usados : 0;
+            $descarteDisponibles = max(0, $descarteLimite - $descarteUsados);
+            @endphp
+
+            <div class="control-buttons-grid">
+                <!-- Botón Girar/Parar Ruleta -->
+                <button id="spinButton" class="control-btn spin-btn" onclick="toggleSpinButton()" {{ !$activeSession ? 'disabled' : '' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                    </svg>
+                    <span>Girar Ruleta</span>
+                </button>
+
+                <!-- Botón Revelar -->
+                <button type="button" id="revealBtn" class="control-btn reveal-btn" onclick="revelarRespuesta()" {{ !$activeSession ? 'disabled' : '' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <span>Revelar</span>
+                </button>
+
+                <!-- Botón Reset/Refrescar -->
+                <button type="button" id="botonReiniciar" class="control-btn reset-btn" {{ !$activeSession ? 'disabled' : '' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+                    </svg>
+                    <span>Refrescar</span>
+                </button>
+
+                <!-- Botón Apuesta x2 -->
+                <form id="form-apuesta-x2" style="margin: 0;">
+                    @csrf
+                    <button
+                        id="apuesta-btn"
+                        type="submit"
+                        class="bonus-btn apuesta-btn {{ $activeSession && $activeSession->apuesta_x2_active ? 'on' : 'off' }}"
+                        data-active="{{ $activeSession && $activeSession->apuesta_x2_active ? '1' : '0' }}"
+                        data-usadas="{{ $apuestaUsadas }}"
+                        data-limite="{{ $apuestaLimite }}"
+                    >
+                        <span class="light"></span>
+                        <span class="label">APUESTA</span>
+                        <span id="apuesta-badge" class="badge">x{{ $apuestaDisponibles }}</span>
+                    </button>
+                </form>
+
+                <!-- Botón Descarte -->
+                <form id="form-descarte" style="margin: 0;">
+                    @csrf
+                    <button
+                        id="descarte-btn"
+                        type="submit"
+                        class="bonus-btn descarte-btn {{ $descarteDisponibles > 0 ? 'on' : 'off' }}"
+                        data-usados="{{ $descarteUsados }}"
+                        data-limite="{{ $descarteLimite }}"
+                    >
+                        <span class="light"></span>
+                        <span class="label">DESCARTE</span>
+                        <span id="descarte-badge" class="badge">x{{ $descarteDisponibles }}</span>
+                    </button>
+                </form>
+            </div>
         </div>
-        <div class="panel-actions">
-    <!-- Botón Apuesta x2 -->
-     @php
-    // calcular límites y disponibles
-    $apuestaLimite = $activeSession ? ($activeSession->isExpress() ? 1 : 2) : 0;
-    $apuestaUsadas = $activeSession ? (int)$activeSession->apuesta_x2_usadas : 0;
-    $apuestaDisponibles = max(0, $apuestaLimite - $apuestaUsadas);
-
-    $descarteLimite = 1; // según tu regla
-    $descarteUsados = $activeSession ? (int)$activeSession->descarte_usados : 0;
-    $descarteDisponibles = max(0, $descarteLimite - $descarteUsados);
-@endphp
-    <form id="form-apuesta-x2">
-        @csrf
-        <button
-            id="apuesta-btn"
-            type="submit"
-            class="bonus-btn apuesta-btn {{ $activeSession && $activeSession->apuesta_x2_active ? 'on' : 'off' }}"
-            data-active="{{ $activeSession && $activeSession->apuesta_x2_active ? '1' : '0' }}"
-            data-usadas="{{ $apuestaUsadas }}"
-            data-limite="{{ $apuestaLimite }}"
-        >
-            <span class="light"></span>
-            <span class="label">
-                {{-- Si quedan 2 mostrar APUESTA X2 (puedes ajustar el texto) --}}
-                APUESTA
-            </span>
-            <span id="apuesta-badge" class="badge" aria-hidden="true">x{{ $apuestaDisponibles }}</span>
-        </button>
-    </form>
-
-    <!-- Botón Descarte -->
-    <form id="form-descarte">
-        @csrf
-        <button
-            id="descarte-btn"
-            type="submit"
-            class="bonus-btn descarte-btn {{ $descarteDisponibles > 0 ? 'on' : 'off' }}"
-            data-usados="{{ $descarteUsados }}"
-            data-limite="{{ $descarteLimite }}"
-        >
-            <span class="light"></span>
-            <span class="label">DESCARTE</span>
-            <span id="descarte-badge" class="badge" aria-hidden="true">x{{ $descarteDisponibles }}</span>
-        </button>
-    </form>
-</div>
 
 
         <!-- Panel de Pregunta -->
@@ -1504,21 +1528,6 @@
                 <button type="button" class="option-btn" id="panelB" style="display:none;" {{ !$activeSession ? 'disabled' : '' }}></button>
                 <button type="button" class="option-btn" id="panelC" style="display:none;" {{ !$activeSession ? 'disabled' : '' }}></button>
                 <button type="button" class="option-btn" id="panelD" style="display:none;" {{ !$activeSession ? 'disabled' : '' }}></button>
-            </div>
-            <div class="panel-actions">
-<button 
-    type="button" 
-    id="revealBtn"
-    class="panel-action-btn reveal-btn" 
-    onclick="revelarRespuesta()" {{ !$activeSession ? 'disabled' : '' }}
->
-    Revelar respuesta
-</button>
-
-<button type="button" id="botonReiniciar" class="panel-action-btn reset-btn" {{ !$activeSession ? 'disabled' : '' }}>
-    Volver a la ruleta
-</button>
-
             </div>
         </div>
 
@@ -1876,15 +1885,27 @@ function toggleStartForm() {
 function toggleSpinButton() {
     const spinButton = document.getElementById('spinButton');
     isSpinning = !isSpinning;
-    
+
     if (isSpinning) {
-        spinButton.textContent = 'Parar Ruleta';
+        spinButton.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+            <span>Parar</span>
+        `;
         spinButton.classList.add('spinning');
     } else {
-        spinButton.textContent = 'Girar Ruleta';
+        spinButton.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="10 8 16 12 10 16 10 8"></polygon>
+            </svg>
+            <span>Girar Ruleta</span>
+        `;
         spinButton.classList.remove('spinning');
     }
-    
+
     girarRuleta();
 }
 
