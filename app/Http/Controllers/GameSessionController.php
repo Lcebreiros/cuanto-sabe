@@ -103,11 +103,27 @@ public function revealAnswer(Request $request)
             $session = $this->getActiveSessionCached(5);
             if ($session && $session->pregunta_json) {
                 $data = json_decode($session->pregunta_json, true);
+
+                // ✅ VALIDAR ESTRUCTURA DEL JSON DECODIFICADO
+                if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
+                    \Log::error('🔴 REVEAL: JSON inválido', [
+                        'error' => json_last_error_msg(),
+                        'json' => $session->pregunta_json
+                    ]);
+                    return response()->json(['error' => 'Datos de pregunta corruptos'], 500);
+                }
+
+                // ✅ VALIDAR CAMPOS REQUERIDOS
+                if (!isset($data['pregunta_id'], $data['label_correcto'], $data['opciones'])) {
+                    \Log::error('🔴 REVEAL: JSON con estructura incompleta', ['data' => $data]);
+                    return response()->json(['error' => 'Estructura de pregunta inválida'], 400);
+                }
+
                 \Log::info('🟡 REVEAL: Recuperado de BD', ['data' => $data]);
                 session(['last_overlay_question' => $data]);
             }
         }
-        
+
         if (!$data) {
             \Log::warning('🔴 REVEAL: No hay pregunta activa');
             return response()->json(['error' => 'No hay pregunta activa en sesión'], 400);
@@ -180,9 +196,15 @@ public function revealAnswer(Request $request)
                 'points_awarded' => (int)$delta,
             ]);
 
-            // Actualizar puntos del invitado
-            $session->guest_points = ($session->guest_points ?? 0) + (int)$delta;
-            $session->save();
+            // ✅ ACTUALIZAR PUNTOS DEL INVITADO CON PROTECCIÓN DE RACE CONDITION
+            DB::transaction(function () use ($session, $delta) {
+                $s = GameSession::where('id', $session->id)->lockForUpdate()->first();
+                $s->guest_points = ($s->guest_points ?? 0) + (int)$delta;
+                $s->save();
+            });
+
+            // Refrescar instancia para obtener valores actualizados
+            $session = $session->fresh();
 
             // Emitir evento para actualizar puntaje en vivo
             broadcast(new \App\Events\GuestPointsUpdated($session->id, $session->guest_points));
@@ -216,26 +238,42 @@ public function revealAnswer(Request $request)
         $participantIds = $session->participants()->pluck('id')->toArray();
         $puntajes = $gamePoints->calcularPuntajesParticipantes($participantIds, $session->id);
 
-        // ✅ GUARDAR PUNTAJES EN BASE DE DATOS
+        // ✅ GUARDAR PUNTAJES EN BASE DE DATOS CON PROTECCIÓN DE RACE CONDITION
         foreach ($puntajes as $participantId => $puntajeTotal) {
-            \App\Models\ParticipantSession::where('id', $participantId)
-                ->update(['puntaje' => $puntajeTotal]);
-            
-            \Log::info('💾 Puntaje guardado en BD', [
+            DB::transaction(function () use ($participantId, $puntajeTotal) {
+                $participant = \App\Models\ParticipantSession::where('id', $participantId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($participant) {
+                    $participant->puntaje = $puntajeTotal;
+                    $participant->save();
+                }
+            });
+
+            \Log::info('💾 Puntaje guardado en BD (con lock)', [
                 'participant_id' => $participantId,
                 'puntaje' => $puntajeTotal
             ]);
         }
 
-        // ✅ DISPARAR EVENTO INDIVIDUAL PARA CADA PARTICIPANTE
+        // ✅ DISPARAR EVENTO INDIVIDUAL PARA CADA PARTICIPANTE CON MANEJO DE ERRORES
         foreach ($puntajes as $participantId => $puntajeTotal) {
-            \Log::info('📤 Enviando PuntajeActualizado', [
-                'participant_id' => $participantId,
-                'puntaje' => $puntajeTotal,
-                'canal' => 'puntaje.' . $participantId
-            ]);
-            
-            broadcast(new \App\Events\PuntajeActualizado($participantId, $puntajeTotal));
+            try {
+                \Log::info('📤 Enviando PuntajeActualizado', [
+                    'participant_id' => $participantId,
+                    'puntaje' => $puntajeTotal,
+                    'canal' => 'puntaje.' . $participantId
+                ]);
+
+                broadcast(new \App\Events\PuntajeActualizado($participantId, $puntajeTotal));
+            } catch (\Throwable $e) {
+                \Log::error('❌ Error al broadcast puntaje individual', [
+                    'participant_id' => $participantId,
+                    'error' => $e->getMessage()
+                ]);
+                // Continuar con el siguiente participante
+            }
         }
 
         // Racha del público
@@ -247,25 +285,33 @@ public function revealAnswer(Request $request)
         // ✅ Refrescar sesión para obtener valores actualizados
         $session = $session->fresh();
 
-        // ✅ Broadcast general con toda la data necesaria
-        broadcast(new \App\Events\RevealAnswerOverlay([
-            'pregunta_id' => $data['pregunta_id'],
-            'label_correcto' => $data['label_correcto'],
-            'opciones' => $data['opciones'] ?? [],
-            'pregunta' => $data['pregunta'] ?? '',
-            'delta_invitado' => $delta,
-            'puntaje_invitado' => $session->guest_points,
-            'puntajes_participantes' => $puntajes, // Para el overlay del host
-            'tendencia' => $tendencia,
-            'racha_publico' => $rachaPublico,
-            'victoria' => $victoria,
-            'golden' => ($data['special_indicator'] ?? null) === 'PREGUNTA DE ORO',
-            // ✅ Agregar información de tendencias del público
-            'tendencias_acertadas' => $session->tendencias_acertadas,
-            'tendencias_objetivo' => $session->tendencias_objetivo,
-            'tendencias_restantes' => $session->tendenciasRestantes(),
-            'publico_gano' => $session->publicoGano(),
-        ]));
+        // ✅ Broadcast general con toda la data necesaria y MANEJO DE ERRORES
+        try {
+            broadcast(new \App\Events\RevealAnswerOverlay([
+                'pregunta_id' => $data['pregunta_id'],
+                'label_correcto' => $data['label_correcto'],
+                'opciones' => $data['opciones'] ?? [],
+                'pregunta' => $data['pregunta'] ?? '',
+                'delta_invitado' => $delta,
+                'puntaje_invitado' => $session->guest_points,
+                'puntajes_participantes' => $puntajes, // Para el overlay del host
+                'tendencia' => $tendencia,
+                'racha_publico' => $rachaPublico,
+                'victoria' => $victoria,
+                'golden' => ($data['special_indicator'] ?? null) === 'PREGUNTA DE ORO',
+                // ✅ Agregar información de tendencias del público
+                'tendencias_acertadas' => $session->tendencias_acertadas,
+                'tendencias_objetivo' => $session->tendencias_objetivo,
+                'tendencias_restantes' => $session->tendenciasRestantes(),
+                'publico_gano' => $session->publicoGano(),
+            ]));
+        } catch (\Throwable $e) {
+            \Log::error('❌ Error crítico en broadcast RevealAnswerOverlay', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            // No fallar la operación, los datos ya están guardados en BD
+        }
 
         \Log::info('✅ REVEAL: Completado exitosamente', [
             'participantes_notificados' => count($puntajes)
@@ -416,14 +462,24 @@ public function add(Request $request)
         return back()->with('success', 'Ya estás registrado en esta sesión.');
     }
 
-    $participant = new ParticipantSession([
-        'username' => $validated['participants'][0]['username'],
-        'dni_last4' => $validated['participants'][0]['dni_last4'],
-        'game_session_id' => $session->id,
-        'status' => 'waiting',
-        'order' => $session->participants()->max('order') + 1,
-    ]);
-    $participant->save();
+    // ✅ CREAR PARTICIPANTE CON PROTECCIÓN DE RACE CONDITION EN ORDER
+    $participant = DB::transaction(function () use ($validated, $session) {
+        // Obtener el orden máximo con lock para evitar duplicados
+        $maxOrder = ParticipantSession::where('game_session_id', $session->id)
+            ->lockForUpdate()
+            ->max('order') ?? 0;
+
+        $participant = new ParticipantSession([
+            'username' => $validated['participants'][0]['username'],
+            'dni_last4' => $validated['participants'][0]['dni_last4'],
+            'game_session_id' => $session->id,
+            'status' => 'waiting',
+            'order' => $maxOrder + 1,
+        ]);
+        $participant->save();
+
+        return $participant;
+    });
 
     // GUARDÁ EL NUEVO PARTICIPANTE EN SESIÓN Y COOKIE
     session(['participant_session_id' => $participant->id]);
@@ -876,25 +932,32 @@ public function enviarParticipacion(Request $request)
     // 5. Log para depuración
     \Log::info("GUARDAR RESPUESTA: qid={$request->question_id}, label_correcto={$labelCorrecto}, seleccionada={$request->option_label}");
 
-    // 6. Guardar la respuesta
-    ParticipantAnswer::updateOrCreate(
-        [
-            'participant_session_id' => $participant->id,
-            'question_id' => $request->question_id,
-        ],
-        [
-            'option_label' => $request->option_label,
-            'label_correcto' => $labelCorrecto,
-        ]
-    );
-    // 7. Tendencia y votos (esto es lo que faltaba, y debe ir sí o sí)
+    // 6. Guardar la respuesta CON PROTECCIÓN DE RACE CONDITION
+    DB::transaction(function () use ($participant, $request, $labelCorrecto) {
+        ParticipantAnswer::updateOrCreate(
+            [
+                'participant_session_id' => $participant->id,
+                'question_id' => $request->question_id,
+            ],
+            [
+                'option_label' => $request->option_label,
+                'label_correcto' => $labelCorrecto,
+            ]
+        );
+    });
+
+    // 7. Tendencia y votos (calculado después de guardar)
     $questionId = $request->question_id;
     $votedOption = $request->option_label;
 
-    $votes = \App\Models\ParticipantAnswer::where('question_id', $questionId)
-        ->select('option_label', DB::raw('count(*) as total'))
-        ->groupBy('option_label')
-        ->get();
+    // Usar shared lock para lectura consistente
+    $votes = DB::transaction(function () use ($questionId) {
+        return \App\Models\ParticipantAnswer::where('question_id', $questionId)
+            ->sharedLock()
+            ->select('option_label', DB::raw('count(*) as total'))
+            ->groupBy('option_label')
+            ->get();
+    });
 
     if ($votes->count() === 1) {
         $trendOption = $votedOption;

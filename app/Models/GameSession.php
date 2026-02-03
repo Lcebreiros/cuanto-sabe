@@ -123,23 +123,36 @@ class GameSession extends Model
     }
 
     /**
-     * Incrementar el contador de tendencias acertadas
+     * Incrementar el contador de tendencias acertadas (con protección de race condition)
      */
     public function incrementarTendenciasAcertadas(): void
     {
-        $this->tendencias_acertadas += 1;
-        $this->save();
+        DB::transaction(function () {
+            $s = self::where('id', $this->id)->lockForUpdate()->first();
+            $s->tendencias_acertadas += 1;
+            $s->save();
+        });
+
+        // Refrescar instancia actual
+        $this->refresh();
     }
 
     /**
      * Reducir el objetivo de tendencias (para slots especiales como "Solo Yo")
+     * Con protección de race condition
      */
     public function reducirObjetivoTendencias(): void
     {
-        if ($this->tendencias_objetivo > 0) {
-            $this->tendencias_objetivo -= 1;
-            $this->save();
-        }
+        DB::transaction(function () {
+            $s = self::where('id', $this->id)->lockForUpdate()->first();
+            if ($s->tendencias_objetivo > 0) {
+                $s->tendencias_objetivo -= 1;
+                $s->save();
+            }
+        });
+
+        // Refrescar instancia actual
+        $this->refresh();
     }
 
     /* -------------------------
