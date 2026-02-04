@@ -291,7 +291,7 @@
     .control-panel {
         background: rgba(10, 14, 35, 0.95);
         border-radius: 20px;
-        padding: 20px;
+        padding: 15px;
         margin-bottom: 10px;
         border: 1px solid rgba(0, 240, 255, 0.2);
         box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
@@ -300,10 +300,13 @@
 
     .control-buttons-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(120px, 150px));
+        grid-template-columns: repeat(3, 1fr);
         gap: 12px;
         align-items: stretch;
-        justify-content: center;
+    }
+
+    .control-buttons-grid form {
+        display: contents;
     }
 
     .control-btn {
@@ -1511,6 +1514,22 @@
             @endphp
 
             <div class="control-buttons-grid">
+                <!-- Botón ON/OFF -->
+                @if(!$activeSession)
+                    <button type="button" class="power-btn-control off" onclick="toggleStartForm('formStartGame')">
+                        <span class="indicator"></span>
+                        <span>OFF</span>
+                    </button>
+                @else
+                    <form action="{{ route('game-session.end') }}" method="POST" style="margin: 0;">
+                        @csrf
+                        <button type="submit" class="power-btn-control on">
+                            <span class="indicator"></span>
+                            <span>ON</span>
+                        </button>
+                    </form>
+                @endif
+
                 <!-- Botón Girar/Parar Ruleta -->
                 <button id="spinButton" class="control-btn spin-btn" onclick="toggleSpinButton()" {{ !$activeSession ? 'disabled' : '' }}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1569,22 +1588,6 @@
                     </svg>
                     <span>Refrescar</span>
                 </button>
-
-                <!-- Botón ON/OFF -->
-                @if(!$activeSession)
-                    <button type="button" class="power-btn-control off" onclick="toggleStartForm('formStartGame')">
-                        <span class="indicator"></span>
-                        <span>OFF</span>
-                    </button>
-                @else
-                    <form action="{{ route('game-session.end') }}" method="POST" style="margin: 0;">
-                        @csrf
-                        <button type="submit" class="power-btn-control on">
-                            <span class="indicator"></span>
-                            <span>ON</span>
-                        </button>
-                    </form>
-                @endif
             </div>
         </div>
 
