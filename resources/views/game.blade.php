@@ -324,7 +324,6 @@
         gap: 8px;
         min-height: 100px;
         max-height: 100px;
-        aspect-ratio: 1;
         position: relative;
         overflow: hidden;
     }
@@ -527,7 +526,6 @@
         .control-btn, .apuesta-btn, .descarte-btn, .power-btn-control {
             min-height: 70px;
             max-height: 70px;
-            aspect-ratio: 1;
             padding: 12px 8px;
             font-size: 0.75rem;
         }
@@ -555,7 +553,6 @@
         .control-btn, .apuesta-btn, .descarte-btn, .power-btn-control {
             min-height: 60px;
             max-height: 60px;
-            aspect-ratio: 1;
             padding: 10px 6px;
             font-size: 0.65rem;
         }
@@ -651,7 +648,6 @@
     gap: 8px;
     min-height: 100px;
     max-height: 100px;
-    aspect-ratio: 1;
     position: relative;
     overflow: hidden;
 }
@@ -771,7 +767,6 @@
     gap: 4px;
     min-height: 100px;
     max-height: 100px;
-    aspect-ratio: 1;
     position: relative;
     color: var(--text-secondary);
 }
@@ -1041,7 +1036,6 @@
         .control-btn, .apuesta-btn, .descarte-btn, .power-btn-control {
             min-height: 65px;
             max-height: 65px;
-            aspect-ratio: 1;
             padding: 10px 8px;
             font-size: 0.7rem;
         }
@@ -1316,7 +1310,6 @@
         .control-btn, .apuesta-btn, .descarte-btn, .power-btn-control {
             min-height: 55px;
             max-height: 55px;
-            aspect-ratio: 1;
             padding: 8px 5px;
             font-size: 0.6rem;
         }
