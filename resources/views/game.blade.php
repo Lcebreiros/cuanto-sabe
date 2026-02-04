@@ -1612,7 +1612,6 @@
 
     <!-- Panel de Participantes -->
     <div class="participants-container">
-        <h3 class="participants-title">Participantes</h3>
         <div class="participants-content" id="queue-container">
             @if($activeSession)
                 @include('components.queue-list', ['participants' => $activeSession->participants])
