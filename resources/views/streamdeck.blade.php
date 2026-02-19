@@ -682,6 +682,58 @@ if (window.Echo && hasSession) {
         if (isSpinning) { isSpinning = false; syncRuletaUI(); }
     });
 }
+
+// Función para activar/desactivar pantalla completa
+function toggleFullscreen() {
+    const btn = document.getElementById('fullscreenBtn');
+    const expandIcon = btn.querySelector('.expand');
+    const compressIcon = btn.querySelector('.compress');
+    
+    if (!document.fullscreenElement) {
+        // Entrar en pantalla completa
+        document.documentElement.requestFullscreen().then(() => {
+            btn.classList.add('active');
+            btn.title = 'Salir de pantalla completa (ESC)';
+            expandIcon.style.display = 'none';
+            compressIcon.style.display = 'block';
+        }).catch(err => {
+            console.error('Error al activar pantalla completa:', err);
+        });
+    } else {
+        // Salir de pantalla completa
+        document.exitFullscreen().then(() => {
+            btn.classList.remove('active');
+            btn.title = 'Pantalla completa (Ctrl+F)';
+            expandIcon.style.display = 'block';
+            compressIcon.style.display = 'none';
+        }).catch(err => {
+            console.error('Error al salir de pantalla completa:', err);
+        });
+    }
+}
+
+// Listener para detectar cambios de pantalla completa (ESC)
+document.addEventListener('fullscreenchange', () => {
+    const btn = document.getElementById('fullscreenBtn');
+    const expandIcon = btn.querySelector('.expand');
+    const compressIcon = btn.querySelector('.compress');
+    
+    if (!document.fullscreenElement) {
+        btn.classList.remove('active');
+        btn.title = 'Pantalla completa (Ctrl+F)';
+        expandIcon.style.display = 'block';
+        compressIcon.style.display = 'none';
+    }
+});
+
+// Atajo de teclado: Ctrl+F
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'f' && e.ctrlKey) {
+        e.preventDefault();
+        toggleFullscreen();
+    }
+});
+
 </script>
 </body>
 </html>
