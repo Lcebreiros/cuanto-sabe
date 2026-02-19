@@ -105,12 +105,7 @@ public static function calcularPuntajeInvitado(
         if ($consumida) {
             $delta *= 2;
             Log::info("[APUESTA x2] ✅ Aplicada exitosamente. Delta duplicado a: {$delta}");
-            
-            // ✅ Refrescar la instancia actual para tener valores actualizados
-            $session = GameSession::find($gameSessionId);
-            
-            // ✅ Broadcast manual aquí porque consumirApuesta() no lo hace
-            broadcast(new GameBonusUpdated($session));
+            // consumirApuesta() ya emite GameBonusUpdated internamente
         } else {
             Log::warning("[APUESTA x2] ❌ No se pudo aplicar (límite alcanzado o desactivada)");
         }

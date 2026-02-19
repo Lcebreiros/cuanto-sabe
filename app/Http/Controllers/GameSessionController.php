@@ -358,6 +358,19 @@ public function revealAnswer(Request $request)
             'categoria_id' => 'required|exists:categorias,id'
         ]);
 
+        // Validar límite de 15 preguntas (igual que en lanzarPreguntaCategoria)
+        $session = GameSession::where('status', 'active')->latest()->first();
+        if ($session) {
+            $questionCount = \App\Models\GuestAnswer::where('game_session_id', $session->id)->count();
+            if ($questionCount >= 15) {
+                return response()->json([
+                    'error' => 'Límite de 15 preguntas alcanzado. El juego del invitado ha terminado.',
+                    'limit_reached' => true,
+                    'question_count' => $questionCount,
+                ], 422);
+            }
+        }
+
         $lastQuestionId = session('last_random_question_id');
         $pregunta = Question::where('category_id', $request->categoria_id)
                             ->where('id', '!=', $lastQuestionId)
@@ -398,10 +411,29 @@ public function revealAnswer(Request $request)
             'timestamp' => now()->toISOString(),
         ];
 
+        // Si hay un indicador especial pendiente (ej.: "PREGUNTA DE ORO"),
+        // heredarlo para que revealAnswer aplique el scoring correcto (+5/0).
+        $pendingIndicator = session('pending_special_indicator');
+        if ($pendingIndicator) {
+            $data['special_indicator'] = $pendingIndicator;
+            session()->forget('pending_special_indicator');
+            \Log::info('🥇 sendRandomQuestion: heredando special_indicator pendiente', [
+                'indicator' => $pendingIndicator,
+                'pregunta_id' => $pregunta->id,
+            ]);
+        }
+
         session([
-            'last_overlay_question' => $data, // 🟢 CORREGIDO
+            'last_overlay_question' => $data,
             'last_random_question_id' => $pregunta->id
         ]);
+
+        // Si hay sesión activa, guardar también en pregunta_json para consistencia
+        if ($session) {
+            $session->pregunta_json = json_encode($data);
+            $session->active_question_id = $pregunta->id;
+            $session->save();
+        }
 
         broadcast(new NuevaPreguntaOverlay($data));
         return response()->json([
@@ -714,6 +746,10 @@ public function lanzarPreguntaCategoria(Request $request)
             'tendencias_objetivo' => $session->tendencias_objetivo,
             'tendencias_restantes' => $session->tendenciasRestantes()
         ]);
+
+        // Guardar indicador pendiente para que la próxima pregunta que se envíe
+        // (vía sendRandomQuestion) lo herede y aplique el scoring de +5/0
+        session(['pending_special_indicator' => 'PREGUNTA DE ORO']);
 
         $data = [
             'pregunta' => strtoupper($categoria),

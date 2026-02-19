@@ -2191,6 +2191,14 @@ if (window.Echo) {
                     btnDescarte.classList.add('off');
                 }
             }
+
+            // Actualizar contador de tendencias en vivo
+            if (typeof event.tendencias_acertadas !== 'undefined') {
+                const acertadasEl = document.getElementById('tendenciasAcertadas');
+                const objetivoEl  = document.getElementById('tendenciasObjetivo');
+                if (acertadasEl) acertadasEl.textContent = event.tendencias_acertadas;
+                if (objetivoEl)  objetivoEl.textContent  = event.tendencias_objetivo;
+            }
         });
 
     // Nueva pregunta

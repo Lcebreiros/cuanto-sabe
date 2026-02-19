@@ -42,6 +42,8 @@ public function __construct(GameSession $session)
         'apuesta_x2_usadas' => $this->session->apuesta_x2_usadas,
         'descarte_usados' => $this->session->descarte_usados,
         'modo_juego' => $this->session->modo_juego,
+        'tendencias_acertadas' => $this->session->tendencias_acertadas ?? 0,
+        'tendencias_objetivo' => $this->session->tendencias_objetivo ?? 10,
     ];
 }
 }
