@@ -10,6 +10,7 @@ use App\Http\Controllers\GameController;
 use App\Http\Controllers\GameSessionController;
 use App\Http\Controllers\QuestionImportController;
 use App\Http\Controllers\GameBonusController;
+use App\Http\Controllers\StreamDeckController;
 use App\Livewire\TeamAdmin;
 
 // Ruta raíz
@@ -17,7 +18,7 @@ Route::get('/', fn() => view('welcome'))->name('home');
 
 // Dashboard para invitados y usuarios autenticados
 Route::get('/guest-dashboard', fn() => view('guest-dashboard'))->name('guest-dashboard');
-Route::get('/dashboard', fn() => view('dashboard'))->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', fn() => view('dashboard'))->middleware(['auth', 'verified', 'admin'])->name('dashboard');
 
 // Perfil de usuario
 Route::middleware('auth')->group(function () {
@@ -29,8 +30,8 @@ Route::middleware('auth')->group(function () {
 // Panel admin
 //Route::middleware(['auth', IsAdmin::class])->get('/admin', fn() => view('admin'))->name('admin');
 
-// Preguntas (público)
-Route::get('/questions', [QuestionController::class, 'index'])->name('questions');
+// Preguntas (solo admin)
+Route::get('/questions', [QuestionController::class, 'index'])->middleware(['auth', 'admin'])->name('questions');
 
 // Rutas de administración de usuarios (solo admin)
 Route::middleware(['auth', IsAdmin::class])->group(function () {
@@ -107,8 +108,29 @@ Route::post('/participar/limpiar', [App\Http\Controllers\GameSessionController::
 Route::post('/participar/reset', [GameSessionController::class, 'resetParticipante'])->name('participar.reset');
 Route::post('/salir', [GameSessionController::class, 'salirDelJuego'])->name('salirDelJuego');
 
-// Chat
-Route::get('/chat', fn() => view('chat'))->middleware(['auth', 'verified'])->name('chat');
+// Chat (solo admin)
+Route::get('/chat', fn() => view('chat'))->middleware(['auth', 'admin'])->name('chat');
+
+// ─── Stream Deck API (sin CSRF, autenticada con STREAMDECK_TOKEN) ───────────
+// Usada por Bitfocus Companion para controlar el juego desde el hardware Stream Deck.
+// Companion pollea GET /sd/state?token=TOKEN cada ~1s y dispara POST /sd/{accion}
+Route::middleware(['streamdeck.auth'])->prefix('sd')->group(function () {
+    Route::get('/state',     [StreamDeckController::class, 'state']);     // Estado completo (para polling)
+    Route::post('/ruleta',   [StreamDeckController::class, 'ruleta']);    // Toggle girar/parar ruleta
+    Route::post('/revelar',  [StreamDeckController::class, 'revelar']);   // Revelar respuesta
+    Route::post('/refrescar',[StreamDeckController::class, 'refrescar']); // Reset overlay
+    Route::post('/apuesta',  [StreamDeckController::class, 'apuesta']);   // Toggle apuesta x2
+    Route::post('/descarte', [StreamDeckController::class, 'descarte']); // Usar descarte
+});
+
+// Stream Deck UI (solo admin)
+Route::get('/streamdeck', function () {
+    $activeSession = \App\Models\GameSession::where('status', 'active')->latest()->first();
+    $questionCount = $activeSession
+        ? \App\Models\GuestAnswer::where('game_session_id', $activeSession->id)->count()
+        : 0;
+    return view('streamdeck', compact('activeSession', 'questionCount'));
+})->middleware(['auth', 'admin'])->name('streamdeck');
 
 // Demo
 // routes/web.php

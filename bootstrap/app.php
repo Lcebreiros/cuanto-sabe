@@ -11,14 +11,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Registrar el middleware de administrador
+        // Registrar middlewares
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'admin'           => \App\Http\Middleware\AdminMiddleware::class,
+            'streamdeck.auth' => \App\Http\Middleware\StreamDeckAuth::class,
         ]);
 
-        // Excluir rutas del CSRF token (para overlays de OBS que pueden estar abiertos mucho tiempo)
+        // Excluir rutas del CSRF token
         $middleware->validateCsrfTokens(except: [
             '/overlay/lanzar-pregunta',
+            '/sd/*',          // Stream Deck API (autenticada con token)
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

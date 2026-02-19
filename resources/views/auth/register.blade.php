@@ -22,7 +22,7 @@
 
             <!-- Últimos 4 del DNI -->
             <div class="space-y-2">
-                <x-input-label for="dni_ultimo4" :value="__('Últimos 4 Dígitos del DNI')" class="text-lg" />
+                <x-input-label for="dni_ultimo4" :value="__('Crea un pin de 4 dígitos')" class="text-lg" />
                 <x-text-input 
                     id="dni_ultimo4" 
                     type="text" 

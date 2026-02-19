@@ -19,6 +19,11 @@
                 <span class="btn-hover-effect"></span>
             </a>
 
+            <a href="{{ route('streamdeck') }}" class="panel-btn">
+                <span class="btn-text">Stream Deck</span>
+                <span class="btn-hover-effect"></span>
+            </a>
+
                         <a href="{{ route('admin.team') }}" class="panel-btn">
                 <span class="btn-text">Equipo</span>
                 <span class="btn-hover-effect"></span>
