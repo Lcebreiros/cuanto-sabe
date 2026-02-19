@@ -138,6 +138,18 @@ public function revealAnswer(Request $request)
 
         $delta = 0;
         $tendencia = null;
+        $esOro = false;
+        $bonoEspecial = null;
+
+        // Detectar modo especial a partir del indicador guardado en la pregunta
+        $specialIndicator = strtolower($data['special_indicator'] ?? '');
+        if ($specialIndicator === 'pregunta de oro') {
+            $esOro = true;
+        } elseif (str_contains($specialIndicator, 'solo yo') || str_contains($specialIndicator, 'ahora yo')) {
+            $bonoEspecial = 'ahora_yo';
+        } elseif (str_contains($specialIndicator, 'responde el chat')) {
+            $bonoEspecial = 'confio';
+        }
 
         $selectedOption = session('selected_guest_option', null);
 
@@ -146,6 +158,7 @@ public function revealAnswer(Request $request)
             \Log::info('💾 GUARDAR RESPUESTA INVITADO');
             \Log::info('Selected Option: ' . $selectedOption);
             \Log::info('Data completo:', $data);
+            \Log::info('Modo especial detectado: esOro=' . ($esOro ? 'true' : 'false') . ', bonoEspecial=' . ($bonoEspecial ?? 'null'));
             \Log::info('========================================');
 
             // Calcular puntaje invitado
@@ -154,9 +167,9 @@ public function revealAnswer(Request $request)
                 $selectedOption,
                 $data['pregunta_id'],
                 $data['label_correcto'],
+                $esOro,
                 false,
-                false,
-                null
+                $bonoEspecial
             );
 
             // Guardar respuesta del invitado en guest_answers
@@ -215,7 +228,8 @@ public function revealAnswer(Request $request)
             $tendencia = $gamePoints->calcularTendencia($session->id, $data['pregunta_id']);
 
             // ✅ VERIFICAR SI EL PÚBLICO ACERTÓ LA TENDENCIA
-            if ($tendencia && $tendencia['option']) {
+            // En modo "Ahora yo" el público no responde, no se cuentan tendencias
+            if ($tendencia && $tendencia['option'] && $bonoEspecial !== 'ahora_yo') {
                 $tendenciaAcierta = (strtoupper($tendencia['option']) === strtoupper($data['label_correcto']));
 
                 if ($tendenciaAcierta) {
@@ -231,6 +245,8 @@ public function revealAnswer(Request $request)
                         'correcta' => $data['label_correcto']
                     ]);
                 }
+            } elseif ($bonoEspecial === 'ahora_yo') {
+                \Log::info('🔒 AHORA YO: tendencia no contabilizada');
             }
         }
 
@@ -285,6 +301,10 @@ public function revealAnswer(Request $request)
         // ✅ Refrescar sesión para obtener valores actualizados
         $session = $session->fresh();
 
+        // Conteo real de preguntas respondidas por el invitado
+        $questionCount = \App\Models\GuestAnswer::where('game_session_id', $session->id)->count();
+        $questionLimit = 15;
+
         // ✅ Broadcast general con toda la data necesaria y MANEJO DE ERRORES
         try {
             broadcast(new \App\Events\RevealAnswerOverlay([
@@ -298,12 +318,16 @@ public function revealAnswer(Request $request)
                 'tendencia' => $tendencia,
                 'racha_publico' => $rachaPublico,
                 'victoria' => $victoria,
-                'golden' => ($data['special_indicator'] ?? null) === 'PREGUNTA DE ORO',
+                'golden' => strtolower($data['special_indicator'] ?? '') === 'pregunta de oro',
                 // ✅ Agregar información de tendencias del público
                 'tendencias_acertadas' => $session->tendencias_acertadas,
                 'tendencias_objetivo' => $session->tendencias_objetivo,
                 'tendencias_restantes' => $session->tendenciasRestantes(),
                 'publico_gano' => $session->publicoGano(),
+                // ✅ Contador de preguntas del invitado
+                'question_count' => $questionCount,
+                'question_limit' => $questionLimit,
+                'question_limit_reached' => ($questionCount >= $questionLimit),
             ]));
         } catch (\Throwable $e) {
             \Log::error('❌ Error crítico en broadcast RevealAnswerOverlay', [
@@ -743,6 +767,16 @@ public function lanzarPreguntaCategoria(Request $request)
         if (!$categoriaModel) {
             return response()->json(['error' => 'Categoría no encontrada: '.$categoria], 404);
         }
+    }
+
+    // ✅ VERIFICAR LÍMITE DE 15 PREGUNTAS DEL INVITADO
+    $questionCount = \App\Models\GuestAnswer::where('game_session_id', $session->id)->count();
+    if ($questionCount >= 15) {
+        return response()->json([
+            'error' => 'Límite de 15 preguntas alcanzado. El juego del invitado ha terminado.',
+            'limit_reached' => true,
+            'question_count' => $questionCount,
+        ], 422);
     }
 
     // ✅ BUSCAR PREGUNTA ALEATORIA EXCLUYENDO LA ANTERIOR

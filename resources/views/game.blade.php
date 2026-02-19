@@ -2083,8 +2083,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mostrar badge de número de pregunta si ya hay preguntas guardadas
     const badge = document.getElementById('questionNumberBadge');
     if (badge && panelQuestionCounter > 0) {
-        badge.textContent = `Pregunta ${panelQuestionCounter}`;
+        badge.textContent = `Pregunta ${panelQuestionCounter}/15`;
         badge.classList.add('active');
+        if (panelQuestionCounter >= 15) {
+            badge.style.background = 'rgba(255, 68, 68, 0.2)';
+            badge.style.borderColor = 'rgba(255, 68, 68, 0.5)';
+            badge.style.color = '#ff6666';
+        }
     }
 });
 
@@ -2226,12 +2231,19 @@ if (window.Echo) {
             }
         }
 
-        // Incrementar contador y mostrar badge
-        panelQuestionCounter++;
+        // Incrementar contador solo para preguntas reales (con opciones)
+        // Los eventos de modos especiales (primer giro) no tienen opciones y no cuentan
+        if (opciones && opciones.length > 0) {
+            panelQuestionCounter++;
+        }
         const badge = document.getElementById('questionNumberBadge');
-        if (badge) {
-            badge.textContent = `Pregunta ${panelQuestionCounter}`;
+        if (badge && panelQuestionCounter > 0) {
+            badge.textContent = `Pregunta ${panelQuestionCounter}/15`;
             badge.classList.add('active');
+            badge.style.background = '';
+            badge.style.borderColor = '';
+            badge.style.color = '';
+            badge.title = '';
         }
 
         ['A','B','C','D'].forEach((l) => {
@@ -2356,7 +2368,7 @@ if (window.Echo) {
 if (window.Echo) {
     Echo.channel('cuanto-sabe-overlay')
         .listen('.revelar-respuesta', (e) => {
-            const payload = e.data || {};
+            const payload = e.data || e || {};
 
             // Actualizar texto de tendencia en botones
             ['A','B','C','D'].forEach(l => {
@@ -2366,12 +2378,13 @@ if (window.Echo) {
                 if (btn.dataset.baseText) btn.textContent = btn.dataset.baseText;
             });
 
-            if (payload.tendencia?.option_label) {
-                const trendBtn = document.getElementById('panel'+payload.tendencia.option_label);
+            const tendenciaOption = payload.tendencia?.option ?? payload.tendencia?.option_label;
+            if (tendenciaOption) {
+                const trendBtn = document.getElementById('panel' + tendenciaOption);
                 if (trendBtn) {
                     trendBtn.classList.add('trend');
                     const base = trendBtn.dataset.baseText || '';
-                    trendBtn.textContent = `${base} — Tendencia (${payload.tendencia.total})`;
+                    trendBtn.textContent = `${base} — Tendencia (${payload.tendencia.votes ?? payload.tendencia.total ?? ''})`;
                 }
             }
 
@@ -2389,14 +2402,29 @@ if (window.Echo) {
                     restantes: payload.tendencias_restantes
                 });
 
-                // Verificar si el público ganó
                 if (payload.publico_gano) {
                     console.log('🎉 ¡EL PÚBLICO GANÓ!');
-                    // Aquí puedes agregar una alerta o animación
                 }
             }
 
-            console.log(payload);
+            // ✅ ACTUALIZAR BADGE DE PREGUNTA con conteo real desde BD
+            if (typeof payload.question_count !== 'undefined') {
+                panelQuestionCounter = payload.question_count;
+                const badge = document.getElementById('questionNumberBadge');
+                if (badge) {
+                    const limit = payload.question_limit || 15;
+                    badge.textContent = `Pregunta ${payload.question_count}/${limit}`;
+                    badge.classList.add('active');
+                    if (payload.question_limit_reached) {
+                        badge.style.background = 'rgba(255, 68, 68, 0.2)';
+                        badge.style.borderColor = 'rgba(255, 68, 68, 0.5)';
+                        badge.style.color = '#ff6666';
+                        badge.title = 'Límite de 15 preguntas alcanzado';
+                    }
+                }
+            }
+
+            console.log('[revelar-respuesta]', payload);
         });
 }
 // Función para activar/desactivar pantalla completa

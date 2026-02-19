@@ -107,6 +107,9 @@ Route::post('/participar/limpiar', [App\Http\Controllers\GameSessionController::
 Route::post('/participar/reset', [GameSessionController::class, 'resetParticipante'])->name('participar.reset');
 Route::post('/salir', [GameSessionController::class, 'salirDelJuego'])->name('salirDelJuego');
 
+// Chat
+Route::get('/chat', fn() => view('chat'))->middleware(['auth', 'verified'])->name('chat');
+
 // Demo
 // routes/web.php
 Route::view('/demo', 'demo')->name('demo');

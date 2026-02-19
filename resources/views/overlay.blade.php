@@ -326,18 +326,28 @@
     text-shadow: 0 0 13px #ffe47a99, 0 0 4px #fff7;
 }
 .indicator-banner {
-    position: fixed;
-    top: 20px;
-    left: 20px;
+    display: inline-flex;
+    align-items: center;
     padding: 10px 20px;
     font-weight: bold;
-    font-family: sans-serif;
-    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 1.2px;
+    border-radius: 12px;
     border: 2.2px solid;
     text-shadow: 0 0 7px #19faffaa, 0 2px 2px #012;
-    box-shadow: 0 0 19px 2px #36d1ff88, 0 0 0.5px #fff2, 0 0 0px #000;
+    box-shadow: 0 0 19px 2px #36d1ff88, 0 0 0.5px #fff2;
     transition: all 0.3s ease-in-out;
-    z-index: 9999;
+}
+
+.bonus-indicators-row {
+    display: flex;
+    gap: 14px;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto 10px auto;
 }
 
 /* Banners distintos */
@@ -356,16 +366,6 @@
 
 </style>
 
-<div style="display: flex; gap: 10px; justify-content: flex-start;">
-    <div id="descarta-indicator" class="indicator-banner" style="display: none;">
-        DESCARTE USADO
-    </div>
-
-    <div id="apuesta-indicator" class="indicator-banner" style="display: none;">
-        APUESTA USADA
-    </div>
-</div>
-
 
 </head>
 <body>
@@ -380,6 +380,17 @@
 </div>
   </div>
   <div class="question-bar" id="questionBar">Esperando pregunta...</div>
+
+  <!-- Indicadores de bonos: apuesta y descarte, lado a lado -->
+  <div class="bonus-indicators-row" id="bonusIndicatorsRow">
+      <div id="apuesta-indicator" class="indicator-banner" style="display: none;">
+          APUESTA x2 ACTIVA
+      </div>
+      <div id="descarta-indicator" class="indicator-banner" style="display: none;">
+          DESCARTE USADO
+      </div>
+  </div>
+
         <div class="answers-row">
             <div class="option-box" id="opA">
                 <span class="opt-label">A</span>
@@ -532,6 +543,12 @@ function resetOverlay() {
     banner.style.display = 'none';
     banner.classList.remove('banner-oro', 'banner-verde', 'banner-azul');
     pendingSpecialBanner = null; // ⚡️ LIMPIA TODO por si acaso
+
+    // Ocultar indicadores de bonos al resetear
+    const apuestaInd = document.getElementById('apuesta-indicator');
+    const descarteInd = document.getElementById('descarta-indicator');
+    if (apuestaInd) apuestaInd.style.display = 'none';
+    if (descarteInd) descarteInd.style.display = 'none';
     currentOptions = [];
     correctLabel = null;
     ultimaSeleccionPanel = null;
@@ -749,21 +766,21 @@ window.Echo.channel('cuanto-sabe-overlay')
     })
 .listen('.GameBonusUpdated', (event) => {
         console.log('[BONUS] Evento recibido:', event);
-        
-        // Mostrar/ocultar indicador de Apuesta x2
+
+        // Indicador de Apuesta x2: visible solo mientras está activa
         const apuestaIndicator = document.getElementById('apuesta-indicator');
-        if (event.apuesta_x2_active) {
-            apuestaIndicator.style.display = 'block';
-        } else {
-            apuestaIndicator.style.display = 'none';
+        if (apuestaIndicator) {
+            apuestaIndicator.style.display = event.apuesta_x2_active ? 'inline-flex' : 'none';
         }
-        
-        // Mostrar/ocultar indicador de Descarte
+
+        // Indicador de Descarte: mostrar por 5 segundos y luego ocultar
         const descarteIndicator = document.getElementById('descarta-indicator');
-        if (event.descarte_usados > 0) {
-            descarteIndicator.style.display = 'block';
-        } else {
-            descarteIndicator.style.display = 'none';
+        if (descarteIndicator && event.descarte_usados > 0) {
+            descarteIndicator.style.display = 'inline-flex';
+            clearTimeout(window._descarteIndicatorTimeout);
+            window._descarteIndicatorTimeout = setTimeout(() => {
+                descarteIndicator.style.display = 'none';
+            }, 5000);
         }
     })
     .listen('.opcion-seleccionada', e => {

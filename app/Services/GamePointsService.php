@@ -70,7 +70,9 @@ public static function calcularPuntajeInvitado(
     $selectedOptionNorm = strtoupper(trim((string)$selectedOption));
     $labelCorrectoNorm  = strtoupper(trim((string)$labelCorrecto));
 
-    if ($esOro) return 5;
+    if ($esOro) {
+        return ($selectedOptionNorm === $labelCorrectoNorm) ? 5 : 0;
+    }
 
     if ($bonoEspecial === 'confio') {
         $tendencia = self::calcularTendencia($gameSessionId, $questionId);
