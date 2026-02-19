@@ -208,6 +208,47 @@
             pointer-events: none;
         }
 
+        .fullscreen-btn-minimal {
+    background: rgba(79, 70, 229, 0.15);
+    color: #818cf8;
+    border: 1.5px solid rgba(129, 140, 248, 0.3);
+    border-radius: 8px;
+    padding: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;  /* Evita que se comprima */
+}
+
+.fullscreen-btn-minimal:hover {
+    background: rgba(79, 70, 229, 0.25);
+    border-color: rgba(129, 140, 248, 0.5);
+    color: #c7d2fe;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.fullscreen-btn-minimal:active {
+    transform: translateY(0);
+}
+
+.fullscreen-btn-minimal.active {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(52, 211, 153, 0.5);
+    color: #6ee7b7;
+}
+
+.fullscreen-btn-minimal.active:hover {
+    background: rgba(16, 185, 129, 0.3);
+    border-color: rgba(52, 211, 153, 0.7);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
         /* ─── PANEL INFO ────────────────────────────────────── */
         .sd-info {
             display: flex;
@@ -309,6 +350,24 @@
             Volver
         </a>
         <span class="chat-title">Chat</span>
+
+        <!-- Botón Pantalla Completa -->
+        <div class="power-toggle-container">
+            <button type="button"
+                id="fullscreenBtn"
+                class="fullscreen-btn-minimal"
+                onclick="toggleFullscreen()"
+                title="Pantalla completa (Ctrl+F)">
+                <!-- Ícono expandir -->
+                <svg class="fs-icon expand" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                </svg>
+                <!-- Ícono contraer -->
+                <svg class="fs-icon compress" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+                </svg>
+            </button>
+        </div>
     </div>
 </head>
 <body>
