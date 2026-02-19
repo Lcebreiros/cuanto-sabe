@@ -37,6 +37,26 @@
             height: 100dvh;
         }
 
+            .chat-wrapper {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        background: #080818;
+    }
+
+    .chat-topbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px;
+        background: rgba(10, 14, 35, 0.98);
+        border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+        flex-shrink: 0;
+        height: 44px;
+    }
+
         /* ─── BOTÓN BASE ────────────────────────────────────── */
         .sd-btn {
             display: flex;
