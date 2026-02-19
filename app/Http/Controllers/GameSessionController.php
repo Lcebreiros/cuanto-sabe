@@ -228,8 +228,8 @@ public function revealAnswer(Request $request)
             $tendencia = $gamePoints->calcularTendencia($session->id, $data['pregunta_id']);
 
             // ✅ VERIFICAR SI EL PÚBLICO ACERTÓ LA TENDENCIA
-            // En modo "Ahora yo" el público no responde, no se cuentan tendencias
-            if ($tendencia && $tendencia['option'] && $bonoEspecial !== 'ahora_yo') {
+            // En modo "Ahora yo" o "Pregunta de oro" el público no responde, no se cuentan tendencias
+            if ($tendencia && $tendencia['option'] && $bonoEspecial !== 'ahora_yo' && !$esOro) {
                 $tendenciaAcierta = (strtoupper($tendencia['option']) === strtoupper($data['label_correcto']));
 
                 if ($tendenciaAcierta) {
@@ -708,22 +708,32 @@ public function lanzarPreguntaCategoria(Request $request)
     } 
     // Pregunta de oro
     elseif ($categoriaLower === 'pregunta de oro') {
+        // El público no puede contestar → reducir objetivo de tendencias
+        $session->reducirObjetivoTendencias();
+        \Log::info('🥇 PREGUNTA DE ORO: Reducido objetivo de tendencias', [
+            'tendencias_objetivo' => $session->tendencias_objetivo,
+            'tendencias_restantes' => $session->tendenciasRestantes()
+        ]);
+
         $data = [
             'pregunta' => strtoupper($categoria),
             'opciones' => [],
             'label_correcto' => null,
             'pregunta_id' => null,
             'categoria_id' => null,
-            'categoria_nombre' => 'Pregunta de Oro', // ✅ AGREGADO
+            'categoria_nombre' => 'Pregunta de Oro',
             'timestamp' => now()->toISOString(),
             'special_indicator' => $specialSlot ?? strtoupper($categoria),
+            'tendencias_acertadas' => $session->tendencias_acertadas,
+            'tendencias_objetivo' => $session->tendencias_objetivo,
+            'tendencias_restantes' => $session->tendenciasRestantes(),
         ];
         $session->active_question_id = null;
         $session->pregunta_json = null;
         $session->save();
-        
+
         session(['last_overlay_question' => $data]);
-        
+
         broadcast(new NuevaPreguntaOverlay($data));
         return response()->json(['ok' => true]);
     }
@@ -747,10 +757,14 @@ public function lanzarPreguntaCategoria(Request $request)
             'label_correcto' => null,
             'pregunta_id' => null,
             'categoria_id' => null,
-            'categoria_nombre' => ucwords($categoria), // ✅ AGREGADO (capitaliza: "Solo Yo", "Responde El Chat")
+            'categoria_nombre' => ucwords($categoria),
             'timestamp' => now()->toISOString(),
             'special_indicator' => $specialSlot ?? strtoupper($categoria),
             'disable_public_answers' => $disablePublic,
+            // Incluir tendencias actualizadas para que el panel se actualice al instante
+            'tendencias_acertadas' => $session->tendencias_acertadas,
+            'tendencias_objetivo' => $session->tendencias_objetivo,
+            'tendencias_restantes' => $session->tendenciasRestantes(),
         ];
         $session->active_question_id = null;
         $session->pregunta_json = null;

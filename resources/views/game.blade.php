@@ -2200,6 +2200,14 @@ if (window.Echo) {
         const opciones = data.opciones || (data.data ? data.data.opciones : []) || [];
         const slotSpecial = data.slot_special || (data.data ? data.data.slot_special : '') || '';
 
+        // Actualizar contador de tendencias si el slot redujo el objetivo (Solo yo / Pregunta de oro)
+        if (typeof data.tendencias_acertadas !== 'undefined') {
+            const acertadasEl = document.getElementById('tendenciasAcertadas');
+            const objetivoEl  = document.getElementById('tendenciasObjetivo');
+            if (acertadasEl) acertadasEl.textContent = data.tendencias_acertadas;
+            if (objetivoEl)  objetivoEl.textContent  = data.tendencias_objetivo;
+        }
+
         // 🔥 GUARDAR EN VARIABLE GLOBAL
         lastOverlayQuestion = data;
         console.log('✅ Pregunta guardada en lastOverlayQuestion:', lastOverlayQuestion);
