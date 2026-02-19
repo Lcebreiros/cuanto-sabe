@@ -348,9 +348,7 @@
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
             Volver
-        </a>
-        <span class="chat-title">Chat</span>
-
+        </a>a
         <!-- Botón Pantalla Completa -->
         <div class="power-toggle-container">
             <button type="button"
