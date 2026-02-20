@@ -182,4 +182,28 @@ class StreamDeckController extends Controller
         Log::info('[STREAMDECK] Descarte usado');
         return app(GameBonusController::class)->toggleDescarte($request);
     }
+
+    /**
+     * POST /sd/opcion/{label}
+     * Selecciona la respuesta del invitado (A, B, C o D).
+     */
+    public function opcion(Request $request, string $label)
+    {
+        $label = strtoupper($label);
+
+        if (!in_array($label, ['A', 'B', 'C', 'D'])) {
+            return response()->json(['error' => 'Opción inválida. Debe ser A, B, C o D.'], 422);
+        }
+
+        $session = $this->session();
+        if (!$session) {
+            return response()->json(['error' => 'No hay sesión activa'], 422);
+        }
+
+        $request->merge(['opcion' => $label]);
+
+        Log::info("[STREAMDECK] Opción seleccionada: {$label}");
+
+        return app(GameSessionController::class)->selectOption($request);
+    }
 }

@@ -26,36 +26,73 @@
         }
 
         /* ─── GRID ─────────────────────────────────────────── */
+        .chat-wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            background: #080818;
+        }
+
+        .chat-topbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(10, 14, 35, 0.98);
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+            flex-shrink: 0;
+            height: 44px;
+        }
+
+        .chat-back-btn {
+            background: rgba(0, 240, 255, 0.1);
+            color: #00f0ff;
+            border: 1.5px solid rgba(0, 240, 255, 0.35);
+            border-radius: 8px;
+            padding: 5px 12px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .chat-back-btn:hover {
+            background: rgba(0, 240, 255, 0.22);
+            border-color: #00f0ff;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);
+        }
+
+        .chat-back-btn svg {
+            width: 13px;
+            height: 13px;
+            flex-shrink: 0;
+        }
+
+        .chat-title {
+            color: #00f0ff;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
         .sd-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(2, 1fr);
             gap: clamp(4px, 1.2vmin, 12px);
             padding: clamp(5px, 1.5vmin, 14px);
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
+            width: 100%;
+            flex: 1;
         }
-
-            .chat-wrapper {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: 100vh;
-        height: 100dvh;
-        background: #080818;
-    }
-
-    .chat-topbar {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 8px 16px;
-        background: rgba(10, 14, 35, 0.98);
-        border-bottom: 1px solid rgba(0, 240, 255, 0.2);
-        flex-shrink: 0;
-        height: 44px;
-    }
 
         /* ─── BOTÓN BASE ────────────────────────────────────── */
         .sd-btn {
@@ -341,34 +378,32 @@
         }
     </style>
 
-    <div class="chat-wrapper">
+</head>
+<body>
+
+<div class="chat-wrapper">
     <div class="chat-topbar">
         <a href="{{ route('dashboard') }}" class="chat-back-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
             Volver
-        </a>a
-        <!-- Botón Pantalla Completa -->
-        <div class="power-toggle-container">
-            <button type="button"
-                id="fullscreenBtn"
-                class="fullscreen-btn-minimal"
-                onclick="toggleFullscreen()"
-                title="Pantalla completa (Ctrl+F)">
-                <!-- Ícono expandir -->
-                <svg class="fs-icon expand" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-                </svg>
-                <!-- Ícono contraer -->
-                <svg class="fs-icon compress" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
-                </svg>
-            </button>
-        </div>
+        </a>
+        <span class="chat-title">Stream Deck</span>
+        <button type="button"
+            id="fullscreenBtn"
+            class="fullscreen-btn-minimal"
+            onclick="toggleFullscreen()"
+            title="Pantalla completa (Ctrl+F)"
+            style="margin-left: auto;">
+            <svg class="fs-icon expand" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+            <svg class="fs-icon compress" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+            </svg>
+        </button>
     </div>
-</head>
-<body>
 
 <div class="sd-grid" id="sdGrid">
 
@@ -448,7 +483,8 @@
         @endif
     </div>
 
-</div>
+</div>{{-- sd-grid --}}
+</div>{{-- chat-wrapper --}}
 
 <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.11.3/echo.iife.js"></script>

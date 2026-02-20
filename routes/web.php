@@ -119,8 +119,9 @@ Route::middleware(['streamdeck.auth'])->prefix('sd')->group(function () {
     Route::post('/ruleta',   [StreamDeckController::class, 'ruleta']);    // Toggle girar/parar ruleta
     Route::post('/revelar',  [StreamDeckController::class, 'revelar']);   // Revelar respuesta
     Route::post('/refrescar',[StreamDeckController::class, 'refrescar']); // Reset overlay
-    Route::post('/apuesta',  [StreamDeckController::class, 'apuesta']);   // Toggle apuesta x2
-    Route::post('/descarte', [StreamDeckController::class, 'descarte']); // Usar descarte
+    Route::post('/apuesta',       [StreamDeckController::class, 'apuesta']);        // Toggle apuesta x2
+    Route::post('/descarte',      [StreamDeckController::class, 'descarte']);       // Usar descarte
+    Route::post('/opcion/{label}',[StreamDeckController::class, 'opcion']);         // Seleccionar opción A/B/C/D
 });
 
 // Stream Deck UI (solo admin)

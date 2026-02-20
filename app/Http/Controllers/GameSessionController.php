@@ -411,8 +411,8 @@ public function revealAnswer(Request $request)
             'timestamp' => now()->toISOString(),
         ];
 
-        // Si hay un indicador especial pendiente (ej.: "PREGUNTA DE ORO"),
-        // heredarlo para que revealAnswer aplique el scoring correcto (+5/0).
+        // Si hay un indicador especial pendiente (ej.: "PREGUNTA DE ORO", "SOLO YO"),
+        // heredarlo para que revealAnswer aplique el scoring correcto y participar bloquee al público.
         $pendingIndicator = session('pending_special_indicator');
         if ($pendingIndicator) {
             $data['special_indicator'] = $pendingIndicator;
@@ -421,6 +421,13 @@ public function revealAnswer(Request $request)
                 'indicator' => $pendingIndicator,
                 'pregunta_id' => $pregunta->id,
             ]);
+        }
+
+        $pendingDisablePublic = session('pending_disable_public');
+        if ($pendingDisablePublic) {
+            $data['disable_public_answers'] = true;
+            session()->forget('pending_disable_public');
+            \Log::info('🔒 sendRandomQuestion: heredando disable_public_answers (Solo Yo)');
         }
 
         session([
@@ -784,6 +791,11 @@ public function lanzarPreguntaCategoria(Request $request)
             \Log::info('🔒 SOLO YO: Reducido objetivo de tendencias', [
                 'tendencias_objetivo' => $session->tendencias_objetivo,
                 'tendencias_restantes' => $session->tendenciasRestantes()
+            ]);
+            // Guardar pending para que sendRandomQuestion herede el indicador y bloquee al público
+            session([
+                'pending_special_indicator' => 'SOLO YO',
+                'pending_disable_public'    => true,
             ]);
         }
 
