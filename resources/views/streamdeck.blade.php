@@ -567,6 +567,7 @@ let hasActiveQuestion = false;
 let questionCount     = {{ $questionCount }};
 const hasSession      = {{ $activeSession ? 'true' : 'false' }};
 let currentOpcion     = null;   // Opción seleccionada actualmente (A/B/C/D)
+let isRevealed        = false;  // Bloquea revelar la misma pregunta dos veces
 
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
@@ -693,8 +694,24 @@ function handleRuleta() {
     .catch(() => { isSpinning = !isSpinning; syncRuletaUI(); });
 }
 
+function syncRevelarBtn() {
+    const btn = document.getElementById('btnRevelar');
+    if (!btn) return;
+    if (isRevealed) {
+        btn.style.opacity       = '0.3';
+        btn.style.pointerEvents = 'none';
+        const span = btn.querySelector('.btn-label');
+        if (span) span.textContent = 'REVELADO';
+    } else {
+        btn.style.opacity       = '';
+        btn.style.pointerEvents = '';
+        const span = btn.querySelector('.btn-label');
+        if (span) span.textContent = 'REVELAR';
+    }
+}
+
 function handleRevelar() {
-    if (!hasSession) return;
+    if (!hasSession || isRevealed) return;
     fetch('/game-session/reveal', {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': CSRF, 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -702,7 +719,13 @@ function handleRevelar() {
         body: JSON.stringify({ selected_option: currentOpcion })
     })
     .then(r => r.json())
-    .then(d => flash(document.getElementById('btnRevelar'), d.success ? 'ok' : 'err'))
+    .then(d => {
+        if (d.success || d.already_revealed) {
+            isRevealed = true;
+            syncRevelarBtn();
+        }
+        flash(document.getElementById('btnRevelar'), (d.success || d.already_revealed) ? 'ok' : 'err');
+    })
     .catch(() => flash(document.getElementById('btnRevelar'), 'err'));
 }
 
@@ -807,7 +830,9 @@ if (window.Echo && hasSession) {
         const opciones = data.opciones || [];
         hasActiveQuestion = opciones.length > 0;
 
-        // Limpiar selección anterior y poblar textos de opciones
+        // Resetear reveal y selección
+        isRevealed = false;
+        syncRevelarBtn();
         currentOpcion = null;
         ['A','B','C','D'].forEach(l => {
             const txt = document.getElementById('opText' + l);
@@ -838,7 +863,7 @@ if (window.Echo && hasSession) {
         }
     });
 
-    // Revelar respuesta → actualizar contador real desde backend
+    // Revelar respuesta → marcar como revelado + actualizar contador
     ch.listen('.revelar-respuesta', (e) => {
         const payload = e.data || e || {};
         if (typeof payload.question_count !== 'undefined') {
@@ -846,16 +871,55 @@ if (window.Echo && hasSession) {
             syncQCount();
         }
         hasActiveQuestion = false;
-        syncOpcionUI(); // deshabilitar opciones tras revelar
+        isRevealed = true;
+        syncRevelarBtn();
+        syncOpcionUI();
     });
 
     // Reset overlay
     ch.listen('.overlay-reset', () => {
         hasActiveQuestion = false;
+        isRevealed = false;
+        syncRevelarBtn();
         clearOpcionUI();
         if (isSpinning) { isSpinning = false; syncRuletaUI(); }
     });
 }
+
+// Restaurar estado al cargar/refrescar la página
+document.addEventListener('DOMContentLoaded', () => {
+    if (!hasSession) return;
+    fetch('/overlay/api/pregunta')
+        .then(r => r.json())
+        .then(data => {
+            if (!data || !data.pregunta_id || !data.opciones || !data.opciones.length) return;
+
+            hasActiveQuestion = true;
+
+            // Poblar textos de opciones
+            const opciones = data.opciones || [];
+            ['A','B','C','D'].forEach(l => {
+                const txt = document.getElementById('opText' + l);
+                if (!txt) return;
+                const op = opciones.find(o => o.label === l);
+                txt.textContent = op ? op.texto : '';
+            });
+
+            // Restaurar opción revelada
+            if (data.revealed_option) {
+                currentOpcion = data.revealed_option.toUpperCase();
+            }
+
+            // Restaurar estado de reveal
+            if (data.is_revealed) {
+                isRevealed = true;
+                syncRevelarBtn();
+            }
+
+            syncOpcionUI();
+        })
+        .catch(e => console.warn('[SD] No se pudo restaurar estado:', e));
+});
 
 // Función para activar/desactivar pantalla completa
 function toggleFullscreen() {

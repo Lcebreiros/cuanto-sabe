@@ -136,6 +136,15 @@ public function revealAnswer(Request $request)
 
         $gamePoints = app(\App\Services\GamePointsService::class);
 
+        // Prevenir doble reveal de la misma pregunta
+        if (!empty($data['pregunta_id'])) {
+            $revealedKey = 'revealed_question_' . $session->id . '_' . $data['pregunta_id'];
+            if (Cache::has($revealedKey)) {
+                \Log::warning('[REVEAL] Pregunta ya fue revelada, ignorando segunda llamada', ['pregunta_id' => $data['pregunta_id']]);
+                return response()->json(['error' => 'Esta pregunta ya fue revelada', 'already_revealed' => true], 409);
+            }
+        }
+
         $delta = 0;
         $tendencia = null;
         $esOro = false;
@@ -360,6 +369,17 @@ public function revealAnswer(Request $request)
         $questionCount = \App\Models\GuestAnswer::where('game_session_id', $session->id)->count();
         $questionLimit = 15;
 
+        // Top participante individual (solo se incluye al llegar al límite de preguntas)
+        $topParticipant = null;
+        if ($questionCount >= $questionLimit) {
+            $topP = \App\Models\ParticipantSession::where('game_session_id', $session->id)
+                ->orderBy('puntaje', 'desc')
+                ->first();
+            if ($topP) {
+                $topParticipant = ['username' => $topP->username, 'puntaje' => $topP->puntaje];
+            }
+        }
+
         // ✅ Broadcast general con toda la data necesaria y MANEJO DE ERRORES
         try {
             broadcast(new \App\Events\RevealAnswerOverlay([
@@ -383,6 +403,8 @@ public function revealAnswer(Request $request)
                 'question_count' => $questionCount,
                 'question_limit' => $questionLimit,
                 'question_limit_reached' => ($questionCount >= $questionLimit),
+                // ✅ Mejor participante individual (solo al finalizar)
+                'top_participant' => $topParticipant,
             ]));
         } catch (\Throwable $e) {
             \Log::error('❌ Error crítico en broadcast RevealAnswerOverlay', [
@@ -392,10 +414,17 @@ public function revealAnswer(Request $request)
             // No fallar la operación, los datos ya están guardados en BD
         }
 
+        // Marcar pregunta como revelada para prevenir doble reveal
+        // y para poder restaurar la opción seleccionada si el panel se refresca
+        if (!empty($data['pregunta_id'])) {
+            Cache::put('revealed_question_' . $session->id . '_' . $data['pregunta_id'], true, now()->addHours(3));
+            Cache::put('revealed_option_' . $session->id, $selectedOption, now()->addHours(3));
+        }
+
         \Log::info('✅ REVEAL: Completado exitosamente', [
             'participantes_notificados' => count($puntajes)
         ]);
-        
+
         return response()->json(['success' => true]);
         
     } catch (\Throwable $e) {
@@ -529,13 +558,15 @@ public function overlayReset(Request $request)
 
     if ($session) {
         if ($session->active_question_id !== null || $session->pregunta_json !== null) {
-            // Limpiar flag de tendencia ya contada para la pregunta activa
+            // Limpiar flags de la pregunta activa
             if ($session->pregunta_json) {
                 $preguntaData = json_decode($session->pregunta_json, true);
                 if (!empty($preguntaData['pregunta_id'])) {
-                    Cache::forget('tendencia_contada_' . $session->id . '_' . $preguntaData['pregunta_id']);
+                    Cache::forget('tendencia_contada_'  . $session->id . '_' . $preguntaData['pregunta_id']);
+                    Cache::forget('revealed_question_'  . $session->id . '_' . $preguntaData['pregunta_id']);
                 }
             }
+            Cache::forget('revealed_option_' . $session->id);
 
             $session->active_question_id = null;
             $session->pregunta_json = null;
@@ -1155,20 +1186,24 @@ public function enviarParticipacion(Request $request)
 
 public function apiActiveQuestion()
 {
-    // 🔥 Aumentar TTL y evitar writes innecesarios
     $session = Cache::remember("game_session_active_question", 8, function () {
-        $session = GameSession::where('status', 'active')->latest()->first();
-        return $session ? [
-            'pregunta_json' => $session->pregunta_json,
-            'id' => $session->id
-        ] : null;
+        $s = GameSession::where('status', 'active')->latest()->first();
+        return $s ? ['pregunta_json' => $s->pregunta_json, 'id' => $s->id] : null;
     });
 
     if (!$session || !$session['pregunta_json']) {
         return response()->json(['pregunta' => null]);
     }
-    
-    return response()->json(json_decode($session['pregunta_json'], true));
+
+    $data      = json_decode($session['pregunta_json'], true);
+    $sessionId = $session['id'];
+
+    // Agregar estado de reveal en tiempo real (no cacheado para que sea siempre fresco)
+    $data['is_revealed']    = !empty($data['pregunta_id'])
+        && Cache::has('revealed_question_' . $sessionId . '_' . $data['pregunta_id']);
+    $data['revealed_option'] = Cache::get('revealed_option_' . $sessionId) ?: null;
+
+    return response()->json($data);
 }
 
 public function limpiarPreguntaParticipante()

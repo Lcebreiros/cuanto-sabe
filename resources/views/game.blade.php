@@ -2000,12 +2000,17 @@ function girarRuleta() {
 let lastOverlayQuestion = null;
 let panelQuestionCounter = {{ $questionCount }};
 let currentSelectedOption = null;  // Opción seleccionada en el panel (sincrónico, sin race condition)
+let isRevealed = false;            // Bloquea revelar la misma pregunta dos veces
 
 
 // Función de revelar
 function revelarRespuesta() {
     if (!lastOverlayQuestion) {
         console.warn("No hay pregunta activa aún");
+        return;
+    }
+    if (isRevealed) {
+        console.warn("Esta pregunta ya fue revelada");
         return;
     }
 
@@ -2022,12 +2027,34 @@ function revelarRespuesta() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
+            isRevealed = true;
+            updateRevealBtnState();
             console.log("Respuesta revelada correctamente");
+        } else if (data.already_revealed) {
+            isRevealed = true;
+            updateRevealBtnState();
+            console.warn("Pregunta ya revelada previamente");
         } else {
             console.warn("No se pudo revelar:", data.error);
         }
     })
     .catch(err => console.error("Error al revelar:", err));
+}
+
+function updateRevealBtnState() {
+    const btn = document.getElementById('revealBtn');
+    if (!btn) return;
+    if (isRevealed) {
+        btn.disabled = true;
+        btn.style.opacity = '0.35';
+        const span = btn.querySelector('span');
+        if (span) span.textContent = 'Revelado';
+    } else {
+        btn.disabled = false;
+        btn.style.opacity = '';
+        const span = btn.querySelector('span');
+        if (span) span.textContent = 'Revelar';
+    }
 }
 
 // Asignar onclick
@@ -2142,6 +2169,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.classList.remove('selected', 'trend');
             });
 
+            // Restaurar opción revelada (si ya se reveló antes del refresh)
+            if (data.revealed_option) {
+                currentSelectedOption = data.revealed_option;
+                const selBtn = document.getElementById('panel' + data.revealed_option);
+                if (selBtn) selBtn.classList.add('selected');
+            }
+
+            // Restaurar estado de reveal
+            if (data.is_revealed) {
+                isRevealed = true;
+                updateRevealBtnState();
+            }
+
             // Habilitar botones de bonos
             const apuestaBtn = document.getElementById('apuesta-btn');
             const descarteBtn = document.getElementById('descarte-btn');
@@ -2155,7 +2195,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 badgeEl.classList.add('active');
             }
 
-            console.log('[Panel] Pregunta restaurada desde BD tras recarga:', data.pregunta_id);
+            console.log('[Panel] Pregunta restaurada desde BD tras recarga:', data.pregunta_id,
+                '| revelada:', data.is_revealed, '| opción:', data.revealed_option);
         })
         .catch(e => console.warn('[Panel] No se pudo restaurar pregunta activa:', e));
 });
@@ -2278,6 +2319,11 @@ if (window.Echo) {
         const opciones = data.opciones || (data.data ? data.data.opciones : []) || [];
         const slotSpecial = data.slot_special || (data.data ? data.data.slot_special : '') || '';
 
+        // Resetear estado de reveal y selección al llegar nueva pregunta
+        isRevealed = false;
+        currentSelectedOption = null;
+        updateRevealBtnState();
+
         // Actualizar contador de tendencias si el slot redujo el objetivo (Solo yo / Pregunta de oro)
         if (typeof data.tendencias_acertadas !== 'undefined') {
             const acertadasEl = document.getElementById('tendenciasAcertadas');
@@ -2397,9 +2443,11 @@ if (window.Echo) {
 
     // Reset overlay
     overlay.listen('.overlay-reset', () => {
-        lastOverlayQuestion = null;       // Limpiar al resetear
-        currentSelectedOption = null;     // Limpiar opción seleccionada
-        console.log('🔄 Overlay reseteado, lastOverlayQuestion y currentSelectedOption limpiados');
+        lastOverlayQuestion = null;
+        currentSelectedOption = null;
+        isRevealed = false;
+        updateRevealBtnState();
+        console.log('🔄 Overlay reseteado');
 
         // ✅ DESHABILITAR BOTONES DE BONOS cuando no hay pregunta
         const apuestaBtn = document.getElementById('apuesta-btn');
@@ -2512,6 +2560,11 @@ if (window.Echo) {
             }
 
             console.log('[revelar-respuesta]', payload);
+
+            // ── Modal de fin de juego ──────────────────────────
+            if (payload.question_limit_reached) {
+                showGameOverModal(payload);
+            }
         });
 }
 // Función para activar/desactivar pantalla completa
@@ -2566,5 +2619,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 </script>
+
+<x-game-over-modal />
 
 @endsection
