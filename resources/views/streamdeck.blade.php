@@ -367,6 +367,62 @@
         .flash-ok  { animation: flash-ok  0.5s ease forwards; }
         .flash-err { animation: flash-err 0.5s ease forwards; }
 
+        /* ─── OPCIONES A/B/C/D ──────────────────────────────────── */
+        .sd-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(4px, 1.2vmin, 12px);
+            padding: 0 clamp(5px, 1.5vmin, 14px) clamp(5px, 1.5vmin, 14px);
+            flex-shrink: 0;
+        }
+
+        .btn-opcion {
+            border-color: rgba(0, 240, 255, 0.25);
+            color: rgba(255,255,255,0.5);
+            min-height: clamp(38px, 9vh, 72px);
+        }
+
+        .btn-opcion .opcion-letra {
+            font-size: clamp(1rem, 4.5vmin, 2rem);
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .btn-opcion .opcion-texto {
+            font-size: clamp(0.38rem, 1.3vmin, 0.58rem);
+            font-weight: 600;
+            opacity: 0.7;
+            text-align: center;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 4px;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        /* Sin pregunta activa: muy tenue */
+        .btn-opcion.no-question {
+            opacity: 0.18;
+            pointer-events: none;
+        }
+
+        /* Con pregunta activa */
+        .btn-opcion.question-active {
+            color: rgba(255,255,255,0.8);
+            border-color: rgba(0, 240, 255, 0.45);
+        }
+
+        /* Seleccionado: amarillo */
+        .btn-opcion.selected {
+            background: #ffe47a;
+            color: #1a1400;
+            border-color: #ffe47a;
+            box-shadow: 0 0 28px rgba(255, 228, 122, 0.75),
+                        inset 0 0 10px rgba(255, 228, 122, 0.15);
+        }
+
         /* ─── ANIMACIONES ────────────────────────────────────── */
         @keyframes sd-pulse {
             0%, 100% { transform: scale(1); }
@@ -484,6 +540,19 @@
     </div>
 
 </div>{{-- sd-grid --}}
+
+{{-- Fila de opciones A / B / C / D --}}
+<div class="sd-options" id="sdOptions">
+    @foreach(['A','B','C','D'] as $op)
+    <button class="sd-btn btn-opcion {{ !$activeSession ? 'no-session' : 'no-question' }}"
+            id="btnOp{{ $op }}"
+            onclick="handleOpcion('{{ $op }}')">
+        <span class="opcion-letra">{{ $op }}</span>
+        <span class="opcion-texto" id="opText{{ $op }}"></span>
+    </button>
+    @endforeach
+</div>
+
 </div>{{-- chat-wrapper --}}
 
 <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
@@ -497,6 +566,7 @@ let descarteDisp      = {{ $descarteDisponible ? '1' : '0' }};
 let hasActiveQuestion = false;
 let questionCount     = {{ $questionCount }};
 const hasSession      = {{ $activeSession ? 'true' : 'false' }};
+let currentOpcion     = null;   // Opción seleccionada actualmente (A/B/C/D)
 
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
@@ -566,6 +636,36 @@ function syncRuletaUI() {
     }
 }
 
+function syncOpcionUI() {
+    ['A','B','C','D'].forEach(l => {
+        const btn = document.getElementById('btnOp' + l);
+        if (!btn) return;
+
+        // Estado base según si hay pregunta activa
+        if (!hasSession) {
+            btn.className = 'sd-btn btn-opcion no-session';
+            return;
+        }
+
+        if (!hasActiveQuestion) {
+            btn.className = 'sd-btn btn-opcion no-question';
+            return;
+        }
+
+        // Hay pregunta activa: mostrar en estado normal o seleccionado
+        btn.className = 'sd-btn btn-opcion question-active' + (currentOpcion === l ? ' selected' : '');
+    });
+}
+
+function clearOpcionUI() {
+    currentOpcion = null;
+    ['A','B','C','D'].forEach(l => {
+        const txt = document.getElementById('opText' + l);
+        if (txt) txt.textContent = '';
+    });
+    syncOpcionUI();
+}
+
 function syncQCount() {
     const el = document.getElementById('qCount');
     if (!el) return;
@@ -597,7 +697,9 @@ function handleRevelar() {
     if (!hasSession) return;
     fetch('/game-session/reveal', {
         method: 'POST',
-        headers: { 'X-CSRF-TOKEN': CSRF, 'Content-Type': 'application/json', 'Accept': 'application/json' }
+        headers: { 'X-CSRF-TOKEN': CSRF, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        // Incluir la opción seleccionada para evitar race conditions
+        body: JSON.stringify({ selected_option: currentOpcion })
     })
     .then(r => r.json())
     .then(d => flash(document.getElementById('btnRevelar'), d.success ? 'ok' : 'err'))
@@ -668,6 +770,23 @@ function handleDescarte() {
     .finally(() => { btn.style.pointerEvents = ''; });
 }
 
+function handleOpcion(label) {
+    if (!hasSession || !hasActiveQuestion) return;
+    const btn = document.getElementById('btnOp' + label);
+
+    currentOpcion = label;
+    syncOpcionUI();
+
+    fetch('/game-session/select-option', {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': CSRF, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ opcion: label })
+    })
+    .then(r => r.json())
+    .then(d => flash(btn, d.ok ? 'ok' : 'err'))
+    .catch(() => flash(btn, 'err'));
+}
+
 // ─── PUSHER LISTENERS ────────────────────────────────────────────────────
 if (window.Echo && hasSession) {
     const ch = window.Echo.channel('cuanto-sabe-overlay');
@@ -682,11 +801,21 @@ if (window.Echo && hasSession) {
         syncDescarteUI();
     });
 
-    // Nueva pregunta → habilitar revelar + actualizar contador
+    // Nueva pregunta → habilitar opciones + actualizar contador
     ch.listen('.nueva-pregunta', (e) => {
         const data    = e.data || e || {};
         const opciones = data.opciones || [];
         hasActiveQuestion = opciones.length > 0;
+
+        // Limpiar selección anterior y poblar textos de opciones
+        currentOpcion = null;
+        ['A','B','C','D'].forEach(l => {
+            const txt = document.getElementById('opText' + l);
+            if (!txt) return;
+            const op = opciones.find(o => o.label === l);
+            txt.textContent = op ? op.texto : '';
+        });
+        syncOpcionUI();
 
         if (opciones.length > 0) {
             questionCount++;
@@ -700,6 +829,15 @@ if (window.Echo && hasSession) {
         }
     });
 
+    // Opción seleccionada (sincronizar entre panel y streamdeck)
+    ch.listen('.opcion-seleccionada', (e) => {
+        const opcion = e.opcion || (e.data && e.data.opcion);
+        if (opcion && ['A','B','C','D'].includes(opcion.toUpperCase())) {
+            currentOpcion = opcion.toUpperCase();
+            syncOpcionUI();
+        }
+    });
+
     // Revelar respuesta → actualizar contador real desde backend
     ch.listen('.revelar-respuesta', (e) => {
         const payload = e.data || e || {};
@@ -708,11 +846,13 @@ if (window.Echo && hasSession) {
             syncQCount();
         }
         hasActiveQuestion = false;
+        syncOpcionUI(); // deshabilitar opciones tras revelar
     });
 
     // Reset overlay
     ch.listen('.overlay-reset', () => {
         hasActiveQuestion = false;
+        clearOpcionUI();
         if (isSpinning) { isSpinning = false; syncRuletaUI(); }
     });
 }

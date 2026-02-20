@@ -152,23 +152,23 @@ class StreamDeckController extends Controller
 
     /**
      * POST /sd/refrescar
-     * Resetea el overlay y limpia el estado de ruleta.
+     * Resetea el overlay, limpia pregunta_json en BD y limpia estado de ruleta.
      */
-    public function refrescar()
+    public function refrescar(Request $request)
     {
         $session = $this->session();
         if (!$session) {
             return response()->json(['error' => 'No hay sesión activa'], 422);
         }
 
-        // Limpiar spinning state en cache
+        // Limpiar spinning y opción seleccionada pendiente del Cache
         Cache::forget($this->spinningKey($session->id));
-
-        broadcast(new OverlayReset());
+        Cache::forget('sd_selected_option_' . $session->id);
 
         Log::info('[STREAMDECK] Overlay reseteado');
 
-        return response()->json(['success' => true]);
+        // Delegar a overlayReset para limpiar pregunta_json y active_question_id en BD
+        return app(GameSessionController::class)->overlayReset($request);
     }
 
     /**

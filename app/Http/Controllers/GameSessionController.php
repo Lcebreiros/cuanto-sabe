@@ -151,7 +151,33 @@ public function revealAnswer(Request $request)
             $bonoEspecial = 'confio';
         }
 
-        $selectedOption = session('selected_guest_option', null);
+        // 1. Request body (panel envía la opción directamente — sin race conditions)
+        $selectedOption = null;
+        $requestOption = $request->input('selected_option');
+        if ($requestOption && in_array(strtoupper($requestOption), ['A', 'B', 'C', 'D'])) {
+            $selectedOption = strtoupper($requestOption);
+            \Log::info('[REVEAL] Opción leída desde request body: ' . $selectedOption);
+        }
+
+        // 2. PHP session (fallback para reveals desde el mismo browser sin body)
+        if (!$selectedOption) {
+            $selectedOption = session('selected_guest_option', null);
+            if ($selectedOption) {
+                \Log::info('[REVEAL] Opción leída desde PHP session: ' . $selectedOption);
+            }
+        }
+
+        // 3. Cache (fallback para StreamDeck — requests stateless sin sesión PHP compartida)
+        if (!$selectedOption) {
+            $cachedOption = Cache::get('sd_selected_option_' . $session->id);
+            if ($cachedOption) {
+                $selectedOption = $cachedOption;
+                \Log::info('[REVEAL] Opción leída desde Cache: ' . $selectedOption);
+            }
+        }
+
+        // Limpiar siempre el Cache para evitar que la opción se reutilice en la próxima pregunta
+        Cache::forget('sd_selected_option_' . $session->id);
 
         if ($selectedOption && isset($data['label_correcto'], $data['pregunta_id'])) {
             \Log::info('========================================');
@@ -244,29 +270,38 @@ public function revealAnswer(Request $request)
         }
 
         // ✅ CALCULAR TENDENCIAS — siempre, independientemente de si el invitado respondió
+        // El flag en Cache protege contra doble conteo si se presiona revelar dos veces
         if (!empty($data['pregunta_id'])) {
-            $tendencia = $gamePoints->calcularTendencia($session->id, $data['pregunta_id']);
+            $tendenciaCacheKey = 'tendencia_contada_' . $session->id . '_' . $data['pregunta_id'];
+            $tendenciaYaContada = Cache::has($tendenciaCacheKey);
 
-            // En "Ahora yo" o "Pregunta de oro" el público no responde, no se cuentan tendencias
-            if ($tendencia && $tendencia['option'] && $bonoEspecial !== 'ahora_yo' && !$esOro) {
-                $tendenciaAcierta = (strtoupper($tendencia['option']) === strtoupper($data['label_correcto']));
+            if (!$tendenciaYaContada) {
+                Cache::put($tendenciaCacheKey, true, now()->addHours(3));
+                $tendencia = $gamePoints->calcularTendencia($session->id, $data['pregunta_id']);
 
-                if ($tendenciaAcierta) {
-                    $session->incrementarTendenciasAcertadas();
-                    $session = $session->fresh();
-                    \Log::info('✅ TENDENCIA ACERTADA', [
-                        'tendencias_acertadas' => $session->tendencias_acertadas,
-                        'tendencias_objetivo'  => $session->tendencias_objetivo,
-                        'restantes'            => $session->tendenciasRestantes()
-                    ]);
-                } else {
-                    \Log::info('❌ TENDENCIA FALLIDA', [
-                        'tendencia' => $tendencia['option'],
-                        'correcta'  => $data['label_correcto']
-                    ]);
+                // En "Ahora yo" o "Pregunta de oro" el público no responde, no se cuentan tendencias
+                if ($tendencia && $tendencia['option'] && $bonoEspecial !== 'ahora_yo' && !$esOro) {
+                    $tendenciaAcierta = (strtoupper($tendencia['option']) === strtoupper($data['label_correcto']));
+
+                    if ($tendenciaAcierta) {
+                        $session->incrementarTendenciasAcertadas();
+                        $session = $session->fresh();
+                        \Log::info('✅ TENDENCIA ACERTADA', [
+                            'tendencias_acertadas' => $session->tendencias_acertadas,
+                            'tendencias_objetivo'  => $session->tendencias_objetivo,
+                            'restantes'            => $session->tendenciasRestantes()
+                        ]);
+                    } else {
+                        \Log::info('❌ TENDENCIA FALLIDA', [
+                            'tendencia' => $tendencia['option'],
+                            'correcta'  => $data['label_correcto']
+                        ]);
+                    }
+                } elseif ($bonoEspecial === 'ahora_yo') {
+                    \Log::info('🔒 AHORA YO: tendencia no contabilizada');
                 }
-            } elseif ($bonoEspecial === 'ahora_yo') {
-                \Log::info('🔒 AHORA YO: tendencia no contabilizada');
+            } else {
+                \Log::info('[REVEAL] Tendencia ya contada para esta pregunta, saltando.');
             }
         }
 
@@ -473,7 +508,15 @@ public function revealAnswer(Request $request)
 public function selectOption(Request $request)
 {
     $opcion = $request->input('opcion');
-    session(['selected_guest_option' => $opcion]); // <--- NUEVO
+
+    // Guardar en PHP session (para reveals desde el game panel en la misma sesión)
+    session(['selected_guest_option' => $opcion]);
+
+    // Guardar también en Cache (para reveals desde StreamDeck en requests stateless)
+    $activeSession = GameSession::where('status', 'active')->latest()->first();
+    if ($activeSession) {
+        Cache::put('sd_selected_option_' . $activeSession->id, $opcion, now()->addHours(1));
+    }
 
     broadcast(new \App\Events\OpcionSeleccionada($opcion))->toOthers();
     return response()->json(['ok' => true]);
@@ -486,6 +529,14 @@ public function overlayReset(Request $request)
 
     if ($session) {
         if ($session->active_question_id !== null || $session->pregunta_json !== null) {
+            // Limpiar flag de tendencia ya contada para la pregunta activa
+            if ($session->pregunta_json) {
+                $preguntaData = json_decode($session->pregunta_json, true);
+                if (!empty($preguntaData['pregunta_id'])) {
+                    Cache::forget('tendencia_contada_' . $session->id . '_' . $preguntaData['pregunta_id']);
+                }
+            }
+
             $session->active_question_id = null;
             $session->pregunta_json = null;
             $session->save();

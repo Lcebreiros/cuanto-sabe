@@ -1999,6 +1999,7 @@ function girarRuleta() {
 
 let lastOverlayQuestion = null;
 let panelQuestionCounter = {{ $questionCount }};
+let currentSelectedOption = null;  // Opción seleccionada en el panel (sincrónico, sin race condition)
 
 
 // Función de revelar
@@ -2013,7 +2014,10 @@ function revelarRespuesta() {
         headers: {
             "X-CSRF-TOKEN": "{{ csrf_token() }}",
             "Content-Type": "application/json"
-        }
+        },
+        // Incluir la opción seleccionada en el body para evitar race conditions
+        // (el body se establece sincrónicamente, antes de hacer el fetch)
+        body: JSON.stringify({ selected_option: currentSelectedOption })
     })
     .then(res => res.json())
     .then(data => {
@@ -2091,6 +2095,69 @@ document.addEventListener('DOMContentLoaded', () => {
             badge.style.color = '#ff6666';
         }
     }
+
+    // ✅ Restaurar pregunta activa al refrescar la página
+    // Si hay una pregunta en curso en la BD, volvemos a mostrarla en el panel
+    // sin necesidad de esperar el próximo evento Pusher.
+    fetch('/overlay/api/pregunta')
+        .then(r => r.json())
+        .then(data => {
+            if (!data || !data.pregunta_id || !data.opciones || !data.opciones.length) return;
+
+            // Restaurar variable global para que revelarRespuesta() funcione
+            lastOverlayQuestion = data;
+
+            // Restaurar texto de pregunta
+            const txt = document.getElementById('textoPreguntaPanel');
+            if (txt) txt.textContent = data.pregunta || '';
+
+            // Restaurar slot especial badge
+            const slotBadge = document.getElementById('slotSpecialBadge');
+            if (slotBadge) {
+                const indicator = data.slot_special || data.special_indicator || '';
+                if (indicator) {
+                    slotBadge.textContent = indicator;
+                    slotBadge.classList.add('active');
+                } else {
+                    slotBadge.textContent = '';
+                    slotBadge.classList.remove('active');
+                }
+            }
+
+            // Restaurar botones de opciones
+            ['A','B','C','D'].forEach(l => {
+                const btn = document.getElementById('panel'+l);
+                if (!btn) return;
+                const opcion = data.opciones.find(op => op.label === l);
+                if (opcion) {
+                    btn.style.display = '';
+                    const base = `${l}: ${opcion.texto}`;
+                    btn.dataset.baseText = base;
+                    btn.textContent = base;
+                } else {
+                    btn.style.display = 'none';
+                    btn.dataset.baseText = '';
+                    btn.textContent = '';
+                }
+                btn.classList.remove('selected', 'trend');
+            });
+
+            // Habilitar botones de bonos
+            const apuestaBtn = document.getElementById('apuesta-btn');
+            const descarteBtn = document.getElementById('descarte-btn');
+            if (apuestaBtn) { apuestaBtn.style.opacity = '1'; apuestaBtn.style.pointerEvents = 'auto'; }
+            if (descarteBtn) { descarteBtn.style.opacity = '1'; descarteBtn.style.pointerEvents = 'auto'; }
+
+            // Actualizar badge (sin incrementar: el contador ya viene de la BD al renderizar)
+            const badgeEl = document.getElementById('questionNumberBadge');
+            if (badgeEl && panelQuestionCounter > 0) {
+                badgeEl.textContent = `Pregunta ${panelQuestionCounter}/15`;
+                badgeEl.classList.add('active');
+            }
+
+            console.log('[Panel] Pregunta restaurada desde BD tras recarga:', data.pregunta_id);
+        })
+        .catch(e => console.warn('[Panel] No se pudo restaurar pregunta activa:', e));
 });
 
 
@@ -2123,7 +2190,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (other) other.classList.remove('selected');
                 });
                 btn.classList.add('selected');
-                
+
+                // ✅ Guardar sincrónicamente ANTES del fetch para evitar race condition con reveal
+                currentSelectedOption = l;
+
                 fetch("{{ route('game-session.select-option') }}", {
                     method: "POST",
                     headers: {
@@ -2327,8 +2397,9 @@ if (window.Echo) {
 
     // Reset overlay
     overlay.listen('.overlay-reset', () => {
-        lastOverlayQuestion = null; // 🔥 LIMPIAR AL RESETEAR
-        console.log('🔄 Overlay reseteado, lastOverlayQuestion limpiado');
+        lastOverlayQuestion = null;       // Limpiar al resetear
+        currentSelectedOption = null;     // Limpiar opción seleccionada
+        console.log('🔄 Overlay reseteado, lastOverlayQuestion y currentSelectedOption limpiados');
 
         // ✅ DESHABILITAR BOTONES DE BONOS cuando no hay pregunta
         const apuestaBtn = document.getElementById('apuesta-btn');
