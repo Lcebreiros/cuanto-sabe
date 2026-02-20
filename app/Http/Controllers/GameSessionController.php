@@ -314,7 +314,13 @@ public function revealAnswer(Request $request)
                         ]);
                     }
                 } elseif ($bonoEspecial === 'ahora_yo') {
-                    \Log::info('🔒 AHORA YO: tendencia no contabilizada');
+                    // Solo yo: el público no puede responder, se regala la tendencia para no penalizarlos
+                    $session->incrementarTendenciasAcertadas();
+                    $session = $session->fresh();
+                    \Log::info('🎁 SOLO YO: tendencia regalada al público', [
+                        'tendencias_acertadas' => $session->tendencias_acertadas,
+                        'tendencias_objetivo'  => $session->tendencias_objetivo,
+                    ]);
                 }
             } else {
                 \Log::info('[REVEAL] Tendencia ya contada para esta pregunta, saltando.');
@@ -543,7 +549,11 @@ public function revealAnswer(Request $request)
 
 public function selectOption(Request $request)
 {
-    $opcion = $request->input('opcion');
+    $opcion = strtoupper(trim($request->input('opcion', '')));
+
+    if (!in_array($opcion, ['A', 'B', 'C', 'D'])) {
+        return response()->json(['error' => 'Opción inválida'], 422);
+    }
 
     // Guardar en PHP session (para reveals desde el game panel en la misma sesión)
     session(['selected_guest_option' => $opcion]);
@@ -554,7 +564,9 @@ public function selectOption(Request $request)
         Cache::put('sd_selected_option_' . $activeSession->id, $opcion, now()->addHours(1));
     }
 
-    broadcast(new \App\Events\OpcionSeleccionada($opcion))->toOthers();
+    // Sin ->toOthers(): todos los clientes reciben el evento para mantenerse sincronizados.
+    // Cada listener es idempotente, así que el emisor recibir su propio evento no causa problemas.
+    broadcast(new \App\Events\OpcionSeleccionada($opcion));
     return response()->json(['ok' => true]);
 }
 

@@ -2317,7 +2317,9 @@ if (window.Echo) {
         const data = e.data || e || {};
         const pregunta = data.pregunta || (data.data ? data.data.pregunta : '') || '';
         const opciones = data.opciones || (data.data ? data.data.opciones : []) || [];
-        const slotSpecial = data.slot_special || (data.data ? data.data.slot_special : '') || '';
+        const slotSpecial = data.slot_special || data.special_indicator
+                         || (data.data ? (data.data.slot_special || data.data.special_indicator) : '')
+                         || '';
 
         // Resetear estado de reveal y selección al llegar nueva pregunta
         isRevealed = false;
@@ -2469,6 +2471,21 @@ if (window.Echo) {
         }
 
         reiniciarOverlay();
+    });
+
+    // Opción seleccionada — sincronizar visual y estado cuando el cambio viene del StreamDeck
+    // (o desde cualquier otro cliente). El handler es idempotente: si el panel ya tenía la
+    // misma opción marcada, volver a aplicarla no genera ningún efecto secundario.
+    overlay.listen('.opcion-seleccionada', (e) => {
+        const opcion = (e.opcion || (e.data && e.data.opcion) || '').toUpperCase();
+        if (!['A', 'B', 'C', 'D'].includes(opcion)) return;
+
+        currentSelectedOption = opcion;
+
+        ['A', 'B', 'C', 'D'].forEach(x => {
+            const btn = document.getElementById('panel' + x);
+            if (btn) btn.classList.toggle('selected', x === opcion);
+        });
     });
 }
 
