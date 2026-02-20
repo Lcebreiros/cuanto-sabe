@@ -188,10 +188,15 @@ public function revealAnswer(Request $request)
         // Limpiar siempre el Cache para evitar que la opción se reutilice en la próxima pregunta
         Cache::forget('sd_selected_option_' . $session->id);
 
-        if ($selectedOption && isset($data['label_correcto'], $data['pregunta_id'])) {
+        // Para "Responde el chat" el puntaje depende de la tendencia, no de la opción del operador.
+        // Se puede puntuar aunque $selectedOption sea null.
+        $puedeCalcularPuntaje = isset($data['label_correcto'], $data['pregunta_id'])
+            && ($selectedOption || $bonoEspecial === 'confio');
+
+        if ($puedeCalcularPuntaje) {
             \Log::info('========================================');
             \Log::info('💾 GUARDAR RESPUESTA INVITADO');
-            \Log::info('Selected Option: ' . $selectedOption);
+            \Log::info('Selected Option: ' . ($selectedOption ?? '(tendencia — confio)'));
             \Log::info('Data completo:', $data);
             \Log::info('Modo especial detectado: esOro=' . ($esOro ? 'true' : 'false') . ', bonoEspecial=' . ($bonoEspecial ?? 'null'));
             \Log::info('========================================');
@@ -199,7 +204,7 @@ public function revealAnswer(Request $request)
             // Calcular puntaje invitado
             $delta = $gamePoints->calcularPuntajeInvitado(
                 $session->id,
-                $selectedOption,
+                $selectedOption ?? '',   // confio ignora este valor internamente
                 $data['pregunta_id'],
                 $data['label_correcto'],
                 $esOro,
@@ -207,8 +212,10 @@ public function revealAnswer(Request $request)
                 $bonoEspecial
             );
 
-            // Guardar respuesta del invitado en guest_answers
-            $isCorrect = (strtoupper($selectedOption) === strtoupper($data['label_correcto']));
+            // Para confio: is_correct refleja si la tendencia acertó (delta > 0)
+            $isCorrect = ($bonoEspecial === 'confio')
+                ? ($delta > 0)
+                : (strtoupper($selectedOption) === strtoupper($data['label_correcto']));
 
             // Buscar el texto de la opción seleccionada
             $selectedOptionText = null;
@@ -237,7 +244,7 @@ public function revealAnswer(Request $request)
             \App\Models\GuestAnswer::create([
                 'game_session_id' => $session->id,
                 'question_id' => $data['pregunta_id'],
-                'selected_option' => strtoupper($selectedOption),
+                'selected_option' => $selectedOption ? strtoupper($selectedOption) : null,
                 'selected_option_text' => $selectedOptionText,
                 'correct_option' => strtoupper($data['label_correcto']),
                 'is_correct' => $isCorrect,
