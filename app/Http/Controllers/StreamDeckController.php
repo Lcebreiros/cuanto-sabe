@@ -137,6 +137,14 @@ class StreamDeckController extends Controller
         // Inyectar datos de pregunta en sesión PHP para que revealAnswer funcione
         session(['last_overlay_question' => json_decode($session->pregunta_json, true)]);
 
+        // Recuperar opción seleccionada vía Companion (guardada en Cache, no en sesión PHP)
+        $cachedOption = Cache::get('sd_selected_option_' . $session->id);
+        if ($cachedOption) {
+            session(['selected_guest_option' => $cachedOption]);
+            Cache::forget('sd_selected_option_' . $session->id);
+            Log::info("[STREAMDECK] Opción inyectada desde cache: {$cachedOption}");
+        }
+
         Log::info('[STREAMDECK] Revelar disparado');
 
         return app(GameSessionController::class)->revealAnswer($request);
@@ -186,6 +194,7 @@ class StreamDeckController extends Controller
     /**
      * POST /sd/opcion/{label}
      * Selecciona la respuesta del invitado (A, B, C o D).
+     * Guarda en Cache (no en sesión PHP) para sobrevivir entre requests stateless.
      */
     public function opcion(Request $request, string $label)
     {
@@ -200,10 +209,14 @@ class StreamDeckController extends Controller
             return response()->json(['error' => 'No hay sesión activa'], 422);
         }
 
-        $request->merge(['opcion' => $label]);
+        // Guardar en Cache para que /sd/revelar lo recupere en el siguiente request
+        Cache::put('sd_selected_option_' . $session->id, $label, now()->addHours(1));
 
-        Log::info("[STREAMDECK] Opción seleccionada: {$label}");
+        // Broadcast del evento para que el overlay/panel vean la selección en tiempo real
+        broadcast(new \App\Events\OpcionSeleccionada($label));
 
-        return app(GameSessionController::class)->selectOption($request);
+        Log::info("[STREAMDECK] Opción seleccionada y guardada en cache: {$label}");
+
+        return response()->json(['ok' => true, 'opcion' => $label]);
     }
 }

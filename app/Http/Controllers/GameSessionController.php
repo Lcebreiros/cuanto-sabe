@@ -224,25 +224,45 @@ public function revealAnswer(Request $request)
 
             session()->forget('selected_guest_option');
 
-            // Calcular tendencia del público
+        } elseif (!empty($data['pregunta_id'])) {
+            // Sin opción seleccionada: registrar la pregunta igualmente para el contador
+            $yaRegistrada = \App\Models\GuestAnswer::where('game_session_id', $session->id)
+                ->where('question_id', $data['pregunta_id'])
+                ->exists();
+            if (!$yaRegistrada) {
+                \App\Models\GuestAnswer::create([
+                    'game_session_id'      => $session->id,
+                    'question_id'          => $data['pregunta_id'],
+                    'selected_option'      => null,
+                    'selected_option_text' => null,
+                    'correct_option'       => strtoupper($data['label_correcto'] ?? ''),
+                    'is_correct'           => false,
+                    'points_awarded'       => 0,
+                ]);
+                \Log::info('[REVEAL] Pregunta registrada sin respuesta del invitado (para contador)');
+            }
+        }
+
+        // ✅ CALCULAR TENDENCIAS — siempre, independientemente de si el invitado respondió
+        if (!empty($data['pregunta_id'])) {
             $tendencia = $gamePoints->calcularTendencia($session->id, $data['pregunta_id']);
 
-            // ✅ VERIFICAR SI EL PÚBLICO ACERTÓ LA TENDENCIA
-            // En modo "Ahora yo" o "Pregunta de oro" el público no responde, no se cuentan tendencias
+            // En "Ahora yo" o "Pregunta de oro" el público no responde, no se cuentan tendencias
             if ($tendencia && $tendencia['option'] && $bonoEspecial !== 'ahora_yo' && !$esOro) {
                 $tendenciaAcierta = (strtoupper($tendencia['option']) === strtoupper($data['label_correcto']));
 
                 if ($tendenciaAcierta) {
                     $session->incrementarTendenciasAcertadas();
+                    $session = $session->fresh();
                     \Log::info('✅ TENDENCIA ACERTADA', [
                         'tendencias_acertadas' => $session->tendencias_acertadas,
-                        'tendencias_objetivo' => $session->tendencias_objetivo,
-                        'restantes' => $session->tendenciasRestantes()
+                        'tendencias_objetivo'  => $session->tendencias_objetivo,
+                        'restantes'            => $session->tendenciasRestantes()
                     ]);
                 } else {
                     \Log::info('❌ TENDENCIA FALLIDA', [
                         'tendencia' => $tendencia['option'],
-                        'correcta' => $data['label_correcto']
+                        'correcta'  => $data['label_correcto']
                     ]);
                 }
             } elseif ($bonoEspecial === 'ahora_yo') {

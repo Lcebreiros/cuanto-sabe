@@ -2423,13 +2423,13 @@ if (window.Echo) {
                 }
             }
 
-            // ✅ ACTUALIZAR BADGE DE PREGUNTA con conteo real desde BD
+            // ✅ ACTUALIZAR BADGE DE PREGUNTA con conteo real desde BD (nunca retrocede)
             if (typeof payload.question_count !== 'undefined') {
-                panelQuestionCounter = payload.question_count;
+                panelQuestionCounter = Math.max(panelQuestionCounter, payload.question_count);
                 const badge = document.getElementById('questionNumberBadge');
                 if (badge) {
                     const limit = payload.question_limit || 15;
-                    badge.textContent = `Pregunta ${payload.question_count}/${limit}`;
+                    badge.textContent = `Pregunta ${panelQuestionCounter}/${limit}`;
                     badge.classList.add('active');
                     if (payload.question_limit_reached) {
                         badge.style.background = 'rgba(255, 68, 68, 0.2)';
