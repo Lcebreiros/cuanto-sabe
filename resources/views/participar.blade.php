@@ -876,6 +876,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ===== FUNCIONES DE UI =====
   function limpiarSeleccionUI() {
+    // Restaurar interactividad del grid al empezar nueva pregunta
+    const grid = form ? form.querySelector('.options-grid') : null;
+    if (grid) grid.style.pointerEvents = '';
+
     document.querySelectorAll('.option-card').forEach(btn => {
       btn.classList.remove('selected', 'disabled', 'correct', 'incorrect', 'blinking', 'locked');
       btn.style.opacity = '1';
@@ -885,6 +889,14 @@ document.addEventListener('DOMContentLoaded', function() {
       msg.style.display = 'none';
       msg.className = 'text-center mb-4 font-extrabold text-lg respuesta-msg';
     }
+  }
+
+  // Bloquea toda interacción con los botones de opción luego de revelar la respuesta.
+  // Actúa sobre el contenedor para no depender del estado de clases individuales.
+  function bloquearBotonesReveal() {
+    enviado = true;
+    const grid = form ? form.querySelector('.options-grid') : null;
+    if (grid) grid.style.pointerEvents = 'none';
   }
 
   function marcarSeleccionUI(label) {
@@ -1093,7 +1105,10 @@ function renderPregunta(data) {
         let data = e.data || e;
         let qid = form ? form.querySelector('input[name="question_id"]').value : null;
         if (String(data.pregunta_id) !== String(qid)) return;
-        
+
+        // Bloquear inmediatamente toda interacción con las opciones
+        bloquearBotonesReveal();
+
         let respondida = yaRespondio;
         if (!respondida) {
           marcarCorrecta(data.label_correcto);
