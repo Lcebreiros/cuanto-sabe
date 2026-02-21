@@ -2,520 +2,635 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Cuánto Sabe - Sobre Nosotros</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <title>Cuanto Sabe — Sobre el juego</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        /* --- RESET Y VARIABLES --- */
+        /* ── Variables ─────────────────────────────────────── */
         :root {
-            --primary-color: #00f0ff;
-            --secondary-color: #ff00ff;
-            --accent-color: #00ffd1;
-            --dark-bg: #030015;
-            --card-bg: rgba(15, 6, 43, 0.85);
-            --text-light: #e6f7ff;
-            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --cyan:    #00f0ff;
+            --magenta: #ff00ff;
+            --green:   #19ff8c;
+            --gold:    #ffe47a;
+            --bg:      #030015;
+            --card-bg: rgba(8, 4, 28, 0.80);
+            --border:  rgba(0, 240, 255, 0.15);
+            --text:    #e6f7ff;
+            --muted:   rgba(230, 247, 255, 0.55);
+            --ease:    cubic-bezier(0.25, 0.8, 0.25, 1);
+            --nav-h:   60px;
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        /* --- BASE STYLES --- */
-        html, body {
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
             min-height: 100vh;
-            width: 100vw;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
             overflow-x: hidden;
-            font-family: 'Montserrat', sans-serif;
-            background: radial-gradient(circle at center, #210054 60%, var(--dark-bg) 100%);
-            color: var(--text-light);
-            position: relative;
-            scroll-behavior: smooth;
         }
-        
-        /* --- FONDO DE PARTÍCULAS --- */
-        .particles-container {
+
+        /* ── Background ────────────────────────────────────── */
+        .bg-gradient {
+            position: fixed; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 55% at 50% 0%,   #1a0050 0%, transparent 70%),
+                radial-gradient(ellipse 55% 45% at 90% 85%,  #00103a 0%, transparent 60%),
+                radial-gradient(ellipse 45% 40% at 5%  60%,  #180040 0%, transparent 60%),
+                var(--bg);
+        }
+
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 1; pointer-events: none;
+            background-image:
+                linear-gradient(rgba(0,240,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,240,255,0.025) 1px, transparent 1px);
+            background-size: 52px 52px;
+        }
+
+        .particles { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+
+        .star {
+            position: absolute; border-radius: 50%;
+            animation: twinkle var(--dur, 4s) var(--delay, 0s) infinite ease-in-out alternate;
+        }
+        @keyframes twinkle {
+            0%   { opacity: var(--op-from, 0.1); transform: scale(1); }
+            100% { opacity: var(--op-to,   0.6); transform: scale(1.4); }
+        }
+
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(80px);
+            animation: drift var(--dur, 12s) var(--delay, 0s) infinite ease-in-out alternate;
+        }
+        @keyframes drift {
+            to { transform: translate(var(--dx, 30px), var(--dy, -40px)) scale(1.08); }
+        }
+
+        /* ── Top nav ───────────────────────────────────────── */
+        .top-nav {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 1;
-            pointer-events: none;
-            overflow: hidden;
-        }
-        
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(12px);
-            opacity: 0.4;
-            animation: float 8s infinite ease-in-out alternate;
-        }
-        
-        .particle:nth-child(1) {
-            width: 160px; height: 160px;
-            background: var(--primary-color);
-            top: 10%; left: 13%;
-            animation-duration: 9s;
-        }
-        
-        .particle:nth-child(2) {
-            width: 110px; height: 110px;
-            background: var(--secondary-color);
-            top: 70%; left: 80%;
-            animation-delay: 2s;
-            animation-duration: 11s;
-        }
-        
-        .particle:nth-child(3) {
-            width: 80px; height: 80px;
-            background: var(--accent-color);
-            top: 66%; left: 27%;
-            animation-delay: 4s;
-        }
-        
-        @keyframes float {
-            to { 
-                transform: translateY(-60px) scale(1.1) rotate(16deg); 
-                opacity: 0.6; 
-            }
-        }
-        
-        /* --- NAV ANCLAS --- */
-        .nav-anchors {
-            position: fixed;
-            top: 6rem;
-            left: 2rem;
-            z-index: 50;
+            top: 0; left: 0; right: 0;
+            height: var(--nav-h);
+            z-index: 100;
             display: flex;
-            flex-direction: column;
-            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: rgba(3, 0, 21, 0.75);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
         }
-        
-        .nav-link {
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.9rem;
-            color: var(--text-light);
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            color: var(--cyan);
             text-decoration: none;
-            padding: 0.5rem 1rem;
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            border-radius: 20px;
-            transition: var(--transition);
-            background: rgba(15, 6, 43, 0.6);
-            backdrop-filter: blur(5px);
+            padding: 7px 14px;
+            border: 1px solid rgba(0,240,255,0.3);
+            border-radius: 999px;
+            background: rgba(0,240,255,0.05);
+            transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
         }
-        
-        .nav-link:hover {
-            color: var(--primary-color);
-            border-color: var(--primary-color);
-            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
-            transform: translateX(5px);
+        .back-btn:hover {
+            background: rgba(0,240,255,0.12);
+            border-color: var(--cyan);
+            box-shadow: 0 0 10px rgba(0,240,255,0.3);
         }
-        
-        /* --- SECCIONES --- */
+        .back-btn svg { flex-shrink: 0; }
+
+        .nav-pills {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .nav-pill {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            color: rgba(230,247,255,0.6);
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            transition: color 0.2s, border-color 0.2s, background 0.2s;
+        }
+        .nav-pill:hover, .nav-pill.active {
+            color: var(--cyan);
+            border-color: rgba(0,240,255,0.3);
+            background: rgba(0,240,255,0.07);
+        }
+
+        @media (max-width: 480px) {
+            .nav-pills { display: none; }
+            .top-nav { padding: 0 14px; }
+        }
+
+        /* ── Page layout ───────────────────────────────────── */
+        .page { position: relative; z-index: 3; padding-top: var(--nav-h); }
+
+        /* ── Shared section layout ─────────────────────────── */
         section {
-            position: relative;
-            z-index: 2;
-            padding: 6rem 2rem;
-        }
-        
-        .section-container {
-            max-width: 1200px;
+            padding: 80px 20px;
+            max-width: 960px;
             margin: 0 auto;
         }
-        
+
+        section.full-bg {
+            max-width: 100%;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        section.full-bg .section-inner {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ── Section header ────────────────────────────────── */
+        .section-header {
+            text-align: center;
+            margin-bottom: 56px;
+        }
+
+        .section-label {
+            display: inline-block;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 12px;
+            opacity: 0.8;
+        }
+
         .section-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
             font-weight: 700;
-            text-align: center;
-            margin-bottom: 3rem;
-            color: var(--primary-color);
-            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
-            position: relative;
+            color: var(--text);
+            margin-bottom: 16px;
+            line-height: 1.2;
         }
-        
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+
+        .section-title span {
+            background: linear-gradient(90deg, var(--cyan), var(--magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        
-        /* --- HERO SECTION --- */
-        #hero {
-            min-height: 100vh;
+
+        .section-rule {
+            width: 60px; height: 2px;
+            background: linear-gradient(90deg, var(--cyan), var(--magenta));
+            margin: 0 auto;
+            border-radius: 2px;
+        }
+
+        /* ── Hero ──────────────────────────────────────────── */
+        #inicio {
+            min-height: calc(100vh - var(--nav-h));
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
+            padding-top: 40px;
+            padding-bottom: 40px;
         }
-        
-        .hero-content {
-            max-width: 800px;
-        }
-        
+
+        .hero-content { max-width: 720px; }
+
         .hero-logo {
-            width: 300px;
+            width: clamp(140px, 25vw, 220px);
             height: auto;
-            margin: 0 auto 2rem;
-            filter: drop-shadow(0 0 20px var(--primary-color));
+            margin-bottom: 28px;
+            filter:
+                drop-shadow(0 0 22px rgba(0,240,255,0.7))
+                drop-shadow(0 0 8px rgba(255,0,255,0.3));
+            animation: logo-pulse 3.5s ease-in-out infinite;
         }
-        
+        @keyframes logo-pulse {
+            0%, 100% { filter: drop-shadow(0 0 22px rgba(0,240,255,0.7)) drop-shadow(0 0 8px rgba(255,0,255,0.3)); }
+            50%       { filter: drop-shadow(0 0 36px rgba(0,240,255,1))   drop-shadow(0 0 14px rgba(255,0,255,0.5)); }
+        }
+
+        .hero-tag {
+            display: inline-block;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            background: rgba(0,240,255,0.08);
+            border: 1px solid rgba(0,240,255,0.25);
+            border-radius: 999px;
+            padding: 5px 16px;
+            margin-bottom: 20px;
+        }
+
         .hero-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: var(--text-light);
-            text-shadow: 0 0 15px rgba(0, 240, 255, 0.7);
+            font-size: clamp(1.6rem, 5vw, 2.8rem);
+            font-weight: 900;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 30%, var(--cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        
-        .hero-subtitle {
-            font-size: 1.4rem;
-            margin-bottom: 2rem;
-            color: var(--primary-color);
-        }
-        
+
         .hero-description {
-            font-size: 1.1rem;
-            line-height: 1.7;
-            margin-bottom: 3rem;
-            opacity: 0.9;
+            font-size: clamp(0.9rem, 2vw, 1.05rem);
+            line-height: 1.75;
+            color: var(--muted);
+            margin-bottom: 36px;
         }
-        
-        /* --- EXPRESS SECTION --- */
-        #express {
-            background: rgba(5, 1, 20, 0.7);
-        }
-        
-        .express-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-        
-        .card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 2.5rem;
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            backdrop-filter: blur(8px);
-            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.1),
-                        0 0 60px rgba(133, 4, 236, 0.05);
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .card::before {
-            content: "";
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, 
-                      rgba(0, 240, 255, 0.05) 0%, 
-                      transparent 70%);
-            z-index: -1;
-            animation: rotate 20s linear infinite;
-        }
-        
-        .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 240, 255, 0.2),
-                        0 0 80px rgba(133, 4, 236, 0.1);
-        }
-        
-        .express-card {
-            text-align: center;
-            padding: 2rem;
-        }
-        
-        .express-icon {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
-            color: var(--accent-color);
-            filter: drop-shadow(0 0 10px var(--accent-color));
-        }
-        
-        .express-title {
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-            color: var(--accent-color);
-        }
-        
-        .rule-description {
-            line-height: 1.6;
-            opacity: 0.9;
-        }
-        
-        /* --- FOOTER --- */
-        footer {
-            background: rgba(3, 0, 21, 0.9);
-            padding: 4rem 2rem;
-            text-align: center;
-            position: relative;
-            z-index: 2;
-            border-top: 1px solid rgba(0, 240, 255, 0.2);
-        }
-        
-        .footer-content {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .footer-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-            color: var(--primary-color);
-        }
-        
-        .footer-text {
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-        
-        .footer-highlight {
-            color: var(--accent-color);
-            font-weight: 500;
-        }
-        
-        /* --- BOTÓN --- */
-        .cta-button {
-            display: inline-block;
-            padding: 1rem 2.5rem;
-            background: transparent;
-            border: 2px solid var(--primary-color);
-            color: var(--primary-color);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 500;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: var(--transition);
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #001c2e;
+            background: var(--cyan);
             text-decoration: none;
+            padding: 13px 28px;
+            border-radius: 999px;
+            box-shadow: 0 0 20px rgba(0,240,255,0.4), 0 0 40px rgba(0,240,255,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .hero-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 32px rgba(0,240,255,0.7), 0 0 60px rgba(0,240,255,0.2);
+        }
+
+        /* ── Scroll indicator ──────────────────────────────── */
+        .scroll-hint {
+            position: absolute;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.68rem;
+            letter-spacing: 0.12em;
+            color: var(--muted);
+            animation: bounce-hint 2s ease-in-out infinite;
+        }
+        @keyframes bounce-hint {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50%       { transform: translateX(-50%) translateY(6px); }
+        }
+
+        /* ── Card ──────────────────────────────────────────── */
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px 28px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             position: relative;
             overflow: hidden;
-            z-index: 1;
+            transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
         }
-        
-        .cta-button::before {
+        .glass-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, 
-                      transparent, 
-                      rgba(0, 240, 255, 0.2), 
-                      transparent);
-            transition: all 0.6s ease;
-            z-index: -1;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,240,255,0.4), transparent);
         }
-        
-        .cta-button:hover {
-            background: var(--primary-color);
-            color: #00122c;
-            box-shadow: 0 0 20px var(--primary-color),
-                       0 0 40px rgba(0, 240, 255, 0.3);
-            transform: translateY(-3px);
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,240,255,0.1), 0 0 60px rgba(133,4,236,0.06);
         }
-        
-        .cta-button:hover::before {
-            left: 100%;
+
+        /* ── Rules grid ────────────────────────────────────── */
+        .rules-wrap {
+            /* Livewire component wrapper */
         }
-        
-        /* --- ANIMACIONES --- */
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+
+        /* ── Express section ───────────────────────────────── */
+        #express.full-bg {
+            background: rgba(5, 1, 20, 0.6);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
         }
-        
-        .fade-in {
+
+        .express-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .express-card {
+            text-align: center;
+        }
+
+        .express-icon {
+            font-size: 2.4rem;
+            margin-bottom: 14px;
+            display: block;
+            filter: drop-shadow(0 0 8px rgba(0,240,255,0.5));
+        }
+
+        .express-card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--cyan);
+            margin-bottom: 10px;
+        }
+
+        .express-card-text {
+            font-size: 0.88rem;
+            line-height: 1.65;
+            color: var(--muted);
+        }
+
+        /* ── Footer ────────────────────────────────────────── */
+        .site-footer {
+            position: relative;
+            z-index: 3;
+            text-align: center;
+            padding: 40px 20px 32px;
+            border-top: 1px solid var(--border);
+            background: rgba(3,0,21,0.85);
+        }
+
+        .footer-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--cyan);
+            margin-bottom: 10px;
+            letter-spacing: 0.05em;
+        }
+
+        .footer-sub {
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        .footer-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--cyan);
+            border: 1px solid rgba(0,240,255,0.35);
+            border-radius: 999px;
+            padding: 9px 22px;
+            text-decoration: none;
+            transition: background 0.2s, box-shadow 0.2s;
+            margin-bottom: 24px;
+        }
+        .footer-cta:hover {
+            background: rgba(0,240,255,0.1);
+            box-shadow: 0 0 12px rgba(0,240,255,0.3);
+        }
+
+        .footer-copy {
+            font-size: 0.7rem;
+            color: rgba(0,240,255,0.28);
+            letter-spacing: 0.04em;
+        }
+
+        /* ── Fade-in on scroll ─────────────────────────────── */
+        .reveal {
             opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
+            transform: translateY(28px);
+            transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
         }
-        
-        .fade-in.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        /* --- RESPONSIVE --- */
-        @media (max-width: 768px) {
-            .nav-anchors {
-                top: 1rem;
-                left: 1rem;
-            }
-            
-            .nav-link {
-                font-size: 0.8rem;
-                padding: 0.4rem 0.8rem;
-            }
-            
-            .section-title {
-                font-size: 2rem;
-            }
-            
-            .hero-title {
-                font-size: 2.5rem;
-            }
-            
-            .hero-logo {
-                width: 200px;
-            }
-            
-            section {
-                padding: 4rem 1rem;
-            }
-            
-            .card {
-                padding: 1.5rem;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .nav-anchors {
-                display: none;
-            }
-            
-            .hero-title {
-                font-size: 2rem;
-            }
-            
-            .hero-subtitle {
-                font-size: 1.1rem;
-            }
-            
-            .section-title {
-                font-size: 1.7rem;
-            }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+
+        /* ── Active nav pill ───────────────────────────────── */
+        .nav-pill.active {
+            color: var(--cyan);
+            border-color: rgba(0,240,255,0.35);
+            background: rgba(0,240,255,0.08);
         }
     </style>
 </head>
 <body>
-    <!-- Fondo de partículas -->
-    <div class="particles-container">
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-    </div>
 
-    <!-- Navegación de anclas -->
-    <nav class="nav-anchors">
-        <a href="#hero" class="nav-link">Inicio</a>
-        <a href="#rules" class="nav-link">Reglas</a>
-        <a href="#express" class="nav-link">Express</a>
-        <a href="#team" class="nav-link">Equipo</a>
+    <!-- Background -->
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- Top nav -->
+    <nav class="top-nav" id="topNav">
+        <a href="{{ route('guest-dashboard') }}" class="back-btn">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Dashboard
+        </a>
+        <div class="nav-pills" id="navPills">
+            <a href="#inicio"   class="nav-pill active" data-section="inicio">Inicio</a>
+            <a href="#reglas"   class="nav-pill"        data-section="reglas">Reglas</a>
+            <a href="#express"  class="nav-pill"        data-section="express">Express</a>
+            <a href="#equipo"   class="nav-pill"        data-section="equipo">Equipo</a>
+        </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section id="hero">
-        <div class="section-container">
-            <div class="hero-content fade-in">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo Cuánto Sabe" class="hero-logo">
-                <h1 class="hero-title">¿QUÉ ES CUÁNTO SABE?</h1>
-                <p class="hero-subtitle">El juego interactivo donde el conocimiento es tu mejor arma</p>
+    <div class="page">
+
+        <!-- ── Hero ─────────────────────────────────────────── -->
+        <section id="inicio" style="position:relative;">
+            <div class="hero-content">
+                <img src="{{ asset('images/logo.png') }}" alt="Cuanto Sabe" class="hero-logo">
+                <p class="hero-tag">El juego de conocimiento en vivo</p>
+                <h1 class="hero-title">¿Cuánto sabés realmente?</h1>
                 <p class="hero-description">
-                    Cuánto Sabe es una experiencia única que combina trivia, humor y participación en vivo. 
-                    Los invitados demuestran su conocimiento enfrentándose a preguntas desafiantes mientras 
-                    el público participa desde cuantosabe.com.ar votando en tiempo real por las respuestas correctas.
+                    Una experiencia única que combina trivia, interacción y competencia en tiempo real.
+                    El invitado responde preguntas desafiantes mientras el público vota desde
+                    cuantosabe.com.ar y sus tendencias influyen en el resultado.
                 </p>
-                <a href="#rules" class="cta-button">Descubre Cómo Jugar</a>
+                <a href="#reglas" class="hero-cta">
+                    Ver cómo se juega <span>↓</span>
+                </a>
             </div>
-        </div>
-    </section>
+            <div class="scroll-hint">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M4 7l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                SCROLL
+            </div>
+        </section>
 
-    <!-- Rules Section (Livewire) -->
-    <section id="rules">
-        <div class="section-container">
-            <h2 class="section-title">REGLAS DEL JUEGO</h2>
-            @livewire('rules-section')
-        </div>
-    </section>
+        <!-- ── Reglas ────────────────────────────────────────── -->
+        <section id="reglas">
+            <div class="section-header reveal">
+                <p class="section-label">Cómo jugar</p>
+                <h2 class="section-title">Reglas del <span>juego</span></h2>
+                <div class="section-rule"></div>
+            </div>
+            <div class="rules-wrap reveal reveal-delay-1">
+                @livewire('rules-section')
+            </div>
+        </section>
 
-    <!-- Express Section -->
-    <section id="express">
-        <div class="section-container">
-            <h2 class="section-title">VERSIÓN EXPRESS</h2>
-            <p class="hero-description text-center" style="max-width: 800px; margin: 0 auto 2rem;">
-                Edición rápida: 5 preguntas, objetivo 10 puntos. Una ruleta = una pregunta; 
-                el público vota desde la web y se muestra la tendencia en pantalla.
-            </p>
-            
-            <div class="express-grid">
-                <div class="card express-card fade-in">
-                    <div class="express-icon">⚡</div>
-                    <h3 class="express-title">RONDAS EXPRESS</h3>
-                    <p class="rule-description">Cada ronda: 1 giro → 1 pregunta. Solo 5 rondas para alcanzar la victoria.</p>
+        <!-- ── Express ──────────────────────────────────────── -->
+        <section id="express" class="full-bg">
+            <div class="section-inner">
+                <div class="section-header reveal">
+                    <p class="section-label">Edición rápida</p>
+                    <h2 class="section-title">Versión <span>Express</span></h2>
+                    <div class="section-rule"></div>
                 </div>
-                
-                <div class="card express-card fade-in">
-                    <div class="express-icon">🎯</div>
-                    <h3 class="express-title">META RÁPIDA</h3>
-                    <p class="rule-description">Invitado: alcanzar 10 puntos en solo 5 preguntas. Cada acierto vale 2 puntos.</p>
-                </div>
-                
-                <div class="card express-card fade-in">
-                    <div class="express-icon">👥</div>
-                    <h3 class="express-title">INTERACCIÓN INMEDIATA</h3>
-                    <p class="rule-description">El público vota en tiempo real desde cuantosabe.com.ar con resultados instantáneos.</p>
+
+                <p class="reveal" style="text-align:center; font-size:0.92rem; color:var(--muted); max-width:600px; margin:0 auto 40px; line-height:1.75;">
+                    Edición rápida de 5 preguntas con objetivo de 10 puntos.
+                    Cada giro de ruleta es una pregunta; el público vota en tiempo real
+                    y la tendencia se muestra en pantalla.
+                </p>
+
+                <div class="express-grid">
+                    <div class="glass-card express-card reveal reveal-delay-1">
+                        <span class="express-icon">⚡</span>
+                        <h3 class="express-card-title">Rondas Express</h3>
+                        <p class="express-card-text">1 giro → 1 pregunta. Solo 5 rondas para alcanzar la victoria.</p>
+                    </div>
+                    <div class="glass-card express-card reveal reveal-delay-2">
+                        <span class="express-icon">🎯</span>
+                        <h3 class="express-card-title">Meta Rápida</h3>
+                        <p class="express-card-text">Invitado: alcanzar 10 puntos en 5 preguntas. Cada acierto vale 2 puntos.</p>
+                    </div>
+                    <div class="glass-card express-card reveal reveal-delay-3">
+                        <span class="express-icon">👥</span>
+                        <h3 class="express-card-title">Interacción Inmediata</h3>
+                        <p class="express-card-text">El público vota en tiempo real desde cuantosabe.com.ar con resultados instantáneos.</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Team Section (Livewire) -->
-    <section id="team">
-        <div class="section-container">
-            <h2 class="section-title">NUESTRO EQUIPO</h2>
-            @livewire('team-section')
-        </div>
-    </section>
+        <!-- ── Equipo ────────────────────────────────────────── -->
+        <section id="equipo">
+            <div class="section-header reveal">
+                <p class="section-label">Quiénes somos</p>
+                <h2 class="section-title">Nuestro <span>equipo</span></h2>
+                <div class="section-rule"></div>
+            </div>
+            <div class="reveal reveal-delay-1">
+                @livewire('team-section')
+            </div>
+        </section>
+
+    </div>
 
     <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <h3 class="footer-title">¿QUERÉS PARTICIPAR?</h3>
-            <p class="footer-text">
-                Entrá a <span class="footer-highlight">cuantosabe.com.ar</span> y votá en tiempo real.
-            </p>
-            <a href="/" class="cta-button">Ir al sitio</a>
-        </div>
+    <footer class="site-footer">
+        <h3 class="footer-title">¿Querés participar?</h3>
+        <p class="footer-sub">Entrá y votá en tiempo real desde tu celular.</p>
+        <a href="{{ route('guest-dashboard') }}" class="footer-cta">Ir al dashboard →</a>
+        <p class="footer-copy">© {{ date('Y') }} Cuanto Sabe &nbsp;·&nbsp; Desarrollado por Leandro Cebreiros</p>
     </footer>
 
     <script>
-        // Animación de aparición al hacer scroll
-        document.addEventListener('DOMContentLoaded', function() {
-            const fadeElements = document.querySelectorAll('.fade-in');
-            
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                    }
-                });
-            }, { threshold: 0.1 });
-            
-            fadeElements.forEach(element => {
-                observer.observe(element);
+    (() => {
+        'use strict';
+
+        /* ── Particles ──────────────────────────────────────── */
+        const container = document.getElementById('particles');
+
+        const orbs = [
+            { w:300, h:240, top:'5%',  left:'2%',  color:'rgba(0,50,110,0.5)',  dur:'14s', delay:'0s',  dx:'35px',  dy:'-45px' },
+            { w:220, h:180, top:'58%', left:'72%', color:'rgba(70,0,110,0.45)', dur:'17s', delay:'3s',  dx:'-25px', dy:'38px'  },
+            { w:160, h:160, top:'40%', left:'18%', color:'rgba(0,200,255,0.05)',dur:'10s', delay:'5s',  dx:'18px',  dy:'-28px' },
+            { w:180, h:140, top:'82%', left:'5%',  color:'rgba(0,80,180,0.28)', dur:'12s', delay:'1.5s',dx:'28px',  dy:'-18px' },
+        ];
+        orbs.forEach(cfg => {
+            const el = document.createElement('div');
+            el.className = 'orb';
+            Object.assign(el.style, {
+                width: cfg.w+'px', height: cfg.h+'px',
+                top: cfg.top, left: cfg.left,
+                background: cfg.color,
+                '--dur': cfg.dur, '--delay': cfg.delay,
+                '--dx': cfg.dx, '--dy': cfg.dy,
             });
+            container.appendChild(el);
         });
+
+        const colors = ['#00f0ff','#ffffff','#ff00ff','#19ff8c','#b8d4ff'];
+        for (let i = 0; i < 50; i++) {
+            const el = document.createElement('div');
+            el.className = 'star';
+            const s = Math.random() * 2.2 + 0.6;
+            Object.assign(el.style, {
+                width: s+'px', height: s+'px',
+                top:  Math.random()*100+'%',
+                left: Math.random()*100+'%',
+                background: colors[Math.floor(Math.random()*colors.length)],
+                '--dur':     (Math.random()*4+2).toFixed(1)+'s',
+                '--delay':   (Math.random()*6).toFixed(1)+'s',
+                '--op-from': (Math.random()*0.1+0.04).toFixed(2),
+                '--op-to':   (Math.random()*0.45+0.25).toFixed(2),
+            });
+            container.appendChild(el);
+        }
+
+        /* ── Reveal on scroll ───────────────────────────────── */
+        const revealEls = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        revealEls.forEach(el => revealObserver.observe(el));
+
+        /* ── Active nav pill on scroll ──────────────────────── */
+        const sections  = ['inicio', 'reglas', 'express', 'equipo'];
+        const navPills  = document.querySelectorAll('.nav-pill[data-section]');
+        const navHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'));
+
+        function setActivePill() {
+            let current = sections[0];
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.getBoundingClientRect().top <= navHeight + 40) current = id;
+            });
+            navPills.forEach(p => p.classList.toggle('active', p.dataset.section === current));
+        }
+
+        window.addEventListener('scroll', setActivePill, { passive: true });
+        setActivePill();
+    })();
     </script>
+
 </body>
 </html>

@@ -11,6 +11,14 @@
   $motivoNombre = optional(\App\Models\Motivo::find($activeSession->motivo_id))->nombre ?? 'Motivo';
 @endphp
 
+<!-- Botón volver al dashboard -->
+<a href="{{ route('guest-dashboard') }}" class="back-dashboard-btn" title="Volver al dashboard">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
+  </svg>
+  Dashboard
+</a>
+
 @if($activeSession)
   <!-- Tarjeta Invitado + Motivo (centrada) -->
   <div class="guest-card-wrap w-full flex items-center justify-center mb-8">
@@ -114,6 +122,45 @@
 
 
 <style>
+
+/* === BOTÓN VOLVER AL DASHBOARD === */
+.back-dashboard-btn {
+    position: fixed;
+    top: 12px;
+    left: 15px;
+    z-index: 10002;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px 8px 12px;
+    background: linear-gradient(135deg, rgba(4,38,78,0.92) 0%, rgba(0,52,94,0.92) 100%);
+    border: 1.5px solid #00f0ff55;
+    border-radius: 999px;
+    color: #36d1ff;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    box-shadow: 0 0 12px #00e8fc33, 0 2px 10px rgba(0,0,0,0.3);
+    backdrop-filter: blur(4px);
+    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
+}
+.back-dashboard-btn:hover {
+    background: linear-gradient(135deg, rgba(0,240,255,0.18) 0%, rgba(0,120,180,0.22) 100%);
+    border-color: #00f0ffaa;
+    box-shadow: 0 0 20px #00e8fc66, 0 2px 12px rgba(0,0,0,0.4);
+    color: #00f0ff;
+    transform: translateX(-2px);
+}
+@media (max-width: 640px) {
+    .back-dashboard-btn {
+        top: 8px;
+        left: 10px;
+        font-size: 0.7rem;
+        padding: 6px 12px 6px 9px;
+    }
+}
 
 /* === AJUSTE PARA EVITAR SOLAPAMIENTO CON NAVIGATION === */
 #pantalla {

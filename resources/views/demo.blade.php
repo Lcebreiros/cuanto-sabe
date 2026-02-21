@@ -150,6 +150,8 @@
     }
     .hud-btn:hover{ transform: translateY(-1px) scale(1.03); box-shadow:0 0 22px #00e8fc88; border-color:#00f0ff88; }
     .hud-btn svg{ width:24px; height:24px; }
+    .hud-back-btn{ color:#36d1ff; text-decoration:none; }
+    .hud-back-btn:hover{ color:#00f0ff; }
 
     /* altavoz animado */
     #sound-btn .slash{ opacity:0; transform: scale(.6) rotate(0); transform-origin:center; transition: opacity .18s ease, transform .18s ease; }
@@ -431,6 +433,14 @@
 <!-- HUD: opciones + sonido -->
 <!-- HUD: opciones primero, luego sonido -->
 <div class="hud-left" aria-label="Controles">
+
+  <!-- VOLVER AL DASHBOARD -->
+  <a href="{{ route('guest-dashboard') }}" class="hud-btn hud-back-btn" title="Volver al dashboard" aria-label="Volver al dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
+    </svg>
+  </a>
+
   <!-- OPCIONES -->
   <div class="opts-wrap">
 <button id="opts-btn" class="hud-btn" title="Opciones" aria-haspopup="true" aria-expanded="false">
