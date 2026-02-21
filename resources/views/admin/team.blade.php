@@ -1,111 +1,92 @@
-@extends('layouts.app') {{-- O layouts.app si usas la opción 2 --}}
+@php $hideNavigation = true; $hideFooter = true; @endphp
+@extends('layouts.app')
 
 @section('title', 'Gestión de Equipo - Cuánto Sabe')
 
 @push('styles')
     <style>
-        .back-btn-admin {
-            display: inline-flex;
+        main { padding: 0 !important; }
+        .chat-topbar {
+            display: flex;
             align-items: center;
-            gap: 6px;
-            font-family: 'Orbitron', Arial, sans-serif;
-            font-size: 0.72rem;
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(10, 14, 35, 0.98);
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+            flex-shrink: 0;
+            height: 44px;
+        }
+        .chat-back-btn {
+            background: rgba(0, 240, 255, 0.1);
+            color: #00f0ff;
+            border: 1.5px solid rgba(0, 240, 255, 0.35);
+            border-radius: 8px;
+            padding: 5px 12px;
+            font-size: 0.82rem;
             font-weight: 600;
-            letter-spacing: 0.08em;
-            color: #00f0ff;
+            cursor: pointer;
             text-decoration: none;
-            padding: 7px 14px;
-            border: 1px solid rgba(0,240,255,0.3);
-            border-radius: 999px;
-            background: rgba(0,240,255,0.05);
-            transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
             white-space: nowrap;
-            margin-bottom: 1.5rem;
         }
-        .back-btn-admin:hover {
-            background: rgba(0,240,255,0.12);
+        .chat-back-btn:hover {
+            background: rgba(0, 240, 255, 0.22);
             border-color: #00f0ff;
-            box-shadow: 0 0 10px rgba(0,240,255,0.3);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);
             color: #00f0ff;
         }
-        .back-btn-admin svg { flex-shrink: 0; }
-        .fade-in-up {
-            animation: fadeInUp 0.6s ease-out;
+        .chat-back-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+        .chat-title {
+            color: #00f0ff;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
-        
+        .fade-in-up { animation: fadeInUp 0.6s ease-out; }
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-        
-        .glow-effect {
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
-        }
-        
-        .glow-effect:hover {
-            box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
-        }
+        .glow-effect      { box-shadow: 0 0 20px rgba(0, 240, 255, 0.1); }
+        .glow-effect:hover { box-shadow: 0 0 30px rgba(0, 240, 255, 0.2); }
     </style>
 @endpush
 
 @section('content')
+    <div class="chat-topbar">
+        <a href="{{ route('dashboard') }}" class="chat-back-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Volver
+        </a>
+        <span class="chat-title">Equipo</span>
+    </div>
+
     <!-- Efectos de fondo adicionales -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
         <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl animate-pulse"></div>
         <div class="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
     </div>
 
-    <div style="padding: 0.5rem 0 0.25rem;">
-        <a href="{{ route('dashboard') }}" class="back-btn-admin">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
-            Volver
-        </a>
-    </div>
-
-    <!-- Contenedor principal con animación de entrada -->
     <div class="fade-in-up">
         @livewire('team-admin')
     </div>
-    
-    <!-- Scripts adicionales -->
+
     @push('scripts')
         <script>
-            // Animaciones adicionales
-            document.addEventListener('DOMContentLoaded', function() {
-                // Efecto de particles para el fondo admin
-                const createParticle = () => {
-                    const particle = document.createElement('div');
-                    particle.className = 'absolute w-2 h-2 bg-cyan-400/20 rounded-full animate-pulse';
-                    particle.style.left = Math.random() * 100 + '%';
-                    particle.style.top = Math.random() * 100 + '%';
-                    particle.style.animationDelay = Math.random() * 3 + 's';
-                    document.querySelector('.fixed.inset-0').appendChild(particle);
-                };
-                
-                // Crear algunas partículas
-                for (let i = 0; i < 8; i++) {
-                    createParticle();
-                }
-            });
-            
-            // Livewire hooks para mejor UX
             document.addEventListener('livewire:init', () => {
                 Livewire.on('memberSaved', () => {
-                    // Efecto de confeti o notificación
                     const toast = document.createElement('div');
                     toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
                     toast.textContent = '✅ Miembro guardado correctamente';
                     document.body.appendChild(toast);
-                    
-                    setTimeout(() => {
-                        toast.remove();
-                    }, 3000);
+                    setTimeout(() => toast.remove(), 3000);
                 });
             });
         </script>

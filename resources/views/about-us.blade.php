@@ -202,12 +202,13 @@
             padding-bottom: 40px;
         }
 
-        .hero-content { max-width: 720px; }
+        .hero-content { max-width: 720px; margin: 0 auto; }
 
         .hero-logo {
-            width: clamp(140px, 25vw, 220px);
+            display: block;
+            margin: 0 auto 28px;
+            width: clamp(170px, 30vw, 260px);
             height: auto;
-            margin-bottom: 28px;
             filter:
                 drop-shadow(0 0 22px rgba(0,240,255,0.7))
                 drop-shadow(0 0 8px rgba(255,0,255,0.3));

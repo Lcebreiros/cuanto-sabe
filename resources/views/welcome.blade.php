@@ -205,34 +205,6 @@
             to { background-position: 200% center; }
         }
 
-        /* ── Feature badges ────────────────────────────────── */
-        .badges {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 22px;
-            opacity: 0;
-            animation: fade-up 0.5s 0.8s var(--ease) forwards;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.72rem;
-            font-weight: 500;
-            letter-spacing: 0.04em;
-            color: var(--text);
-            background: rgba(0, 240, 255, 0.07);
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            border-radius: 999px;
-            padding: 5px 12px;
-            white-space: nowrap;
-        }
-
-        .badge-icon { font-size: 0.85rem; }
-
         /* ── Divider ───────────────────────────────────────── */
         .divider {
             height: 1px;
@@ -324,12 +296,6 @@
 
         .cta:active { transform: translateY(0) scale(0.99); }
 
-        .cta-arrow {
-            font-size: 1.1rem;
-            transition: transform 0.2s var(--ease);
-        }
-        .cta:hover .cta-arrow { transform: translateX(4px); }
-
         /* ── Footer ────────────────────────────────────────── */
         .footer {
             margin-top: 28px;
@@ -404,13 +370,6 @@
                 <!-- Tagline -->
                 <p class="tagline">El juego de conocimiento en vivo</p>
 
-                <!-- Feature badges -->
-                <div class="badges">
-                    <span class="badge"><span class="badge-icon">🎯</span> En vivo</span>
-                    <span class="badge"><span class="badge-icon">⚡</span> Por puntos</span>
-                    <span class="badge"><span class="badge-icon">👥</span> Multijugador</span>
-                </div>
-
                 <!-- Divider -->
                 <div class="divider"></div>
 
@@ -423,8 +382,7 @@
                 <!-- CTA -->
                 <div class="cta-wrap">
                     <a href="{{ route('guest-dashboard') }}" class="cta" id="cta">
-                        Ingresar al juego
-                        <span class="cta-arrow">→</span>
+                        Ingresar
                     </a>
                 </div>
 
