@@ -38,19 +38,7 @@
         /* ── Background ────────────────────────────────────── */
         .bg-gradient {
             position: fixed; inset: 0; z-index: 0;
-            background:
-                radial-gradient(ellipse 80% 55% at 50% 0%,   #1a0050 0%, transparent 70%),
-                radial-gradient(ellipse 55% 45% at 90% 85%,  #00103a 0%, transparent 60%),
-                radial-gradient(ellipse 45% 40% at 5%  60%,  #180040 0%, transparent 60%),
-                var(--bg);
-        }
-
-        .bg-grid {
-            position: fixed; inset: 0; z-index: 1; pointer-events: none;
-            background-image:
-                linear-gradient(rgba(0,240,255,0.025) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,240,255,0.025) 1px, transparent 1px);
-            background-size: 52px 52px;
+            background: radial-gradient(circle at center, #1e0047 60%, #0c0125 100%);
         }
 
         .particles { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
@@ -449,7 +437,6 @@
 
     <!-- Background -->
     <div class="bg-gradient"></div>
-    <div class="bg-grid"></div>
     <div class="particles" id="particles"></div>
 
     <!-- Top nav -->
@@ -458,7 +445,7 @@
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            Dashboard
+            Menú
         </a>
         <div class="nav-pills" id="navPills">
             <a href="#inicio"   class="nav-pill active" data-section="inicio">Inicio</a>

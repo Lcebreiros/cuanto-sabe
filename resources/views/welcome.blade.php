@@ -38,24 +38,8 @@
         .bg-gradient {
             position: fixed;
             inset: 0;
-            background:
-                radial-gradient(ellipse 80% 60% at 50% 0%,   #1a0050 0%, transparent 70%),
-                radial-gradient(ellipse 60% 50% at 80% 90%,  #00103a 0%, transparent 60%),
-                radial-gradient(ellipse 50% 40% at 10% 60%,  #180040 0%, transparent 60%),
-                var(--bg);
+            background: radial-gradient(circle at center, #1e0047 60%, #0c0125 100%);
             z-index: 0;
-        }
-
-        /* Subtle grid overlay */
-        .bg-grid {
-            position: fixed;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px);
-            background-size: 48px 48px;
-            z-index: 1;
-            pointer-events: none;
         }
 
         /* ── Particles ─────────────────────────────────────── */
@@ -180,6 +164,8 @@
 
         /* ── Logo ──────────────────────────────────────────── */
         .logo-wrap {
+            display: flex;
+            justify-content: center;
             margin-bottom: 8px;
             opacity: 0;
             animation: fade-up 0.5s 0.5s var(--ease) forwards;
@@ -400,7 +386,6 @@
 
     <!-- Background layers -->
     <div class="bg-gradient"></div>
-    <div class="bg-grid"></div>
 
     <!-- Particles -->
     <div class="particles" id="particles"></div>
