@@ -1,7 +1,7 @@
 @php $hideNavigation = true; $hideFooter = true; @endphp
 @extends('layouts.app')
 
-@push('styles')
+@section('content')
 <style>
     main { padding: 0 !important; }
     .chat-topbar {
@@ -46,17 +46,16 @@
         text-transform: uppercase;
     }
 </style>
-@endpush
 
-@section('content')
-  <div class="chat-topbar">
-      <a href="{{ route('dashboard') }}" class="chat-back-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-          </svg>
-          Volver
-      </a>
-      <span class="chat-title">Reglas</span>
-  </div>
-  @livewire('rule-admin')
+<div class="chat-topbar">
+    <a href="{{ route('dashboard') }}" class="chat-back-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Volver
+    </a>
+    <span class="chat-title">Reglas</span>
+</div>
+
+@livewire('rule-admin')
 @endsection
