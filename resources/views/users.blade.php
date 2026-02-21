@@ -9,7 +9,7 @@
             <thead>
                 <tr>
                     <th>Nombre</th>
-                    <th>DNI</th>
+                    <th>Pin</th>
                     <th>Registrado</th>
                     <th>Rol</th>
                     <th>Acciones</th>

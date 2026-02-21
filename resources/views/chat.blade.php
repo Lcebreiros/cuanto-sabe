@@ -106,7 +106,7 @@
 
     <div class="chat-frame-container">
         <iframe
-            src="https://socialstream.ninja/dock.html?session=NDUiG3QvPP&transparent&scale=1&showtime=30000&delaytime=10000"
+            src="https://socialstream.ninja/dock.html?session=NDUiG3QvPP&transparent&scale=1&delaytime=10000000"
             allowtransparency="true"
             allow="autoplay"
             title="Chat"
