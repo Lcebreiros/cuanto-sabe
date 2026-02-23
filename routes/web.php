@@ -71,6 +71,7 @@ Route::post('/game-session/overlay-reset', [GameSessionController::class, 'overl
 Route::post('/game-session/select-option', [GameSessionController::class, 'selectOption'])->name('game-session.select-option');
 Route::get('/overlay/api/puntos', [GameSessionController::class, 'apiGuestPoints']);
 Route::get('/overlay/api/pregunta', [GameSessionController::class, 'apiActiveQuestion']);
+Route::get('/overlay/api/state', [GameSessionController::class, 'apiOverlayState']);
 
 // bonos y descartes
 Route::prefix('game')->group(function () {

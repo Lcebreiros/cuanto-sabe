@@ -854,6 +854,14 @@ public function lanzarPreguntaCategoria(Request $request)
         return response()->json(['error' => 'No hay sesión activa'], 400);
     }
 
+    // ✅ LOCK ANTI-DUPLICADO: si dos overlays giran al mismo tiempo, solo el primero gana
+    $lockKey = 'question_launch_lock_' . $session->id;
+    if (Cache::has($lockKey)) {
+        \Log::warning('[LANZAR] Request ignorado: pregunta ya siendo lanzada por otro overlay', ['session_id' => $session->id]);
+        return response()->json(['error' => 'Pregunta ya siendo procesada', 'locked' => true], 409);
+    }
+    Cache::put($lockKey, true, now()->addSeconds(5));
+
     // ✅ Obtener ID de la pregunta anterior para no repetirla
     $preguntaAnteriorId = $session->active_question_id;
 
@@ -1289,6 +1297,38 @@ public function salirDelJuego(Request $request)
     // 4. Redirigir
     return redirect()->route('guest-dashboard')->with('success', 'Saliste del juego y tu registro fue eliminado.');
 }
+public function apiOverlayState()
+{
+    $session = GameSession::where('status', 'active')->latest()->first();
+
+    if (!$session) {
+        return response()->json(['pregunta' => null, 'session' => null]);
+    }
+
+    $preguntaData = null;
+    if ($session->pregunta_json) {
+        $preguntaData = json_decode($session->pregunta_json, true);
+        if ($preguntaData) {
+            $preguntaId = $preguntaData['pregunta_id'] ?? null;
+            $preguntaData['is_revealed']     = $preguntaId
+                && Cache::has('revealed_question_' . $session->id . '_' . $preguntaId);
+            $preguntaData['revealed_option'] = Cache::get('revealed_option_' . $session->id) ?: null;
+            $preguntaData['selected_option'] = Cache::get('sd_selected_option_' . $session->id) ?: null;
+        }
+    }
+
+    return response()->json([
+        'pregunta' => $preguntaData,
+        'session'  => [
+            'apuesta_x2_active'    => (bool) $session->apuesta_x2_active,
+            'descarte_usados'      => (int)  $session->descarte_usados,
+            'guest_points'         => (int)  ($session->guest_points ?? 0),
+            'tendencias_acertadas' => (int)  ($session->tendencias_acertadas ?? 0),
+            'tendencias_objetivo'  => (int)  ($session->tendencias_objetivo ?? 0),
+        ],
+    ]);
+}
+
 // En GameSessionController:
 public function apiGuestPoints()
 {

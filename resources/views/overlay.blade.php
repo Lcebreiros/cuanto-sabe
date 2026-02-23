@@ -449,7 +449,16 @@ window.Echo = new Echo({
 function updateConnectionStatus(connected) {
     document.getElementById('connectionStatus').classList.toggle('connected', connected);
 }
-window.Echo.connector.pusher.connection.bind('connected', () => updateConnectionStatus(true));
+let isFirstConnection = true;
+window.Echo.connector.pusher.connection.bind('connected', () => {
+    updateConnectionStatus(true);
+    if (!isFirstConnection) {
+        // Reconexión mid-stream: restaurar estado actual desde el servidor
+        console.log('[OVERLAY] Reconectado a Pusher — restaurando estado...');
+        fetchOverlayState();
+    }
+    isFirstConnection = false;
+});
 window.Echo.connector.pusher.connection.bind('disconnected', () => updateConnectionStatus(false));
 
 // =========== PANEL LOGIC =============
@@ -466,39 +475,54 @@ const FETCH_COOLDOWN = 2000; // 2 segundos mínimo entre llamadas
 
 async function fetchOverlayState() {
     const now = Date.now();
-    
+
     // 🔥 Evitar llamadas duplicadas
     if (isFetching || (now - lastFetch) < FETCH_COOLDOWN) {
         console.log('[DEBUG] fetchOverlayState: cooldown activo, skip');
         return;
     }
-    
+
     isFetching = true;
     lastFetch = now;
-    
-    try {
-        // 1. Pregunta activa
-        let pregunta = null;
-        const resP = await fetch('/overlay/api/pregunta');
-        if (resP.ok) pregunta = await resP.json();
 
+    try {
+        const res = await fetch('/overlay/api/state');
+        if (!res.ok) return;
+        const state = await res.json();
+
+        const pregunta = state.pregunta;
         if (pregunta && pregunta.pregunta) {
-            showQuestion(pregunta);
+            // Si la pregunta se lanzó hace más de 10s, mostrar todo de inmediato (reconexión)
+            const elapsed = pregunta.timestamp
+                ? Date.now() - new Date(pregunta.timestamp).getTime()
+                : Infinity;
+            const skipDelay = elapsed > 10000;
+
+            showQuestion(pregunta, skipDelay);
+
+            // Restaurar opción seleccionada y reveal solo si ya pasaron los 10s
+            if (skipDelay) {
+                const selOption = pregunta.selected_option || pregunta.revealed_option;
+                if (selOption) {
+                    ultimaSeleccionPanel = selOption;
+                    showSelectedOption(selOption);
+                }
+                if (pregunta.is_revealed) {
+                    setTimeout(() => revealAnswer(pregunta), 300);
+                }
+            }
         } else {
             resetOverlay();
         }
 
-        /*
-        let puntos = 0;
-        const resPts = await fetch('/overlay/api/puntos');
-        if (resPts.ok) {
-            const json = await resPts.json();
-            puntos = json.points ?? 0;
+        // Restaurar indicadores de bonus
+        if (state.session) {
+            const apuestaInd = document.getElementById('apuesta-indicator');
+            if (apuestaInd) {
+                apuestaInd.style.display = state.session.apuesta_x2_active ? 'inline-flex' : 'none';
+            }
         }
-        const val = document.getElementById('guestPointsValue');
-        if (val) val.textContent = puntos;
-        */
-        
+
     } catch (e) {
         console.error('[ERROR] fetchOverlayState:', e);
     } finally {
@@ -568,7 +592,7 @@ function resetOverlay() {
 }
 
 
-function showQuestion(data) {
+function showQuestion(data, skipDelay = false) {
     // 🔥 LIMPIA TENDENCIA DE TODAS LAS OPCIONES
     ['A','B','C','D'].forEach(l => {
         const optEl = document.getElementById('op'+l);
@@ -665,7 +689,7 @@ function showQuestion(data) {
                 optEl.style.display = 'none';
             }
         });
-    }, 10000); // 10 segundos
+    }, skipDelay ? 0 : 10000); // 10 segundos (0 si es reconexión)
 }
 
 // NUEVO: Ruleta se va tras seleccionar opción (llamalo desde showSelectedOption)
