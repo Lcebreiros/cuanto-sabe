@@ -69,9 +69,15 @@ Route::post('/game-session/reveal', [GameSessionController::class, 'revealAnswer
 Route::post('/game-session/random-question', [GameSessionController::class, 'sendRandomQuestion'])->name('game-session.random-question');
 Route::post('/game-session/overlay-reset', [GameSessionController::class, 'overlayReset'])->name('game-session.overlay-reset');
 Route::post('/game-session/select-option', [GameSessionController::class, 'selectOption'])->name('game-session.select-option');
+// Rutas API del overlay — deben ir ANTES de /overlay/{code} para no ser interceptadas
 Route::get('/overlay/api/puntos', [GameSessionController::class, 'apiGuestPoints']);
 Route::get('/overlay/api/pregunta', [GameSessionController::class, 'apiActiveQuestion']);
 Route::get('/overlay/api/state', [GameSessionController::class, 'apiOverlayState']);
+Route::get('/overlay/api/validate/{code}', [GameSessionController::class, 'apiValidateSessionCode']);
+// Overlay por código en URL (ej: /overlay/XK7P2M para OBS) — solo acepta códigos alfanuméricos de 4-8 chars
+Route::get('/overlay/{code}', [GameSessionController::class, 'ruletaOverlay'])
+    ->where('code', '[A-Za-z0-9]{4,8}')
+    ->name('overlay.code');
 
 // bonos y descartes
 Route::prefix('game')->group(function () {
@@ -131,7 +137,10 @@ Route::get('/streamdeck', function () {
     $questionCount = $activeSession
         ? \App\Models\GuestAnswer::where('game_session_id', $activeSession->id)->count()
         : 0;
-    return view('streamdeck', compact('activeSession', 'questionCount'));
+    $isSpinning = $activeSession
+        ? (bool) \Illuminate\Support\Facades\Cache::get('sd_spinning_' . $activeSession->id, false)
+        : false;
+    return view('streamdeck', compact('activeSession', 'questionCount', 'isSpinning'));
 })->middleware(['auth', 'admin'])->name('streamdeck');
 
 // Demo

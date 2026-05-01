@@ -13,37 +13,33 @@ class GameBonusUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $apuesta_x2_active;
-    public $descarte_usados;
+    public $session;
 
-public $session;
-
-public function __construct(GameSession $session)
-{
-    $this->session = $session;
-}
-
+    public function __construct(GameSession $session)
+    {
+        $this->session = $session;
+    }
 
     public function broadcastOn()
     {
-        return new Channel('cuanto-sabe-overlay');
+        $code = $this->session->session_code ?? 'default';
+        return new Channel('cuanto-sabe-overlay-' . $code);
     }
 
-    // ✅ IMPORTANTE: Define el nombre del evento
     public function broadcastAs()
     {
         return 'GameBonusUpdated';
     }
 
     public function broadcastWith()
-{
-    return [
-        'apuesta_x2_active' => $this->session->apuesta_x2_active,
-        'apuesta_x2_usadas' => $this->session->apuesta_x2_usadas,
-        'descarte_usados' => $this->session->descarte_usados,
-        'modo_juego' => $this->session->modo_juego,
-        'tendencias_acertadas' => $this->session->tendencias_acertadas ?? 0,
-        'tendencias_objetivo' => $this->session->tendencias_objetivo ?? 10,
-    ];
-}
+    {
+        return [
+            'apuesta_x2_active'    => $this->session->apuesta_x2_active,
+            'apuesta_x2_usadas'    => $this->session->apuesta_x2_usadas,
+            'descarte_usados'      => $this->session->descarte_usados,
+            'modo_juego'           => $this->session->modo_juego,
+            'tendencias_acertadas' => $this->session->tendencias_acertadas ?? 0,
+            'tendencias_objetivo'  => $this->session->tendencias_objetivo ?? 10,
+        ];
+    }
 }

@@ -95,7 +95,7 @@ class GameBonusController extends Controller
 
         // ✅ Broadcast de eventos
         broadcast(new GameBonusUpdated($session));
-        broadcast(new \App\Events\OverlayReset());
+        broadcast(new \App\Events\OverlayReset($session->session_code ?? 'default'));
 
         return response()->json([
             'success' => true,

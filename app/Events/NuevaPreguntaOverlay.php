@@ -12,16 +12,18 @@ class NuevaPreguntaOverlay implements ShouldBroadcastNow
     use InteractsWithSockets, SerializesModels;
 
     public $data;
+    public string $sessionCode;
 
-    public function __construct($data)
+    public function __construct($data, string $sessionCode)
     {
         \Log::info('NuevaPreguntaOverlay lanzado', $data);
         $this->data = $data;
+        $this->sessionCode = $sessionCode;
     }
 
     public function broadcastOn()
     {
-        return new Channel('cuanto-sabe-overlay');
+        return new Channel('cuanto-sabe-overlay-' . $this->sessionCode);
     }
 
     public function broadcastAs()

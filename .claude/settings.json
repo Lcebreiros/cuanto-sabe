@@ -9,7 +9,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:resources.overlays.uno)",
       "WebFetch(domain:companion.free)",
-      "WebFetch(domain:deepwiki.com)"
+      "WebFetch(domain:deepwiki.com)",
+      "Bash(grep -E \"\\(Game|Overlay|\\\\.php$\\)\")"
     ]
   }
 }

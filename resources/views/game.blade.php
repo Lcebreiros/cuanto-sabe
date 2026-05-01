@@ -1391,6 +1391,14 @@
     @endif
 </div>
 
+@if($activeSession && $activeSession->session_code)
+<div class="overlay-code-badge" title="Ingresá este código en la ventana del overlay para sincronizarla">
+    <span class="overlay-code-label">OVERLAY</span>
+    <span class="overlay-code-value" id="overlayCodeDisplay">{{ $activeSession->session_code }}</span>
+    <button class="overlay-code-copy" onclick="navigator.clipboard.writeText('{{ $activeSession->session_code }}').then(()=>{ this.textContent='✓'; setTimeout(()=>this.textContent='⎘',1200); })" title="Copiar código">⎘</button>
+</div>
+@endif
+
 <style>
 .guest-info-container {
     display: flex;
@@ -1456,6 +1464,28 @@
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     color: #fff;
 }
+
+/* Código de overlay */
+.overlay-code-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #0d1b2e; border: 1px solid #2d60a6;
+    border-radius: 8px; padding: 6px 12px;
+    font-family: monospace;
+}
+.overlay-code-label {
+    font-size: 0.65rem; color: #4a7ab5;
+    letter-spacing: 0.1em; text-transform: uppercase;
+}
+.overlay-code-value {
+    font-size: 1.1rem; font-weight: bold; letter-spacing: 0.2em;
+    color: #22fa68;
+}
+.overlay-code-copy {
+    background: none; border: none; color: #4a7ab5;
+    cursor: pointer; font-size: 1rem; padding: 0 2px;
+    line-height: 1;
+}
+.overlay-code-copy:hover { color: #7eb8ff; }
 </style>
 
         </div>
@@ -1909,10 +1939,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Escuchar broadcasts en cuanto-sabe-overlay -> GameBonusUpdated
+    // Escuchar broadcasts en canal de sesión -> GameBonusUpdated
     try {
-        if (window.Echo) {
-            window.Echo.channel('cuanto-sabe-overlay')
+        const _gameOverlayChannel = '{{ $activeSession?->session_code ? "cuanto-sabe-overlay-" . $activeSession->session_code : "" }}';
+        if (window.Echo && _gameOverlayChannel) {
+            window.Echo.channel(_gameOverlayChannel)
                 .listen('.GameBonusUpdated', (payload) => {
                     // payload ejemplo: { apuesta_x2_active, apuesta_x2_usadas, descarte_usados, modo_juego }
                     // Acomodar nombres si tu backend envía sin prefijos
@@ -2273,9 +2304,10 @@ document.addEventListener('DOMContentLoaded', function() {
     @endif
 
 // --- Overlay channel: nueva pregunta + tendencia + reset ---
-if (window.Echo) {
-    const overlay = Echo.channel('cuanto-sabe-overlay');
-    Echo.channel('cuanto-sabe-overlay')
+const _panelOverlayChannel = '{{ $activeSession?->session_code ? "cuanto-sabe-overlay-" . $activeSession->session_code : "" }}';
+if (window.Echo && _panelOverlayChannel) {
+    const overlay = Echo.channel(_panelOverlayChannel);
+    Echo.channel(_panelOverlayChannel)
         .listen('.GameBonusUpdated', (event) => {
             console.log('[PANEL] Evento bonus recibido:', event);
 
@@ -2507,18 +2539,18 @@ if (window.Echo) {
                 }, 200);
             });
         });
-if (window.Echo) {
-    Echo.channel('cuanto-sabe-overlay')
+if (window.Echo && _panelOverlayChannel) {
+    Echo.channel(_panelOverlayChannel)
         .listen('.GuestPointsUpdated', e => {
             const val = document.getElementById('guestPointsValue');
             if (val) {
-                val.textContent = e.points; // actualiza el valor
+                val.textContent = e.points;
             }
         });
 }
 
-if (window.Echo) {
-    Echo.channel('cuanto-sabe-overlay')
+if (window.Echo && _panelOverlayChannel) {
+    Echo.channel(_panelOverlayChannel)
         .listen('.revelar-respuesta', (e) => {
             const payload = e.data || e || {};
 

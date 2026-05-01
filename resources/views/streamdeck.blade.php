@@ -559,15 +559,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.11.3/echo.iife.js"></script>
 <script>
 // ─── ESTADO ──────────────────────────────────────────────────────────────
-let isSpinning        = false;
+let isSpinning        = {{ $isSpinning ? 'true' : 'false' }};
 let apuestaActive     = {{ $apuestaActive ? 'true' : 'false' }};
 let apuestaDisp       = {{ $apuestaDisponibles }};
 let descarteDisp      = {{ $descarteDisponible ? '1' : '0' }};
 let hasActiveQuestion = false;
 let questionCount     = {{ $questionCount }};
 const hasSession      = {{ $activeSession ? 'true' : 'false' }};
-let currentOpcion     = null;   // Opción seleccionada actualmente (A/B/C/D)
-let isRevealed        = false;  // Bloquea revelar la misma pregunta dos veces
+const overlayChannel  = @json($activeSession?->session_code ? 'cuanto-sabe-overlay-' . $activeSession->session_code : null);
+let currentOpcion     = null;
+let isRevealed        = false;
+let ruletaInFlight    = false; // Protección doble-click
 
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
@@ -677,21 +679,22 @@ function syncQCount() {
 
 // ─── HANDLERS ────────────────────────────────────────────────────────────
 function handleRuleta() {
-    if (!hasSession) return;
+    if (!hasSession || ruletaInFlight) return;
+    ruletaInFlight = true;
     isSpinning = !isSpinning;
     syncRuletaUI();
 
     fetch('/game-session/girar-ruleta', {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': CSRF, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ action: isSpinning ? 'start' : 'stop' })
     })
     .then(r => r.json())
     .then(d => {
         flash(document.getElementById('btnRuleta'), d.error ? 'err' : 'ok');
         if (d.error) { isSpinning = !isSpinning; syncRuletaUI(); }
     })
-    .catch(() => { isSpinning = !isSpinning; syncRuletaUI(); });
+    .catch(() => { isSpinning = !isSpinning; syncRuletaUI(); })
+    .finally(() => { ruletaInFlight = false; });
 }
 
 function syncRevelarBtn() {
@@ -811,8 +814,8 @@ function handleOpcion(label) {
 }
 
 // ─── PUSHER LISTENERS ────────────────────────────────────────────────────
-if (window.Echo && hasSession) {
-    const ch = window.Echo.channel('cuanto-sabe-overlay');
+if (window.Echo && hasSession && overlayChannel) {
+    const ch = window.Echo.channel(overlayChannel);
 
     // Bonus (apuesta / descarte)
     ch.listen('.GameBonusUpdated', (e) => {
@@ -886,17 +889,39 @@ if (window.Echo && hasSession) {
     });
 }
 
-// Restaurar estado al cargar/refrescar la página
+// Restaurar estado completo al cargar/refrescar la página
 document.addEventListener('DOMContentLoaded', () => {
     if (!hasSession) return;
-    fetch('/overlay/api/pregunta')
+
+    // Aplicar estado inicial de spinning (viene del servidor via PHP)
+    syncRuletaUI();
+
+    fetch('/overlay/api/state')
         .then(r => r.json())
-        .then(data => {
+        .then(state => {
+            // ── Sesión: apuesta, descarte, conteo ──
+            if (state.session) {
+                const s = state.session;
+                if (typeof s.apuesta_x2_active !== 'undefined') {
+                    apuestaActive = !!s.apuesta_x2_active;
+                }
+                if (typeof s.descarte_usados !== 'undefined') {
+                    descarteDisp = s.descarte_usados < 1 ? 1 : 0;
+                }
+                if (typeof s.question_count !== 'undefined') {
+                    questionCount = s.question_count;
+                    syncQCount();
+                }
+                syncApuestaUI();
+                syncDescarteUI();
+            }
+
+            // ── Pregunta activa ──
+            const data = state.pregunta;
             if (!data || !data.pregunta_id || !data.opciones || !data.opciones.length) return;
 
             hasActiveQuestion = true;
 
-            // Poblar textos de opciones
             const opciones = data.opciones || [];
             ['A','B','C','D'].forEach(l => {
                 const txt = document.getElementById('opText' + l);
@@ -905,14 +930,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 txt.textContent = op ? op.texto : '';
             });
 
-            // Restaurar opción revelada
-            if (data.revealed_option) {
-                currentOpcion = data.revealed_option.toUpperCase();
+            // Restaurar opción seleccionada/revelada
+            const opRestored = data.revealed_option || data.selected_option;
+            if (opRestored) {
+                currentOpcion = opRestored.toUpperCase();
             }
 
-            // Restaurar estado de reveal
             if (data.is_revealed) {
                 isRevealed = true;
+                hasActiveQuestion = false;
                 syncRevelarBtn();
             }
 

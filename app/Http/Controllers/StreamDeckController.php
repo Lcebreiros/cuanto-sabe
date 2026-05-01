@@ -108,7 +108,7 @@ class StreamDeckController extends Controller
         $newSpinning = !$spinning;
 
         Cache::put($key, $newSpinning, now()->addHours(3));
-        broadcast(new GirarRuleta());
+        broadcast(new GirarRuleta($session->session_code ?? 'default'));
 
         Log::info('[STREAMDECK] Ruleta toggled', ['spinning' => $newSpinning]);
 
@@ -213,7 +213,7 @@ class StreamDeckController extends Controller
         Cache::put('sd_selected_option_' . $session->id, $label, now()->addHours(1));
 
         // Broadcast del evento para que el overlay/panel vean la selección en tiempo real
-        broadcast(new \App\Events\OpcionSeleccionada($label));
+        broadcast(new \App\Events\OpcionSeleccionada($label, $session->session_code ?? 'default'));
 
         Log::info("[STREAMDECK] Opción seleccionada y guardada en cache: {$label}");
 

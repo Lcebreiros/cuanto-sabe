@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use App\Services\GamePointsService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class GameSessionController extends Controller
 {
@@ -40,6 +41,7 @@ class GameSessionController extends Controller
         'guest_name' => $request->guest_name,
         'motivo_id' => $request->motivo_id,
         'status' => 'active',
+        'session_code' => strtoupper(Str::random(6)),
         'modo_juego' => $request->modo_juego,
         // inicializar contadores explícitamente
         'apuesta_x2_active' => false,
@@ -262,7 +264,7 @@ public function revealAnswer(Request $request)
             $session = $session->fresh();
 
             // Emitir evento para actualizar puntaje en vivo
-            broadcast(new \App\Events\GuestPointsUpdated($session->id, $session->guest_points));
+            broadcast(new \App\Events\GuestPointsUpdated($session->id, $session->guest_points, $session->session_code ?? 'default'));
 
             session()->forget('selected_guest_option');
 
@@ -418,7 +420,7 @@ public function revealAnswer(Request $request)
                 'question_limit_reached' => ($questionCount >= $questionLimit),
                 // ✅ Mejor participante individual (solo al finalizar)
                 'top_participant' => $topParticipant,
-            ]));
+            ], $session->session_code ?? 'default'));
         } catch (\Throwable $e) {
             \Log::error('❌ Error crítico en broadcast RevealAnswerOverlay', [
                 'error' => $e->getMessage(),
@@ -539,7 +541,7 @@ public function revealAnswer(Request $request)
             $session->save();
         }
 
-        broadcast(new NuevaPreguntaOverlay($data));
+        broadcast(new NuevaPreguntaOverlay($data, $session->session_code ?? 'default'));
         return response()->json([
             'success' => true,
             'mensaje' => 'Pregunta enviada',
@@ -566,7 +568,8 @@ public function selectOption(Request $request)
 
     // Sin ->toOthers(): todos los clientes reciben el evento para mantenerse sincronizados.
     // Cada listener es idempotente, así que el emisor recibir su propio evento no causa problemas.
-    broadcast(new \App\Events\OpcionSeleccionada($opcion));
+    $code = $activeSession ? ($activeSession->session_code ?? 'default') : 'default';
+    broadcast(new \App\Events\OpcionSeleccionada($opcion, $code));
     return response()->json(['ok' => true]);
 }
 
@@ -593,7 +596,7 @@ public function overlayReset(Request $request)
             Cache::forget("game_session_active");
 
             // broadcast solo si hubo write real
-            broadcast(new \App\Events\OverlayReset());
+            broadcast(new \App\Events\OverlayReset($session->session_code ?? 'default'));
         }
     }
 
@@ -686,38 +689,45 @@ public function add(Request $request)
     return back()->with('success', '¡Te anotaste en la cola!');
     }
 
-public function ruletaOverlay()
+public function ruletaOverlay(string $urlCode = null)
 {
     $session = GameSession::where('status', 'active')->latest()->first();
-    if (!$session) {
+
+    // Sin código en URL y sin sesión activa → error normal
+    if (!$session && !$urlCode) {
         return back()->with('error', 'No hay sesión activa.');
     }
 
-    $motivo = Motivo::find($session->motivo_id);
-    $categorias = $motivo->categorias ?? collect();
+    $categories = [];
+    if ($session) {
+        $motivo    = Motivo::find($session->motivo_id);
+        $categorias = $motivo->categorias ?? collect();
 
-    $categories = $categorias->map(function($cat) {
-        return [
-            'label' => $cat->nombre,
-            'color' => $cat->color ?? "#2346c0",
-            'textColor' => $cat->text_color ?? "#fff",
-            'fixed' => false,
-        ];
-    })->values()->toArray();
+        $categories = $categorias->map(function ($cat) {
+            return [
+                'label'     => $cat->nombre,
+                'color'     => $cat->color ?? "#2346c0",
+                'textColor' => $cat->text_color ?? "#fff",
+                'fixed'     => false,
+            ];
+        })->values()->toArray();
 
-    array_unshift($categories,
-        ['label' => "Pregunta de oro", 'color' => "#ffe47a", 'textColor' => "#ad8100", 'fixed' => true],
-        ['label' => "Responde el chat", 'color' => "#02204e", 'textColor' => "#00f0ff", 'fixed' => true],
-        ['label' => "Solo yo", 'color' => "#101e33", 'textColor' => "#19ff8c", 'fixed' => true],
-        ['label' => "Random", 'color' => "#0e223c", 'textColor' => "#ffe47a", 'fixed' => true]
-    );
+        array_unshift($categories,
+            ['label' => "Pregunta de oro",  'color' => "#ffe47a", 'textColor' => "#ad8100", 'fixed' => true],
+            ['label' => "Responde el chat", 'color' => "#02204e", 'textColor' => "#00f0ff", 'fixed' => true],
+            ['label' => "Solo yo",          'color' => "#101e33", 'textColor' => "#19ff8c", 'fixed' => true],
+            ['label' => "Random",           'color' => "#0e223c", 'textColor' => "#ffe47a", 'fixed' => true]
+        );
+    }
 
-    $sessionGame = ['categories' => $categories];
-
-    // ✅ definirla aquí
+    $sessionGame  = ['categories' => $categories];
     $activeSession = $session;
 
-    return view('overlay', compact('sessionGame', 'activeSession'));
+    // Código que viene por URL (p.ej. /overlay/XK7P2M desde OBS)
+    // Se pasa a la vista para que JS se conecte sin mostrar el modal
+    $autoCode = $urlCode ? strtoupper(trim($urlCode)) : null;
+
+    return view('overlay', compact('sessionGame', 'activeSession', 'autoCode'));
 }
 
 public function finalScores()
@@ -906,7 +916,7 @@ public function lanzarPreguntaCategoria(Request $request)
 
         session(['last_overlay_question' => $data]);
 
-        broadcast(new NuevaPreguntaOverlay($data));
+        broadcast(new NuevaPreguntaOverlay($data, $session->session_code ?? 'default'));
         return response()->json(['ok' => true]);
     }
     // Chat o Solo Yo
@@ -949,7 +959,7 @@ public function lanzarPreguntaCategoria(Request $request)
 
         session(['last_overlay_question' => $data]);
 
-        broadcast(new NuevaPreguntaOverlay($data));
+        broadcast(new NuevaPreguntaOverlay($data, $session->session_code ?? 'default'));
         return response()->json(['ok' => true]);
     }
     // Si es categoría normal
@@ -1040,12 +1050,23 @@ public function lanzarPreguntaCategoria(Request $request)
         'categoria' => $categoriaModel->nombre // ✅ AGREGADO al log
     ]);
 
-    broadcast(new NuevaPreguntaOverlay($data));
+    broadcast(new NuevaPreguntaOverlay($data, $session->session_code ?? 'default'));
     return response()->json(['success' => true, 'data' => $data]);
 }
 
     public function girarRuleta() {
-        broadcast(new \App\Events\GirarRuleta());
+        $session = $this->getActiveSessionCached(5);
+        $code = $session ? ($session->session_code ?? 'default') : 'default';
+
+        // Sincronizar cache de spinning para que el SD físico (que pollea /sd/state) siempre refleje el estado real.
+        // Esto evita el desfase cuando se gira desde el panel web o la vista /streamdeck.
+        if ($session) {
+            $spinKey        = 'sd_spinning_' . $session->id;
+            $currentlySpinning = (bool) Cache::get($spinKey, false);
+            Cache::put($spinKey, !$currentlySpinning, now()->addHours(3));
+        }
+
+        broadcast(new \App\Events\GirarRuleta($code));
         return response()->json(['ok' => true]);
     }
 
@@ -1200,11 +1221,13 @@ public function enviarParticipacion(Request $request)
     }
 
     if (isset($trendOption)) {
+        $sessionForTrend = GameSession::where('status', 'active')->latest()->first();
+        $codeForTrend = $sessionForTrend ? ($sessionForTrend->session_code ?? 'default') : 'default';
         broadcast(new \App\Events\TendenciaActualizada([
             'question_id' => $questionId,
             'option_label' => $trendOption,
             'total' => $trendTotal,
-        ]));
+        ], $codeForTrend));
     }
 
     return redirect()->back()->with('success', '¡Respuesta enviada!');
@@ -1317,6 +1340,8 @@ public function apiOverlayState()
         }
     }
 
+    $questionCount = \App\Models\GuestAnswer::where('game_session_id', $session->id)->count();
+
     return response()->json([
         'pregunta' => $preguntaData,
         'session'  => [
@@ -1325,6 +1350,7 @@ public function apiOverlayState()
             'guest_points'         => (int)  ($session->guest_points ?? 0),
             'tendencias_acertadas' => (int)  ($session->tendencias_acertadas ?? 0),
             'tendencias_objetivo'  => (int)  ($session->tendencias_objetivo ?? 0),
+            'question_count'       => $questionCount,
         ],
     ]);
 }
@@ -1339,6 +1365,18 @@ public function apiGuestPoints()
     
     return response()->json(['points' => $points]);
 }
+public function apiValidateSessionCode(string $code)
+{
+    $session = GameSession::where('status', 'active')
+        ->where('session_code', strtoupper(trim($code)))
+        ->first();
+
+    return response()->json([
+        'valid' => $session !== null,
+        'session_code' => $session ? $session->session_code : null,
+    ]);
+}
+
 /* public function activarApuestaX2($id)
 {
     $session = GameSession::findOrFail($id);

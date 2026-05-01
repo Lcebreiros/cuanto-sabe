@@ -6,23 +6,24 @@ namespace App\Events;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\InteractsWithSockets;
-// CAMBIÁ ESTA LINEA:
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
-class OpcionSeleccionada implements ShouldBroadcastNow // <-- CAMBIÁ ESTO
+class OpcionSeleccionada implements ShouldBroadcastNow
 {
     use InteractsWithSockets, SerializesModels;
 
     public $opcion;
+    public string $sessionCode;
 
-    public function __construct($opcion)
+    public function __construct($opcion, string $sessionCode)
     {
         $this->opcion = $opcion;
+        $this->sessionCode = $sessionCode;
     }
 
     public function broadcastOn()
     {
-        return new Channel('cuanto-sabe-overlay');
+        return new Channel('cuanto-sabe-overlay-' . $this->sessionCode);
     }
 
     public function broadcastAs()

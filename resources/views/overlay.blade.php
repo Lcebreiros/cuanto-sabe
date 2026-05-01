@@ -363,12 +363,84 @@
     border-color: #ff3636;
 }
 
+/* ── Modal de emparejamiento por código ── */
+#session-code-modal {
+    position: fixed; inset: 0; background: rgba(4,10,22,0.97);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+}
+#session-code-modal.hidden { display: none; }
+.code-modal-box {
+    background: #0a1628; border: 2px solid #2d60a6;
+    border-radius: 16px; padding: 44px 52px;
+    text-align: center; max-width: 420px; width: 90%;
+    box-shadow: 0 0 50px rgba(45,96,166,0.45);
+}
+.code-modal-logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem; letter-spacing: 0.25em;
+    color: #2d60a6; margin-bottom: 28px; text-transform: uppercase;
+}
+.code-modal-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.05rem; color: #7eb8ff;
+    letter-spacing: 0.1em; margin-bottom: 6px;
+}
+.code-modal-subtitle {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem; color: #4a7ab5; margin-bottom: 32px;
+}
+.code-modal-input {
+    font-family: 'Orbitron', monospace; font-size: 2.2rem;
+    letter-spacing: 0.35em; text-align: center; text-transform: uppercase;
+    background: #060f1e; border: 2px solid #1e3d6e;
+    color: #fff; padding: 16px 20px; border-radius: 8px;
+    width: 100%; box-sizing: border-box; margin-bottom: 20px;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.code-modal-input:focus {
+    border-color: #22fa68;
+    box-shadow: 0 0 14px rgba(34,250,104,0.25);
+}
+.code-modal-btn {
+    font-family: 'Orbitron', sans-serif; font-size: 0.9rem;
+    background: #1e3d6e; color: #7eb8ff; border: 1px solid #2d60a6;
+    padding: 14px 40px; border-radius: 8px; cursor: pointer;
+    width: 100%; letter-spacing: 0.15em;
+    transition: background 0.2s, color 0.2s;
+}
+.code-modal-btn:hover:not(:disabled) { background: #2d60a6; color: #fff; }
+.code-modal-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.code-modal-error {
+    color: #ff5555; font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem; margin-top: 14px; min-height: 20px;
+}
+.code-modal-status {
+    color: #22fa68; font-family: 'Rajdhani', sans-serif;
+    font-size: 0.88rem; margin-top: 8px;
+}
 
 </style>
 
 
 </head>
 <body>
+
+<!-- ── Modal emparejamiento por código de sesión ── -->
+<div id="session-code-modal">
+    <div class="code-modal-box">
+        <div class="code-modal-logo">Cuánto Sabe · Overlay</div>
+        <div class="code-modal-title">CÓDIGO DE SESIÓN</div>
+        <div class="code-modal-subtitle">Ingresá el código que aparece en el panel de juego</div>
+        <input type="text" id="code-input" class="code-modal-input"
+            maxlength="6" placeholder="XXXXXX"
+            autocomplete="off" spellcheck="false">
+        <button id="code-connect-btn" class="code-modal-btn">CONECTAR</button>
+        <div id="code-modal-error" class="code-modal-error"></div>
+        <div id="code-modal-status" class="code-modal-status"></div>
+    </div>
+</div>
+
     <div class="connection-status" id="connectionStatus"></div>
 <div class="overlay-content">
   <div class="top-bar-row">
@@ -777,70 +849,156 @@ function revealAnswer(data) {
     }
 }
 
-window.Echo.channel('cuanto-sabe-overlay')
-    .listen('.girar-ruleta', () => {
-        window.girarRuletaRemoto && window.girarRuletaRemoto();
-    })
-    .listen('.nueva-pregunta', e => {
-        if (!e.data || !e.data.pregunta) {
-            fetchOverlayState(); // 🚨 Si el evento viene vacío, refrescá del backend
-        } else {
-            showQuestion(e.data || e);
-        }
-    })
-.listen('.GameBonusUpdated', (event) => {
-        console.log('[BONUS] Evento recibido:', event);
+// ── Suscripción al canal aislado por código de sesión ──
+let _overlaySessionCode = null;
+let _overlayEchoChannel = null;
 
-        // Indicador de Apuesta x2: visible solo mientras está activa
-        const apuestaIndicator = document.getElementById('apuesta-indicator');
-        if (apuestaIndicator) {
-            apuestaIndicator.style.display = event.apuesta_x2_active ? 'inline-flex' : 'none';
-        }
-
-        // Indicador de Descarte: mostrar por 5 segundos y luego ocultar
-        const descarteIndicator = document.getElementById('descarta-indicator');
-        if (descarteIndicator && event.descarte_usados > 0) {
-            descarteIndicator.style.display = 'inline-flex';
-            clearTimeout(window._descarteIndicatorTimeout);
-            window._descarteIndicatorTimeout = setTimeout(() => {
-                descarteIndicator.style.display = 'none';
-            }, 5000);
-        }
-    })
-    .listen('.opcion-seleccionada', e => {
-        ultimaSeleccionPanel = e.opcion;
-        showSelectedOption(e.opcion);
-    })
-    .listen('.revelar-respuesta', e => {
-        revealAnswer(e.data || e);
-    })
-    .listen('.overlay-reset', () => {
-        resetOverlay();
-        fetchOverlayState(); // 🚨 Tras un reset, asegurate que la UI quede sincronizada
-    })
-    .listen('.tendencia-actualizada', e => {
-        ['A','B','C','D'].forEach(l => {
-            const optEl = document.getElementById('op'+l);
-            optEl && optEl.classList.remove('tendencia');
-        });
-        if (e.data && e.data.option_label) {
-            const tendenciaEl = document.getElementById('op' + e.data.option_label);
-            if (tendenciaEl) {
-                tendenciaEl.classList.add('tendencia');
+function subscribeToOverlayChannel(code) {
+    if (_overlayEchoChannel && _overlaySessionCode) {
+        window.Echo.leaveChannel('cuanto-sabe-overlay-' + _overlaySessionCode);
+    }
+    _overlaySessionCode = code;
+    _overlayEchoChannel = window.Echo.channel('cuanto-sabe-overlay-' + code)
+        .listen('.girar-ruleta', () => {
+            window.girarRuletaRemoto && window.girarRuletaRemoto();
+        })
+        .listen('.nueva-pregunta', e => {
+            if (!e.data || !e.data.pregunta) {
+                fetchOverlayState();
+            } else {
+                showQuestion(e.data || e);
             }
-        }
-    });
-    /*
-    .listen('.GuestPointsUpdated', e => {
-        const bar = document.getElementById('guestPointsBar');
-        const val = document.getElementById('guestPointsValue');
-        if (bar && val) {
-            val.textContent = e.points;
-            bar.style.display = '';
-        }
-    });
-    */
+        })
+        .listen('.GameBonusUpdated', (event) => {
+            console.log('[BONUS] Evento recibido:', event);
+            const apuestaIndicator = document.getElementById('apuesta-indicator');
+            if (apuestaIndicator) {
+                apuestaIndicator.style.display = event.apuesta_x2_active ? 'inline-flex' : 'none';
+            }
+            const descarteIndicator = document.getElementById('descarta-indicator');
+            if (descarteIndicator && event.descarte_usados > 0) {
+                descarteIndicator.style.display = 'inline-flex';
+                clearTimeout(window._descarteIndicatorTimeout);
+                window._descarteIndicatorTimeout = setTimeout(() => {
+                    descarteIndicator.style.display = 'none';
+                }, 5000);
+            }
+        })
+        .listen('.opcion-seleccionada', e => {
+            ultimaSeleccionPanel = e.opcion;
+            showSelectedOption(e.opcion);
+        })
+        .listen('.revelar-respuesta', e => {
+            revealAnswer(e.data || e);
+        })
+        .listen('.overlay-reset', () => {
+            resetOverlay();
+            fetchOverlayState();
+        })
+        .listen('.tendencia-actualizada', e => {
+            ['A','B','C','D'].forEach(l => {
+                const optEl = document.getElementById('op'+l);
+                optEl && optEl.classList.remove('tendencia');
+            });
+            if (e.data && e.data.option_label) {
+                const tendenciaEl = document.getElementById('op' + e.data.option_label);
+                if (tendenciaEl) tendenciaEl.classList.add('tendencia');
+            }
+        });
+    console.log('[OVERLAY] Suscrito al canal cuanto-sabe-overlay-' + code);
+}
 
+// ── Lógica del modal de código ──
+function showCodeModal() {
+    document.getElementById('session-code-modal').classList.remove('hidden');
+    const input = document.getElementById('code-input');
+    if (input) { input.value = ''; input.focus(); }
+}
+
+function hideCodeModal() {
+    document.getElementById('session-code-modal').classList.add('hidden');
+    resetOverlay();
+    fetchOverlayState();
+}
+
+async function validateAndConnect(code, isAuto = false) {
+    const btn    = document.getElementById('code-connect-btn');
+    const errEl  = document.getElementById('code-modal-error');
+    const statEl = document.getElementById('code-modal-status');
+
+    if (btn)    btn.disabled = true;
+    if (errEl)  errEl.textContent = '';
+    if (statEl) statEl.textContent = isAuto ? 'Reconectando...' : 'Verificando...';
+
+    try {
+        const res  = await fetch('/overlay/api/validate/' + encodeURIComponent(code.toUpperCase().trim()));
+        const json = await res.json();
+
+        if (json.valid) {
+            localStorage.setItem('overlay_session_code', json.session_code);
+            subscribeToOverlayChannel(json.session_code);
+            hideCodeModal();
+        } else {
+            localStorage.removeItem('overlay_session_code');
+            if (statEl) statEl.textContent = '';
+            if (errEl) {
+                errEl.textContent = isAuto
+                    ? 'Código anterior inválido. Ingresá el código actual.'
+                    : 'Código incorrecto o sesión no activa.';
+            }
+            if (isAuto) showCodeModal();
+        }
+    } catch (e) {
+        if (statEl) statEl.textContent = '';
+        if (errEl)  errEl.textContent = 'Error de conexión. Reintentá.';
+        if (isAuto) showCodeModal();
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+// Botón CONECTAR
+document.getElementById('code-connect-btn').addEventListener('click', () => {
+    const code = (document.getElementById('code-input').value || '').trim();
+    if (code.length < 4) {
+        document.getElementById('code-modal-error').textContent = 'Ingresá el código completo.';
+        return;
+    }
+    validateAndConnect(code, false);
+});
+
+// Enter en el input
+document.getElementById('code-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('code-connect-btn').click();
+});
+
+// Auto-mayúsculas mientras se tipea
+document.getElementById('code-input').addEventListener('input', e => {
+    const pos = e.target.selectionStart;
+    e.target.value = e.target.value.toUpperCase();
+    e.target.setSelectionRange(pos, pos);
+});
+
+// ── Al cargar la página: intentar reconectar ──
+// Si el código viene en la URL (ej: /overlay/XK7P2M desde OBS), conectar sin modal
+(function initOverlayCode() {
+    const urlCode = @json($autoCode ?? null);
+
+    if (urlCode) {
+        // Código en URL → conectar directo, sin modal ni validación (para OBS)
+        localStorage.setItem('overlay_session_code', urlCode);
+        subscribeToOverlayChannel(urlCode);
+        hideCodeModal();
+        return;
+    }
+
+    const stored = localStorage.getItem('overlay_session_code');
+    if (stored) {
+        validateAndConnect(stored, true);
+    } else {
+        showCodeModal();
+    }
+})();
 
 // ---- Inicial ----
 resetOverlay();

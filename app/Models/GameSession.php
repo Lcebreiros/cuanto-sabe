@@ -13,6 +13,7 @@ class GameSession extends Model
         'guest_name',
         'motivo_id',
         'status',
+        'session_code',
         'guest_points',
         'modo_juego',
         'active_question_id',

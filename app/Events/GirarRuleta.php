@@ -6,6 +6,20 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
 class GirarRuleta implements ShouldBroadcastNow
 {
-    public function broadcastOn() { return new Channel('cuanto-sabe-overlay'); }
-    public function broadcastAs() { return 'girar-ruleta'; }
+    public string $sessionCode;
+
+    public function __construct(string $sessionCode)
+    {
+        $this->sessionCode = $sessionCode;
+    }
+
+    public function broadcastOn()
+    {
+        return new Channel('cuanto-sabe-overlay-' . $this->sessionCode);
+    }
+
+    public function broadcastAs()
+    {
+        return 'girar-ruleta';
+    }
 }

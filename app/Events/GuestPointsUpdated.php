@@ -13,21 +13,19 @@ class GuestPointsUpdated implements ShouldBroadcast
 
     public $sessionId;
     public $points;
+    public string $sessionCode;
 
-    public function __construct($sessionId, $points)
+    public function __construct($sessionId, $points, string $sessionCode)
     {
         $this->sessionId = $sessionId;
         $this->points = $points;
+        $this->sessionCode = $sessionCode;
     }
 
-public function broadcastOn()
-{
-    $channels = [];
-    if ($this->sessionId) $channels[] = new Channel('overlay-session-' . $this->sessionId);
-    $channels[] = new Channel('cuanto-sabe-overlay'); // <- SIEMPRE
-    return $channels;
-}
-
+    public function broadcastOn()
+    {
+        return new Channel('cuanto-sabe-overlay-' . $this->sessionCode);
+    }
 
     public function broadcastAs()
     {
