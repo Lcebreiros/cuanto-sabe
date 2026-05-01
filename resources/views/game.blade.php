@@ -1806,6 +1806,10 @@ window.Echo = new Echo({
 // Estado del botón de ruleta
 let isSpinning = false;
 
+// Canal de overlay aislado por sesión — se computa una vez en top-level para que sea
+// accesible desde todos los DOMContentLoaded y el código suelto de más abajo.
+const _panelOverlayChannel = '{{ $activeSession?->session_code ? "cuanto-sabe-overlay-" . $activeSession->session_code : "" }}';
+
 document.addEventListener('DOMContentLoaded', function () {
     const apuestaForm = document.getElementById('form-apuesta-x2');
     const descarteForm = document.getElementById('form-descarte');
@@ -1941,22 +1945,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Escuchar broadcasts en canal de sesión -> GameBonusUpdated
     try {
-        const _gameOverlayChannel = '{{ $activeSession?->session_code ? "cuanto-sabe-overlay-" . $activeSession->session_code : "" }}';
-        if (window.Echo && _gameOverlayChannel) {
-            window.Echo.channel(_gameOverlayChannel)
+        if (window.Echo && _panelOverlayChannel) {
+            window.Echo.channel(_panelOverlayChannel)
                 .listen('.GameBonusUpdated', (payload) => {
-                    // payload ejemplo: { apuesta_x2_active, apuesta_x2_usadas, descarte_usados, modo_juego }
-                    // Acomodar nombres si tu backend envía sin prefijos
                     updateApuestaUI({
                         apuesta_x2_active: payload.apuesta_x2_active ?? payload.apuesta_x2Active,
                         apuesta_x2_usadas: payload.apuesta_x2_usadas ?? payload.apuesta_x2Usadas,
                         apuesta_x2_disponibles: (payload.modo_juego ? ((payload.modo_juego === 'express') ? 1 : 2) : (Number(apuestaBtn.dataset.limite || 2))) - (payload.apuesta_x2_usadas ?? 0),
                         modo_juego: payload.modo_juego
                     });
-
                     updateDescarteUI({
                         descarte_usados: payload.descarte_usados ?? payload.descarteUsados,
-                        // si el backend no envía descarte_disponible, lo calculamos
                     });
                 });
         }
@@ -2304,7 +2303,6 @@ document.addEventListener('DOMContentLoaded', function() {
     @endif
 
 // --- Overlay channel: nueva pregunta + tendencia + reset ---
-const _panelOverlayChannel = '{{ $activeSession?->session_code ? "cuanto-sabe-overlay-" . $activeSession->session_code : "" }}';
 if (window.Echo && _panelOverlayChannel) {
     const overlay = Echo.channel(_panelOverlayChannel);
     Echo.channel(_panelOverlayChannel)
