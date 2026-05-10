@@ -907,6 +907,8 @@ window.Echo = new Echo({
   forceTLS: true
 });
 
+const _participarChannel = '{{ $activeSession?->session_code ? "cuanto-sabe-overlay-" . $activeSession->session_code : "" }}';
+
 // ============================================
 // SCRIPT CONSOLIDADO PARA participar.blade.php
 // Reemplaza AMBOS scripts @if(session('participant_session_id'))
@@ -1136,10 +1138,10 @@ function renderPregunta(data) {
   }
 
   // ===== PUSHER/ECHO PARA PREGUNTAS =====
-  if (window.Echo) {
-    console.log('[ECHO] Inicializando canales...');
+  if (window.Echo && _participarChannel) {
+    console.log('[ECHO] Inicializando canal:', _participarChannel);
 
-    window.Echo.channel('cuanto-sabe-overlay')
+    window.Echo.channel(_participarChannel)
       .listen('.nueva-pregunta', function(e) {
         console.log('[PUSHER] Nueva pregunta recibida:', e);
         const data = e.data || e;
