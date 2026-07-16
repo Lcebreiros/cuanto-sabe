@@ -547,7 +547,7 @@
         <h3 class="footer-title">¿Querés participar?</h3>
         <p class="footer-sub">Entrá y votá en tiempo real desde tu celular.</p>
         <a href="{{ route('guest-dashboard') }}" class="footer-cta">Ir al dashboard →</a>
-        <p class="footer-copy">© {{ date('Y') }} Cuanto Sabe &nbsp;·&nbsp; Desarrollado por Leandro Cebreiros</p>
+        <p class="footer-copy">© {{ date('Y') }} Cuanto Sabe &nbsp;·&nbsp;</p>
     </footer>
 
     <script>

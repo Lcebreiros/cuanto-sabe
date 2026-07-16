@@ -653,30 +653,11 @@ public function add(Request $request)
         return back()->with('success', 'Ya estás registrado en esta sesión.');
     }
 
-    // ✅ CREAR PARTICIPANTE CON PROTECCIÓN DE RACE CONDITION EN ORDER
-    $participant = DB::transaction(function () use ($validated, $session) {
-        // Obtener el orden máximo con lock para evitar duplicados
-        $maxOrder = ParticipantSession::where('game_session_id', $session->id)
-            ->lockForUpdate()
-            ->max('order') ?? 0;
-
-        $participant = new ParticipantSession([
-            'username' => $validated['participants'][0]['username'],
-            'dni_last4' => $validated['participants'][0]['dni_last4'],
-            'game_session_id' => $session->id,
-            'status' => 'waiting',
-            'order' => $maxOrder + 1,
-        ]);
-        $participant->save();
-
-        return $participant;
-    });
+    $participant = $this->createParticipant($session, $validated['participants'][0]['username'], $validated['participants'][0]['dni_last4']);
 
     // GUARDÁ EL NUEVO PARTICIPANTE EN SESIÓN Y COOKIE
     session(['participant_session_id' => $participant->id]);
     Cookie::queue('participant_session_id', $participant->id, 60*24*30); // 30 días
-
-    broadcast(new ParticipantQueueUpdated($session->id));
 
     // 🔁 Redirección inteligente
     $returnToUrl = session('return_to_url');
@@ -692,6 +673,37 @@ public function add(Request $request)
     }
     return back()->with('success', '¡Te anotaste en la cola!');
     }
+
+/**
+ * Crea la fila de ParticipantSession con protección de race condition en `order`,
+ * y difunde la actualización de cola. Compartido entre /participants/add (web) y
+ * POST /api/participants/join (mobile) — ambos clientes terminan escribiendo la
+ * misma tabla, por eso pueden jugar la misma sesión en simultáneo sin pisarse.
+ */
+public function createParticipant(GameSession $session, string $username, string $dniLast4): ParticipantSession
+{
+    $participant = DB::transaction(function () use ($session, $username, $dniLast4) {
+        // Obtener el orden máximo con lock para evitar duplicados
+        $maxOrder = ParticipantSession::where('game_session_id', $session->id)
+            ->lockForUpdate()
+            ->max('order') ?? 0;
+
+        $participant = new ParticipantSession([
+            'username' => $username,
+            'dni_last4' => $dniLast4,
+            'game_session_id' => $session->id,
+            'status' => 'waiting',
+            'order' => $maxOrder + 1,
+        ]);
+        $participant->save();
+
+        return $participant;
+    });
+
+    broadcast(new ParticipantQueueUpdated($session->id));
+
+    return $participant;
+}
 
 public function ruletaOverlay(string $urlCode = null)
 {
@@ -1155,35 +1167,50 @@ public function enviarParticipacion(Request $request)
         'question_id' => 'required|exists:questions,id'
     ]);
 
-    // 1. Obtener participante desde la session
+    // Obtener participante desde la session (flujo web, cookie-based)
     $participantSessionId = session('participant_session_id');
     $participant = $participantSessionId ? ParticipantSession::find($participantSessionId) : null;
     if (!$participant) {
         return redirect()->route('participants.form')->with('error', 'Debes iniciar sesión como participante primero.');
     }
 
-    // 2. Obtener label_correcto de la pregunta_json de la sesión activa
-    $labelCorrecto = null;
+    $error = $this->submitParticipantAnswer($participant, (int) $request->question_id, $request->option_label);
+    if ($error) {
+        // JSON + 409 (no redirect): el formulario se envía por fetch() y trata cualquier respuesta
+        // ok/redirigida como éxito, así que un redirect() dejaría al participante creyendo que votó.
+        return response()->json(['error' => $error], 409);
+    }
+
+    return redirect()->back()->with('success', '¡Respuesta enviada!');
+}
+
+/**
+ * Núcleo compartido entre /participar/enviar (web) y la API mobile (Api\ParticipateController):
+ * resuelve label_correcto, guarda la respuesta con protección de race condition, y difunde
+ * la tendencia de votos. Devuelve un mensaje de error si la pregunta ya fue revelada, o null si
+ * se guardó bien. No devuelve label_correcto: eso nunca debe viajar de vuelta al cliente pre-reveal.
+ */
+public function submitParticipantAnswer(ParticipantSession $participant, int $questionId, string $optionLabel): ?string
+{
     $session = GameSession::where('status', 'active')->latest()->first();
 
     // No permitir votar/revotar una vez que la pregunta ya fue revelada (evita "esperar el reveal y votar seguro")
-    // JSON + 409 (no redirect): el formulario se envía por fetch() y trata cualquier respuesta
-    // ok/redirigida como éxito, así que un redirect() dejaría al participante creyendo que votó.
-    if ($session && Cache::has('revealed_question_' . $session->id . '_' . $request->question_id)) {
-        return response()->json(['error' => 'Esta pregunta ya fue revelada, no se puede responder.'], 409);
+    if ($session && Cache::has('revealed_question_' . $session->id . '_' . $questionId)) {
+        return 'Esta pregunta ya fue revelada, no se puede responder.';
     }
 
+    // Obtener label_correcto de la pregunta_json de la sesión activa
+    $labelCorrecto = null;
     if ($session && $session->pregunta_json) {
         $data = json_decode($session->pregunta_json, true);
-
-        if (isset($data['pregunta_id']) && $data['pregunta_id'] == $request->question_id) {
+        if (isset($data['pregunta_id']) && $data['pregunta_id'] == $questionId) {
             $labelCorrecto = $data['label_correcto'] ?? null;
         }
     }
 
-    // 3. Fallback (nunca guardar null)
+    // Fallback (nunca guardar null)
     if (!$labelCorrecto) {
-        $prevAnswer = ParticipantAnswer::where('question_id', $request->question_id)
+        $prevAnswer = ParticipantAnswer::where('question_id', $questionId)
             ->whereNotNull('label_correcto')
             ->latest('id')
             ->first();
@@ -1192,38 +1219,33 @@ public function enviarParticipacion(Request $request)
         }
     }
 
-    // 4. Fallback final
+    // Fallback final
     if (!$labelCorrecto) {
-        $question = \App\Models\Question::find($request->question_id);
+        $question = \App\Models\Question::find($questionId);
         if ($question && method_exists($question, 'getCorrectLabel')) {
             $labelCorrecto = $question->getCorrectLabel();
         }
     }
 
-    // 5. Log para depuración
-    \Log::debug("GUARDAR RESPUESTA: qid={$request->question_id}, label_correcto={$labelCorrecto}, seleccionada={$request->option_label}");
+    \Log::debug("GUARDAR RESPUESTA: qid={$questionId}, label_correcto={$labelCorrecto}, seleccionada={$optionLabel}");
 
-    // 6. Guardar la respuesta CON PROTECCIÓN DE RACE CONDITION
-    DB::transaction(function () use ($participant, $request, $labelCorrecto) {
+    // Guardar la respuesta CON PROTECCIÓN DE RACE CONDITION
+    DB::transaction(function () use ($participant, $questionId, $optionLabel, $labelCorrecto) {
         ParticipantAnswer::updateOrCreate(
             [
                 'participant_session_id' => $participant->id,
-                'question_id' => $request->question_id,
+                'question_id' => $questionId,
             ],
             [
-                'option_label' => $request->option_label,
+                'option_label' => $optionLabel,
                 'label_correcto' => $labelCorrecto,
             ]
         );
     });
 
-    // 7. Tendencia y votos (calculado después de guardar)
-    $questionId = $request->question_id;
-    $votedOption = $request->option_label;
-
-    // Usar shared lock para lectura consistente
+    // Tendencia y votos (calculado después de guardar), con shared lock para lectura consistente
     $votes = DB::transaction(function () use ($questionId) {
-        return \App\Models\ParticipantAnswer::where('question_id', $questionId)
+        return ParticipantAnswer::where('question_id', $questionId)
             ->sharedLock()
             ->select('option_label', DB::raw('count(*) as total'))
             ->groupBy('option_label')
@@ -1231,31 +1253,23 @@ public function enviarParticipacion(Request $request)
     });
 
     if ($votes->count() === 1) {
-        $trendOption = $votedOption;
+        $trendOption = $optionLabel;
         $trendTotal = 1;
     } else {
         $max = $votes->max('total');
         $candidates = $votes->where('total', $max)->pluck('option_label')->toArray();
-
-        if (in_array($votedOption, $candidates)) {
-            $trendOption = $votedOption;
-        } else {
-            $trendOption = $candidates[0];
-        }
+        $trendOption = in_array($optionLabel, $candidates) ? $optionLabel : $candidates[0];
         $trendTotal = $max;
     }
 
-    if (isset($trendOption)) {
-        $sessionForTrend = GameSession::where('status', 'active')->latest()->first();
-        $codeForTrend = $sessionForTrend ? ($sessionForTrend->session_code ?? 'default') : 'default';
-        broadcast(new \App\Events\TendenciaActualizada([
-            'question_id' => $questionId,
-            'option_label' => $trendOption,
-            'total' => $trendTotal,
-        ], $codeForTrend));
-    }
+    $codeForTrend = $session->session_code ?? 'default';
+    broadcast(new \App\Events\TendenciaActualizada([
+        'question_id' => $questionId,
+        'option_label' => $trendOption,
+        'total' => $trendTotal,
+    ], $codeForTrend));
 
-    return redirect()->back()->with('success', '¡Respuesta enviada!');
+    return null;
 }
 
 

@@ -391,7 +391,7 @@
 
         <!-- Footer -->
         <p class="footer">
-            © {{ date('Y') }} Cuanto Sabe &nbsp;·&nbsp; Web desarrollada por Leandro Cebreiros
+            © {{ date('Y') }} Cuanto Sabe &nbsp;·&nbsp;
         </p>
 
     </main>
