@@ -9,14 +9,14 @@ class StreamDeckAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        $expected = env('STREAMDECK_TOKEN');
+        $expected = config('services.streamdeck.token');
 
-        // Aceptar token por: Bearer header, header X-StreamDeck-Token, o query param ?token=
+        // Aceptar token solo por header (Bearer o X-StreamDeck-Token) — nunca por query string,
+        // que queda expuesto en logs de acceso, headers Referer y proxies intermedios.
         $provided = $request->bearerToken()
-            ?? $request->header('X-StreamDeck-Token')
-            ?? $request->query('token');
+            ?? $request->header('X-StreamDeck-Token');
 
-        if (!$expected || $provided !== $expected) {
+        if (!$expected || !$provided || !hash_equals((string) $expected, (string) $provided)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 

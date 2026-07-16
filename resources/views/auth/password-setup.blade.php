@@ -1,26 +1,31 @@
 <x-guest-layout>
-    <form method="POST" action="{{ route('register') }}" class="w-full max-w-md mx-auto space-y-8 p-8">
+    <form method="POST" action="{{ route('password.setup.store') }}" class="w-full max-w-md mx-auto space-y-8 p-8">
         @csrf
 
-        <!-- Campos del formulario -->
+        @if (session('status'))
+            <div class="text-center text-sm text-[#ffe47a] bg-[#3a2f00] border border-[#ffe47a55] rounded-lg py-3 px-4">
+                {{ session('status') }}
+            </div>
+        @endif
+
         <div class="space-y-6">
             <!-- Nombre -->
             <div class="space-y-2">
                 <x-input-label for="name" :value="__('Nombre')" class="text-lg" />
-                <x-text-input 
-                    id="name" 
-                    type="text" 
-                    name="name" 
-                    :value="old('name')" 
-                    required 
-                    autofocus 
-                    autocomplete="name" 
+                <x-text-input
+                    id="name"
+                    type="text"
+                    name="name"
+                    :value="old('name', $name ?? '')"
+                    required
+                    autofocus
+                    autocomplete="username"
                     class="w-full text-lg py-3 px-4"
                 />
                 <x-input-error :messages="$errors->get('name')" />
             </div>
 
-            <!-- Contraseña -->
+            <!-- Nueva contraseña -->
             <div class="space-y-2">
                 <x-input-label for="password" :value="__('Creá una contraseña')" class="text-lg" />
                 <x-text-input
@@ -49,25 +54,23 @@
             </div>
         </div>
 
-        <!-- Botones de acción -->
         <div class="space-y-6 pt-4">
             <x-primary-button class="w-full justify-center py-4 text-lg font-semibold">
-                {{ __('Registrarse') }}
+                {{ __('Crear contraseña e iniciar sesión') }}
             </x-primary-button>
 
             <div class="text-center">
-                <a 
-                    href="{{ route('login') }}" 
+                <a
+                    href="{{ route('login') }}"
                     class="text-sm underline text-[#66cce6] hover:text-[#00f0ff] transition-colors duration-300"
                 >
-                    {{ __('¿Ya tienes cuenta? Iniciar sesión') }}
+                    {{ __('Volver a iniciar sesión') }}
                 </a>
             </div>
         </div>
     </form>
 
     <style>
-        /* Estilos coherentes con login */
         .space-y-8 > :not([hidden]) ~ :not([hidden]) {
             margin-top: 2rem;
         }
@@ -76,7 +79,8 @@
             margin-top: 1.5rem;
         }
 
-        input[type="text"] {
+        input[type="text"],
+        input[type="password"] {
             font-size: 1rem !important;
             padding: 0.875rem 1rem !important;
             border-radius: 0.5rem !important;

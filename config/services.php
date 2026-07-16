@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'streamdeck' => [
+        'token' => env('STREAMDECK_TOKEN'),
+    ],
+
 ];

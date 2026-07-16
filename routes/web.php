@@ -52,23 +52,27 @@ Route::post('/motivo', [GameController::class, 'storeMotivo'])->name('motivo.sto
 Route::post('/categoria', [GameController::class, 'storeCategoria'])->name('categoria.store');
 Route::post('/pregunta', [GameController::class, 'storePregunta'])->name('pregunta.store');
 
-// Sesiones de juego (crear/finalizar)
-Route::post('/game-session/start', [GameSessionController::class, 'start'])->name('game-session.start');
-Route::post('/game-session/end', [GameSessionController::class, 'end'])->name('game-session.end');
+// Sesiones de juego (crear/finalizar) — solo el host autenticado puede arrancar/cerrar la sesión
+Route::post('/game-session/start', [GameSessionController::class, 'start'])->name('game-session.start')->middleware(['auth', 'admin']);
+Route::post('/game-session/end', [GameSessionController::class, 'end'])->name('game-session.end')->middleware(['auth', 'admin']);
 
 // Overlay de juego para invitados (puede ser el panel público)
 Route::get('/jugar', fn() => view('game.participate'))->name('game.participate');
 
 Route::get('/overlay', [App\Http\Controllers\GameSessionController::class, 'ruletaOverlay'])->name('overlay');
+// NOTA: estas dos vistas usan "background: transparent" a pantalla completa — son fuentes de
+// navegador para OBS igual que /overlay, por eso quedan públicas y no con auth+admin (el
+// navegador embebido de OBS no tiene la sesión del host). El contenido ya es información
+// post-reveal (resultados finales), no hay respuesta correcta sin revelar que filtrar acá.
 Route::get('/final-scores', [App\Http\Controllers\GameSessionController::class, 'finalScores'])->name('final-scores');
 Route::get('/top-participants', [App\Http\Controllers\GameSessionController::class, 'topParticipants'])->name('top-participants');
 
 
-// Acciones del overlay/sesión de juego
-Route::post('/game-session/reveal', [GameSessionController::class, 'revealAnswer'])->name('game-session.reveal');
-Route::post('/game-session/random-question', [GameSessionController::class, 'sendRandomQuestion'])->name('game-session.random-question');
-Route::post('/game-session/overlay-reset', [GameSessionController::class, 'overlayReset'])->name('game-session.overlay-reset');
-Route::post('/game-session/select-option', [GameSessionController::class, 'selectOption'])->name('game-session.select-option');
+// Acciones del overlay/sesión de juego — disparadas únicamente desde el panel del host (game.blade.php)
+Route::post('/game-session/reveal', [GameSessionController::class, 'revealAnswer'])->name('game-session.reveal')->middleware(['auth', 'admin']);
+Route::post('/game-session/random-question', [GameSessionController::class, 'sendRandomQuestion'])->name('game-session.random-question')->middleware(['auth', 'admin']);
+Route::post('/game-session/overlay-reset', [GameSessionController::class, 'overlayReset'])->name('game-session.overlay-reset')->middleware(['auth', 'admin']);
+Route::post('/game-session/select-option', [GameSessionController::class, 'selectOption'])->name('game-session.select-option')->middleware(['auth', 'admin']);
 // Rutas API del overlay — deben ir ANTES de /overlay/{code} para no ser interceptadas
 Route::get('/overlay/api/puntos', [GameSessionController::class, 'apiGuestPoints']);
 Route::get('/overlay/api/pregunta', [GameSessionController::class, 'apiActiveQuestion']);
@@ -79,8 +83,8 @@ Route::get('/overlay/{code}', [GameSessionController::class, 'ruletaOverlay'])
     ->where('code', '[A-Za-z0-9]{4,8}')
     ->name('overlay.code');
 
-// bonos y descartes
-Route::prefix('game')->group(function () {
+// bonos y descartes — disparados desde el panel del host o /streamdeck (ambos ya protegidos con auth+admin)
+Route::prefix('game')->middleware(['auth', 'admin'])->group(function () {
     Route::post('/apuesta-x2/toggle', [GameBonusController::class, 'toggleApuestaX2'])->name('game.toggleApuestaX2');
     Route::post('/descarte/toggle', [GameBonusController::class, 'toggleDescarte'])->name('game.toggleDescarte');
 });
@@ -88,7 +92,8 @@ Route::prefix('game')->group(function () {
 
 // Participantes
 Route::get('/participants/form', [GameSessionController::class, 'showParticipantForm'])->name('participants.form');
-Route::post('/participants/add', [GameSessionController::class, 'add'])->name('participants.add');
+// Throttle: username+dni_last4 (10.000 combinaciones) actúa como login — limitar intentos por IP
+Route::post('/participants/add', [GameSessionController::class, 'add'])->name('participants.add')->middleware('throttle:15,1');
 Route::get('/participants/list', [GameSessionController::class, 'showParticipants'])->name('participants.list');
 Route::post('/salir-juego', [App\Http\Controllers\GameSessionController::class, 'salirDelJuego'])->name('salir.juego');
 
@@ -101,14 +106,14 @@ Route::get('/ruleta', [GameSessionController::class, 'ruletaOverlay'])->name('ru
 Route::post('/overlay/lanzar-pregunta', [GameSessionController::class, 'lanzarPreguntaCategoria'])
     ->name('overlay.lanzar-pregunta');
 
-Route::post('/game-session/girar-ruleta', [GameSessionController::class, 'girarRuleta'])->name('game-session.girar-ruleta');
-Route::post('/game-session/limpiar-spin-pendiente', [GameSessionController::class, 'limpiarSpinPendiente'])->name('game-session.limpiar-spin-pendiente');
-Route::post('/game-session/lanzar-pregunta-finalizar', [GameSessionController::class, 'lanzarPreguntaAlFinalizar'])->name('game-session.lanzar-pregunta-finalizar');
+Route::post('/game-session/girar-ruleta', [GameSessionController::class, 'girarRuleta'])->name('game-session.girar-ruleta')->middleware(['auth', 'admin']);
+Route::post('/game-session/limpiar-spin-pendiente', [GameSessionController::class, 'limpiarSpinPendiente'])->name('game-session.limpiar-spin-pendiente')->middleware(['auth', 'admin']);
+Route::post('/game-session/lanzar-pregunta-finalizar', [GameSessionController::class, 'lanzarPreguntaAlFinalizar'])->name('game-session.lanzar-pregunta-finalizar')->middleware(['auth', 'admin']);
 
-Route::post('/game-session/sync-question', [GameSessionController::class, 'syncQuestion'])->name('game-session.sync-question');
+Route::post('/game-session/sync-question', [GameSessionController::class, 'syncQuestion'])->name('game-session.sync-question')->middleware(['auth', 'admin']);
 
 Route::get('/participar', [GameSessionController::class, 'participar'])->name('participar');
-Route::post('/participar/enviar', [GameSessionController::class, 'enviarParticipacion'])->name('participar.enviar');
+Route::post('/participar/enviar', [GameSessionController::class, 'enviarParticipacion'])->name('participar.enviar')->middleware('throttle:60,1');
 // En routes/web.php
 Route::get('/api/active-question', [GameSessionController::class, 'apiActiveQuestion']);
 Route::post('/participar/limpiar', [App\Http\Controllers\GameSessionController::class, 'limpiarPreguntaParticipante'])->name('participar.limpiar');
@@ -121,7 +126,7 @@ Route::get('/chat', fn() => view('chat'))->middleware(['auth', 'admin'])->name('
 // ─── Stream Deck API (sin CSRF, autenticada con STREAMDECK_TOKEN) ───────────
 // Usada por Bitfocus Companion para controlar el juego desde el hardware Stream Deck.
 // Companion pollea GET /sd/state?token=TOKEN cada ~1s y dispara POST /sd/{accion}
-Route::middleware(['streamdeck.auth'])->prefix('sd')->group(function () {
+Route::middleware(['throttle:180,1', 'streamdeck.auth'])->prefix('sd')->group(function () {
     Route::get('/state',     [StreamDeckController::class, 'state']);     // Estado completo (para polling)
     Route::post('/ruleta',   [StreamDeckController::class, 'ruleta']);    // Toggle girar/parar ruleta
     Route::post('/revelar',  [StreamDeckController::class, 'revelar']);   // Revelar respuesta

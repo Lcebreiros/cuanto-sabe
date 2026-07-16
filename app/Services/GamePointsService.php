@@ -59,7 +59,7 @@ public static function calcularPuntajeInvitado(
     $apuestaX2 = false,
     $bonoEspecial = null
 ) {
-    Log::info("[PUNTAJE INVITADO] game_session_id={$gameSessionId}, question_id={$questionId}, opcion={$selectedOption}, correcta={$labelCorrecto}");
+    Log::debug("[PUNTAJE INVITADO] game_session_id={$gameSessionId}, question_id={$questionId}, opcion={$selectedOption}, correcta={$labelCorrecto}");
 
     $session = GameSession::find($gameSessionId);
     if (!$session) {

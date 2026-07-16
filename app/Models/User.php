@@ -17,7 +17,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'dni_ultimo4',
+        'password',
         'role',
     ];
 
@@ -27,7 +27,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
-        'dni_ultimo4', // ocultamos para que no se vea el hash
+        'password',
         'remember_token',
     ];
 
@@ -41,16 +41,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
         ];
-    }
-
-    /**
-     * Override the method Laravel uses to get the password for authentication.
-     *
-     * @return string
-     */
-    public function getAuthPassword()
-    {
-        return $this->dni_ultimo4;
     }
 
     // En app/Models/User.php

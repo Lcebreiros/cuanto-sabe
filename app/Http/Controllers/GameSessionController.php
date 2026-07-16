@@ -99,7 +99,7 @@ public function revealAnswer(Request $request)
 {
     try {
         $data = session('last_overlay_question', null);
-        \Log::info('🔴 REVEAL: Sesión PHP', ['data' => $data]);
+        \Log::debug('🔴 REVEAL: Sesión PHP', ['data' => $data]);
         
         if (!$data) {
             $session = $this->getActiveSessionCached(5);
@@ -121,7 +121,7 @@ public function revealAnswer(Request $request)
                     return response()->json(['error' => 'Estructura de pregunta inválida'], 400);
                 }
 
-                \Log::info('🟡 REVEAL: Recuperado de BD', ['data' => $data]);
+                \Log::debug('🟡 REVEAL: Recuperado de BD', ['data' => $data]);
                 session(['last_overlay_question' => $data]);
             }
         }
@@ -199,7 +199,7 @@ public function revealAnswer(Request $request)
             \Log::info('========================================');
             \Log::info('💾 GUARDAR RESPUESTA INVITADO');
             \Log::info('Selected Option: ' . ($selectedOption ?? '(tendencia — confio)'));
-            \Log::info('Data completo:', $data);
+            \Log::debug('Data completo:', $data);
             \Log::info('Modo especial detectado: esOro=' . ($esOro ? 'true' : 'false') . ', bonoEspecial=' . ($bonoEspecial ?? 'null'));
             \Log::info('========================================');
 
@@ -381,7 +381,7 @@ public function revealAnswer(Request $request)
         $session = $session->fresh();
 
         // Conteo real de preguntas respondidas por el invitado
-        $questionCount = \App\Models\GuestAnswer::where('game_session_id', $session->id)->count();
+        $questionCount = \App\Models\GuestAnswer::where('game_session_id', $session->id)->whereNotNull('selected_option')->count();
         $questionLimit = 15;
 
         // Top participante individual (solo se incluye al llegar al límite de preguntas)
@@ -460,7 +460,7 @@ public function revealAnswer(Request $request)
         // Validar límite de 15 preguntas (igual que en lanzarPreguntaCategoria)
         $session = GameSession::where('status', 'active')->latest()->first();
         if ($session) {
-            $questionCount = \App\Models\GuestAnswer::where('game_session_id', $session->id)->count();
+            $questionCount = \App\Models\GuestAnswer::where('game_session_id', $session->id)->whereNotNull('selected_option')->count();
             if ($questionCount >= 15) {
                 return response()->json([
                     'error' => 'Límite de 15 preguntas alcanzado. El juego del invitado ha terminado.',
@@ -864,6 +864,13 @@ public function lanzarPreguntaCategoria(Request $request)
         return response()->json(['error' => 'No hay sesión activa'], 400);
     }
 
+    // ✅ Requiere conocer el código de la sesión (misma credencial que usa el overlay para conectarse).
+    // Evita que cualquiera sin el código controle la ruleta de la sesión activa.
+    $providedCode = strtoupper(trim((string) $request->input('code')));
+    if (!$providedCode || $providedCode !== strtoupper($session->session_code ?? '')) {
+        return response()->json(['error' => 'Código de sesión inválido o faltante'], 403);
+    }
+
     // ✅ LOCK ANTI-DUPLICADO: si dos overlays giran al mismo tiempo, solo el primero gana
     $lockKey = 'question_launch_lock_' . $session->id;
     if (Cache::has($lockKey)) {
@@ -971,7 +978,7 @@ public function lanzarPreguntaCategoria(Request $request)
     }
 
     // ✅ VERIFICAR LÍMITE DE 15 PREGUNTAS DEL INVITADO
-    $questionCount = \App\Models\GuestAnswer::where('game_session_id', $session->id)->count();
+    $questionCount = \App\Models\GuestAnswer::where('game_session_id', $session->id)->whereNotNull('selected_option')->count();
     if ($questionCount >= 15) {
         return response()->json([
             'error' => 'Límite de 15 preguntas alcanzado. El juego del invitado ha terminado.',
@@ -1051,7 +1058,12 @@ public function lanzarPreguntaCategoria(Request $request)
     ]);
 
     broadcast(new NuevaPreguntaOverlay($data, $session->session_code ?? 'default'));
-    return response()->json(['success' => true, 'data' => $data]);
+
+    // Esta respuesta la recibe el overlay sin autenticación (solo con el código de sesión) —
+    // no devolver label_correcto acá, igual que ya se redacta en el broadcast.
+    $publicData = $data;
+    unset($publicData['label_correcto']);
+    return response()->json(['success' => true, 'data' => $publicData]);
 }
 
     public function girarRuleta() {
@@ -1148,6 +1160,13 @@ public function enviarParticipacion(Request $request)
     $labelCorrecto = null;
     $session = GameSession::where('status', 'active')->latest()->first();
 
+    // No permitir votar/revotar una vez que la pregunta ya fue revelada (evita "esperar el reveal y votar seguro")
+    // JSON + 409 (no redirect): el formulario se envía por fetch() y trata cualquier respuesta
+    // ok/redirigida como éxito, así que un redirect() dejaría al participante creyendo que votó.
+    if ($session && Cache::has('revealed_question_' . $session->id . '_' . $request->question_id)) {
+        return response()->json(['error' => 'Esta pregunta ya fue revelada, no se puede responder.'], 409);
+    }
+
     if ($session && $session->pregunta_json) {
         $data = json_decode($session->pregunta_json, true);
 
@@ -1176,7 +1195,7 @@ public function enviarParticipacion(Request $request)
     }
 
     // 5. Log para depuración
-    \Log::info("GUARDAR RESPUESTA: qid={$request->question_id}, label_correcto={$labelCorrecto}, seleccionada={$request->option_label}");
+    \Log::debug("GUARDAR RESPUESTA: qid={$request->question_id}, label_correcto={$labelCorrecto}, seleccionada={$request->option_label}");
 
     // 6. Guardar la respuesta CON PROTECCIÓN DE RACE CONDITION
     DB::transaction(function () use ($participant, $request, $labelCorrecto) {
@@ -1253,6 +1272,11 @@ public function apiActiveQuestion()
         && Cache::has('revealed_question_' . $sessionId . '_' . $data['pregunta_id']);
     $data['revealed_option'] = Cache::get('revealed_option_' . $sessionId) ?: null;
 
+    // No exponer la respuesta correcta hasta que la pregunta haya sido revelada
+    if (!$data['is_revealed']) {
+        unset($data['label_correcto']);
+    }
+
     return response()->json($data);
 }
 
@@ -1274,6 +1298,12 @@ public function resetParticipante(Request $request)
     
     if (!$participant) {
         return response()->json(['error' => 'Participante no encontrado'], 404);
+    }
+
+    // No permitir borrar/reintentar la respuesta una vez que la pregunta ya fue revelada
+    $revealedKey = 'revealed_question_' . $participant->game_session_id . '_' . $request->question_id;
+    if (Cache::has($revealedKey)) {
+        return response()->json(['error' => 'Esta pregunta ya fue revelada, no se puede modificar la respuesta'], 409);
     }
 
     // Eliminar la respuesta anterior si existe
@@ -1337,10 +1367,15 @@ public function apiOverlayState()
                 && Cache::has('revealed_question_' . $session->id . '_' . $preguntaId);
             $preguntaData['revealed_option'] = Cache::get('revealed_option_' . $session->id) ?: null;
             $preguntaData['selected_option'] = Cache::get('sd_selected_option_' . $session->id) ?: null;
+
+            // No exponer la respuesta correcta hasta que la pregunta haya sido revelada
+            if (!$preguntaData['is_revealed']) {
+                unset($preguntaData['label_correcto']);
+            }
         }
     }
 
-    $questionCount = \App\Models\GuestAnswer::where('game_session_id', $session->id)->count();
+    $questionCount = \App\Models\GuestAnswer::where('game_session_id', $session->id)->whereNotNull('selected_option')->count();
 
     return response()->json([
         'pregunta' => $preguntaData,

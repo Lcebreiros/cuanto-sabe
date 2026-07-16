@@ -1,4 +1,7 @@
 {{-- resources/views/components/queue-list.blade.php --}}
+@php
+    $queueSessionCode = ($session->session_code ?? null) ?? ($activeSession->session_code ?? null) ?? 'default';
+@endphp
 <div class="neon-queue-box" id="queue-container">
     <div class="queue-title">
         Participantes
@@ -129,7 +132,7 @@
 // Solo ejecutar si Echo está disponible
 if (window.Echo) {
     // Escuchar evento de actualización de puntajes de participantes
-    window.Echo.channel('cuanto-sabe-overlay')
+    window.Echo.channel('cuanto-sabe-overlay-{{ $queueSessionCode }}')
         .listen('.revelar-respuesta', (e) => {
             console.log('[QUEUE] Evento revelar recibido:', e);
             

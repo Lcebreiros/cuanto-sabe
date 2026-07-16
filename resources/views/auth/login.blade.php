@@ -22,18 +22,16 @@
 
             <!-- Password -->
             <div class="space-y-2">
-                <x-input-label for="dni_ultimo4" :value="__('Pin')" class="text-lg" />
-                <x-text-input 
-                    id="dni_ultimo4" 
-                    type="text" 
-                    name="dni_ultimo4" 
-                    required 
-                    maxlength="4"
-                    inputmode="numeric"
-                    autocomplete="current-password" 
-                    class="w-full text-lg py-3 px-4" 
+                <x-input-label for="password" :value="__('Contraseña')" class="text-lg" />
+                <x-text-input
+                    id="password"
+                    type="password"
+                    name="password"
+                    required
+                    autocomplete="current-password"
+                    class="w-full text-lg py-3 px-4"
                 />
-                <x-input-error :messages="$errors->get('dni_ultimo4')" />
+                <x-input-error :messages="$errors->get('password')" />
             </div>
 
             <!-- Remember me -->

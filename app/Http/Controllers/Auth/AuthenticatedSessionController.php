@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +25,14 @@ class AuthenticatedSessionController extends Controller
      */
 public function store(LoginRequest $request): RedirectResponse
 {
+    // Cuentas migradas del viejo sistema de pin de 4 dígitos todavía no tienen contraseña
+    // (columna password null) — en vez de intentar autenticar, mandarlas a crearla primero.
+    $legacyUser = User::where('name', $request->input('name'))->whereNull('password')->first();
+    if ($legacyUser) {
+        return redirect()->route('password.setup', ['name' => $legacyUser->name])
+            ->with('status', 'Cambiamos la forma de iniciar sesión: ahora necesitás crear una contraseña para tu cuenta.');
+    }
+
     $request->authenticate();
 
     $request->session()->regenerate();

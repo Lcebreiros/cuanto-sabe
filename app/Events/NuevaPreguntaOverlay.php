@@ -16,7 +16,8 @@ class NuevaPreguntaOverlay implements ShouldBroadcastNow
 
     public function __construct($data, string $sessionCode)
     {
-        \Log::info('NuevaPreguntaOverlay lanzado', $data);
+        // debug (no info): $data incluye label_correcto, no debe quedar en logs de nivel operativo
+        \Log::debug('NuevaPreguntaOverlay lanzado', $data);
         $this->data = $data;
         $this->sessionCode = $sessionCode;
     }
@@ -29,5 +30,14 @@ class NuevaPreguntaOverlay implements ShouldBroadcastNow
     public function broadcastAs()
     {
         return 'nueva-pregunta';
+    }
+
+    public function broadcastWith()
+    {
+        // Nunca exponer la respuesta correcta en el canal público antes del reveal.
+        $data = $this->data;
+        unset($data['label_correcto']);
+
+        return ['data' => $data];
     }
 }

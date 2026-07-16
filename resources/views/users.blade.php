@@ -9,7 +9,6 @@
             <thead>
                 <tr>
                     <th>Nombre</th>
-                    <th>Pin</th>
                     <th>Registrado</th>
                     <th>Rol</th>
                     <th>Acciones</th>
@@ -19,7 +18,6 @@
                 @foreach($users as $user)
                 <tr data-user-id="{{ $user->id }}">
                     <td>{{ $user->name }}</td>
-                    <td>{{ $user->dni_ultimo4 }}</td>
                     <td>{{ $user->created_at->format('d/m/Y') }}</td>
                     <td>
                         <select class="role-select" data-user-id="{{ $user->id }}" data-current-role="{{ $user->role }}">

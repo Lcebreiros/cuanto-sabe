@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Auth;
 
-use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +20,7 @@ class LoginRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string'],
-            'dni_ultimo4' => ['required', 'digits:4'],
+            'password' => ['required', 'string'],
         ];
     }
 
@@ -29,25 +28,16 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-    // Buscar usuario por nombre Y dni_ultimo4 (ambos en texto plano)
-    $user = User::where('name', $this->input('name'))
-                ->where('dni_ultimo4', $this->input('dni_ultimo4'))
-                ->first();
+        if (! Auth::attempt($this->only('name', 'password'), $this->boolean('remember'))) {
+            RateLimiter::hit($this->throttleKey());
 
-    // Si no existe, lanzar error
-    if (! $user) {
-        RateLimiter::hit($this->throttleKey());
+            throw ValidationException::withMessages([
+                'name' => 'Las credenciales no coinciden con nuestros registros.',
+            ]);
+        }
 
-        throw ValidationException::withMessages([
-            'name' => 'Las credenciales no coinciden con nuestros registros.',
-        ]);
-    }
-
-    // Login manual con el usuario encontrado
-    Auth::login($user, $this->boolean('remember'));
-
-    // Limpiar el rate limiter después del login exitoso
-    RateLimiter::clear($this->throttleKey());
+        // Limpiar el rate limiter después del login exitoso
+        RateLimiter::clear($this->throttleKey());
     }
 
     public function ensureIsNotRateLimited(): void
@@ -77,8 +67,7 @@ class LoginRequest extends FormRequest
     {
         return [
             'name.required' => 'El nombre es obligatorio.',
-            'dni_ultimo4.required' => 'Los últimos 4 dígitos del DNI son obligatorios.',
-            'dni_ultimo4.digits' => 'Debes ingresar exactamente 4 dígitos.',
+            'password.required' => 'La contraseña es obligatoria.',
         ];
     }
 }

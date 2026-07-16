@@ -1396,7 +1396,7 @@ function finalizeSpin() {
             // LOGICA DE DOBLE GIRO
             if (lastSpecialSlot !== null) {
                 // SEGUNDO GIRO: mandar pregunta usando el especial guardado
-                let payload = { categoria: selectedCategory, special_slot: lastSpecialSlot };
+                let payload = { categoria: selectedCategory, special_slot: lastSpecialSlot, code: _overlaySessionCode };
                 console.log('Enviando payload (doble giro):', payload);
                 pendingSpecialBanner = payload.special_slot;
                 fetch('/overlay/lanzar-pregunta', {
@@ -1416,7 +1416,7 @@ function finalizeSpin() {
                 console.log('🎯 Categoría especial detectada, segundo giro activado');
             } else {
                 // GIRO NORMAL: pregunta directa
-                let payload = { categoria: selectedCategory };
+                let payload = { categoria: selectedCategory, code: _overlaySessionCode };
                 console.log('Enviando payload (giro normal):', payload);
                 fetch('/overlay/lanzar-pregunta', {
                     method: 'POST',

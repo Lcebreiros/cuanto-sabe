@@ -58,7 +58,7 @@ class StreamDeckController extends Controller
             $apuestaActive = (bool) $session->apuesta_x2_active;
             $apuestaDisp   = max(0, $limite - (int) $session->apuesta_x2_usadas);
             $descarteDisp  = (int) $session->descarte_usados < 1;
-            $questionCount = GuestAnswer::where('game_session_id', $session->id)->count();
+            $questionCount = GuestAnswer::where('game_session_id', $session->id)->whereNotNull('selected_option')->count();
         }
 
         return response()->json([
