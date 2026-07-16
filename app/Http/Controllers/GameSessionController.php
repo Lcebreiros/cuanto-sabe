@@ -542,10 +542,14 @@ public function revealAnswer(Request $request)
         }
 
         broadcast(new NuevaPreguntaOverlay($data, $session->session_code ?? 'default'));
+
+        // No devolver label_correcto en la respuesta HTTP, igual que en lanzarPreguntaCategoria.
+        $publicData = $data;
+        unset($publicData['label_correcto']);
         return response()->json([
             'success' => true,
             'mensaje' => 'Pregunta enviada',
-            'data' => $data
+            'data' => $publicData
         ]);
     }
 
@@ -1109,6 +1113,8 @@ public function participar(Request $request)
     $data = null;
     if ($session && $session->pregunta_json) {
         $data = json_decode($session->pregunta_json, true);
+        // No pasar la respuesta correcta al render de la vista del participante.
+        unset($data['label_correcto']);
     }
 
     // Buscar si ya respondió a la pregunta actual
